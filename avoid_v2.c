@@ -1,22 +1,16 @@
 /*
- * File:          avoid_obj.c
- * Date:
- * Description:
+ * File:  avoid_obj.c
+ * Date:  29.03.2020
  * Author: Victor
- * Modifications:
  */
-
-
 
 #include <webots/robot.h>
 #include <webots/motor.h>
 #include <webots/distance_sensor.h>
 #include <stdio.h>
 
-
 #define TIME_STEP 64
 #define MAX_SPEED 6.28
-
 
 int main(int argc, char **argv) {
   /* necessary to initialize webots stuff */
