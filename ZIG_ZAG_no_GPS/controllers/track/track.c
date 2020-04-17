@@ -1,15 +1,17 @@
 /*.........................................*/
-//  Version 0.8 || 16.04.2020 || V. J. H
+// !! this version does not determine the Zig-Zag pattern by using GPS coordinates !!
+// it uses rotary encoders to measure the distance traversed by the snow blower
+
 //  Snow-e Autonomous Snow Blower 
-//  Dynamic Coverage Path Planning and obstacle avoidance
+//  Coverage Path Planning
+//  Version 0.8
+//  16.04.2020 
+//  V. Hansen, D. Kazokas
 
 // - Sonar: detect obstacles
 // - Compass: navigation
 // - Position Sensors: measure distance travelled
 // - GPS: define boundaries
-
-// Snow throwing distance = 5 m, throw outside boundaries 
-
 
 
 /* To do:
@@ -41,14 +43,11 @@
 #define TOTAL_PATH_LENGTH 100.0
 #define AREA 9.0 // floorSize 10x10
 
-
 enum SIDES { LEFT, RIGHT, MIDDLE };
 enum FSM { INIT, FORWARD, PAUSE, GO_LEFT, GO_RIGHT, 
            UTURN_R, UTURN_L, R_OBSTACLE, STUCK, DONE };
 
-enum sub_states {Sub_FORWARD, Sub_GO_LEFT, Sub_GO_RIGHT};
 enum ObstacleFlag { A, B, C };
-
 
 enum SONAR_Sensors { SONAR_MID, SONAR_L, SONAR_R };
 enum XZComponents { X, Y, Z };
@@ -68,7 +67,6 @@ double pos_val[2] = {0.0, 0.0};
 int obstacle_flag[3] = {0, 0, 0};
 double inc_pos = 0.0;
 double avg_pos_val = 0.0;
-double saved_avg_pos[3] = {0.0, 0.0, 0.0};
 static bool autopilot = true;
 static bool old_autopilot = true;
 static int old_key = -1;
@@ -113,7 +111,6 @@ static void drive_manual() {
     else
       printf("manual control, use WASD.\n");
   }
-
    /*......SET SPEED......*/
   wb_motor_set_velocity(l_motor, speed[LEFT]);
   wb_motor_set_velocity(r_motor, speed[RIGHT]);
@@ -139,7 +136,7 @@ static int drive_autopilot(void) {
   pos_val[RIGHT] = wb_position_sensor_get_value(r_pos_sens);
   avg_pos_val = (pos_val[LEFT]+pos_val[RIGHT])/2.0;
   
-  // used for calibration
+  // used for calibration and debugging
   if (fmod(current_time,2)==0.0) {
     printf("(X, Z) = (%.4g, %.4g)\n", gps_pos[X], gps_pos[Z]);
     printf("%.4g m\n", avg_pos_val);
@@ -162,18 +159,12 @@ static int drive_autopilot(void) {
     case FORWARD:
       speed[LEFT]  = DEFAULT_SPEED;
       speed[RIGHT] = DEFAULT_SPEED;
-        // check for obstacle
-      if ( sonar_val[SONAR_MID]>THRESHOLD || sonar_val[SONAR_R]>THRESHOLD ) {
-        saved_avg_pos[0] = avg_pos_val;
-        state = R_OBSTACLE;
-      }
       else if (avg_pos_val >= PATH_LENGTH+inc_pos) {
         state = PAUSE;
       }
+      // if snow blower has reached the parking lot boundary
       else if (avg_pos_val >= TOTAL_PATH_LENGTH || fabs(gps_pos[X]) > (AREA/2.0) || fabs(gps_pos[Y]) > (AREA/2.0)) {
-        state = DONE;  
-        // gps_pos[X] > 4.5
-        // gps_pos[Z] > 4.5        
+        state = DONE;    
       }
       break;
     /*...... PAUSE ......*/ 
@@ -198,9 +189,6 @@ static int drive_autopilot(void) {
         if (avg_pos_val >= PATH_LENGTH+TURN_WIDTH+inc_pos) {
           state = UTURN_L;
         }
-        /*else if ( sonar_val[SONAR_MID]>THRESHOLD || sonar_val[SONAR_L]>THRESHOLD || sonar_val[SONAR_R]>THRESHOLD ) {
-          state = OBSTACLE;
-        }*/
       }
       break;
     /*......GO RIGHT......*/ 
@@ -214,9 +202,6 @@ static int drive_autopilot(void) {
         if (avg_pos_val >= PATH_LENGTH+TURN_WIDTH+inc_pos) {
           state = UTURN_R;
         }
-       /* else if ( sonar_val[SONAR_MID]>THRESHOLD || sonar_val[SONAR_L]>THRESHOLD || sonar_val[SONAR_R]>THRESHOLD ) {
-          state = OBSTACLE;
-        }*/
       }
       break;
     /*......UTURN RIGHT......*/
@@ -241,55 +226,9 @@ static int drive_autopilot(void) {
       break;
       
     /*......obstacle detected......*/  
-    case R_OBSTACLE:
-      // turn left (180) --> go forward --> turn right (90) --> go forward --> turn right (0)
-      switch (sub_state) {
-        /*................................................*/  
-        case Sub_FORWARD:
-          speed[LEFT] = DEFAULT_SPEED;
-          speed[RIGHT] = DEFAULT_SPEED;
-          if ( (avg_pos_val >= saved_avg_pos[0] + TURN_WIDTH) && (obstacle_flag[0] == 0) ) {
-            sub_state = Sub_GO_RIGHT;
-          }
-          else if ( (avg_pos_val >= saved_avg_pos[1] + TURN_WIDTH + 2) && (obstacle_flag[0] == 1) && (obstacle_flag[2] == 0)) {
-            obstacle_flag[1] = 1;
-            sub_state = Sub_GO_RIGHT;
-          }
-          else if ( (avg_pos_val >= saved_avg_pos[1] + 4 && obstacle_flag[2] == 1) ) {
-            sub_state = Sub_GO_LEFT;
-          }
-          break;
-        /*................................................*/  
-        case Sub_GO_LEFT:
-          speed[LEFT]  = -DEFAULT_SPEED;
-          speed[RIGHT] = DEFAULT_SPEED;
-          if (theta >= -181.00 && theta <= -179.00) { 
-            sub_state = Sub_FORWARD;
-            saved_avg_pos[1] = avg_pos_val;
-          }
-          else if (theta >= -181.00 && theta <= -179.00 && obstacle_flag[2] == 1) { 
-            state = FORWARD;
-          }
-          break;
-        /*................................................*/  
-        case Sub_GO_RIGHT:
-          speed[LEFT]  = DEFAULT_SPEED;
-          speed[RIGHT] = -DEFAULT_SPEED;
-          if ( (theta > -95.00 && theta < -85.00 && obstacle_flag[0] == 0) 
-            || (theta > 85.00  && theta < 95.00  && obstacle_flag[0] == 0) ) { 
-            obstacle_flag[0] = 1;
-            sub_state = Sub_FORWARD;
-          }
-          else if (theta >= -5.00 && theta <= 5.00 && obstacle_flag[1] == 1) {
-            obstacle_flag[2] = 1;
-            sub_state = Sub_FORWARD;
-          }
-          break;
-        /*................................................*/  
-        default:
-          break;
-      }
+    /*case R_OBSTACLE:
       break;
+    */
       
     /*......if we are done with this area......*/ 
     case DONE:
