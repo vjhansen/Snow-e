@@ -6,7 +6,6 @@ To do:
 - Remove position sensors (i.e. rotary encoders)
 - Add snow plow/shredder and chute
 - Create new path when encountering obstacles
-
 */
 
 
@@ -19,6 +18,7 @@ To do:
   - Engineers: V. Hansen, D. Kazokas
 */
 
+
 /* 
 Sensors used:
   - Sonar & LiDAR: detect obstacles
@@ -27,7 +27,8 @@ Sensors used:
   - GPS: Generate Zig-Zag path and define boundaries/no go zones
 */
 
-// some functions (name) are based on concepts from webots/moose_path_following.c
+
+// some functions (norm, minus) are based on concepts from webots/moose_path_following.c
 
 /*.........................................*/
 #include <webots/motor.h>
@@ -69,17 +70,43 @@ typedef struct _Vector {
 // can hardcode no-go zones here
 static Vector hard_code_targets[3] = {
   {-4.209318, -9.147717}, {0.946812, -9.404304},  {0.175989, 1.784311}
-
 };
+
+
+
+/*
+static Vector targets[21] = 
+{
+  {0, 0}, // n = 0
+  {0, PATH_LENGTH}, // n = 1
+  {TURN_WIDTH, PATH_LENGTH}, 
+  {TURN_WIDTH, 0},
+  {2*TURN_WIDTH, 0}, 
+  {2*TURN_WIDTH, PATH_LENGTH},
+  {3*TURN_WIDTH, PATH_LENGTH}, 
+  {3*TURN_WIDTH, 0},
+  {4*TURN_WIDTH, 0}, 
+  {4*TURN_WIDTH, PATH_LENGTH},
+  {5*TURN_WIDTH, PATH_LENGTH},
+  {5*TURN_WIDTH, 0},
+  {6*TURN_WIDTH, 0}, 
+  {6*TURN_WIDTH, PATH_LENGTH},
+  {7*TURN_WIDTH, PATH_LENGTH}, 
+  {7*TURN_WIDTH, 0},
+  {8*TURN_WIDTH, 0},
+  {8*TURN_WIDTH, PATH_LENGTH},
+  {9*TURN_WIDTH, PATH_LENGTH},
+  {9*TURN_WIDTH, 0},
+  {10*TURN_WIDTH, 0},
+}; */
 
 /*.........................................*/
 static WbDeviceTag sonar[NUM_SONAR];
 static WbDeviceTag l_motor, r_motor;
 static WbDeviceTag compass;
 static WbDeviceTag gps;
-static WbDeviceTag l_pos_sens, r_pos_sens;
+static WbDeviceTag l_pos_sens, r_pos_sens; // remove
 /*.........................................*/
-
 
 double sonar_val[NUM_SONAR] = {0.0, 0.0, 0.0};
 int state = INIT;
