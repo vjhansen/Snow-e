@@ -61,10 +61,8 @@ static WbDeviceTag l_pos_sens, r_pos_sens;
 /*.........................................*/
 double sonar_val[NUM_SONAR] = {0.0, 0.0, 0.0};
 int state = INIT;
-int sub_state = Sub_GO_LEFT;
 int new_north = 0;
 double pos_val[2] = {0.0, 0.0};
-int obstacle_flag[3] = {0, 0, 0};
 double inc_pos = 0.0;
 double avg_pos_val = 0.0;
 static bool autopilot = true;
@@ -140,8 +138,6 @@ static int drive_autopilot(void) {
   if (fmod(current_time,2)==0.0) {
     printf("(X, Z) = (%.4g, %.4g)\n", gps_pos[X], gps_pos[Z]);
     printf("%.4g m\n", avg_pos_val);
-    printf("1:: %.4g m\n", saved_avg_pos[0]);
-    printf("2:: %.4g m\n", saved_avg_pos[1]);
     printf("%.4g \n", theta);
     //printf("Sonar[M]: %.4g \n",sonar_val[SONAR_MID]);
     //printf("Sonar[L]: %.4g \n",sonar_val[SONAR_L]);
@@ -159,7 +155,7 @@ static int drive_autopilot(void) {
     case FORWARD:
       speed[LEFT]  = DEFAULT_SPEED;
       speed[RIGHT] = DEFAULT_SPEED;
-      else if (avg_pos_val >= PATH_LENGTH+inc_pos) {
+      if (avg_pos_val >= PATH_LENGTH+inc_pos) {
         state = PAUSE;
       }
       // if snow blower has reached the parking lot boundary
