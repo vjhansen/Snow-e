@@ -1,14 +1,33 @@
-/*.........................................*/
-//  Version 0.1 || 16.04.2020 || V. J. H
-//  Snow-e Autonomous Snow Blower 
-//  Dynamic Coverage Path Planning and obstacle avoidance
+/*
+To do:
 
-// - Sonar: detect obstacles
-// - Compass: navigation
-// - Position Sensors: measure distance travelled
-// - GPS: define boundaries
+- Add LiDAR to enable 360 obstacle detection
+- Generate Zig-Zag patter based on GPS coordinates
+- Remove position sensors (i.e. rotary encoders)
+- Add snow plow/shredder and chute
+- Create new path when encountering obstacles
 
-// based on concepts from webots/moose_path_following.c
+*/
+
+
+/* Snow-e Autonomous Snow Blower
+   Dynamic Coverage Path Planning using RTK GPS */
+
+/*  
+  - Version: 0.0.1
+  - Date: 17.04.2020
+  - Engineers: V. Hansen, D. Kazokas
+*/
+
+/* 
+Sensors used:
+  - Sonar & LiDAR: detect obstacles
+  - Compass: navigation
+  - Position Sensors: measure distance travelled (to be removed)
+  - GPS: Generate Zig-Zag path and define boundaries/no go zones
+*/
+
+// some functions (name) are based on concepts from webots/moose_path_following.c
 
 /*.........................................*/
 #include <webots/motor.h>
@@ -47,13 +66,11 @@ typedef struct _Vector {
 } Vector;
 
 
+// can hardcode no-go zones here
 static Vector hard_code_targets[3] = {
   {-4.209318, -9.147717}, {0.946812, -9.404304},  {0.175989, 1.784311}
 
 };
-
-
-
 
 /*.........................................*/
 static WbDeviceTag sonar[NUM_SONAR];
@@ -62,6 +79,8 @@ static WbDeviceTag compass;
 static WbDeviceTag gps;
 static WbDeviceTag l_pos_sens, r_pos_sens;
 /*.........................................*/
+
+
 double sonar_val[NUM_SONAR] = {0.0, 0.0, 0.0};
 int state = INIT;
 int new_north = 0;
@@ -70,7 +89,6 @@ double distance = 0.0;
 double pos_val[2] = {0.0, 0.0};
 double inc_pos = 0.0;
 double avg_pos_val = 0.0;
-double saved_avg_pos[3] = {0.0, 0.0, 0.0};
 static bool autopilot = true;
 static bool old_autopilot = true;
 static int old_key = -1;
@@ -123,11 +141,12 @@ static void drive_manual() {
   old_key = key;
 }
 
-// Euclidean Norm
+// Euclidean Norm, i.e. distance between 
 static double norm(const Vector *vec) {
   return sqrt(vec->Z_v*vec->Z_v + vec->X_v*vec->X_v);
 }
 
+// new vector = vector 1 - vector 2
 static void minus(Vector *nv, const Vector *vec1, const Vector *vec2) {
   nv->Z_v = vec1->Z_v - vec2->Z_v;
   nv->X_v = vec1->X_v - vec2->X_v;
@@ -200,8 +219,7 @@ static int drive_autopilot(void) {
       new_north = (int)theta;
       state = FORWARD;
       break;
-    
-    
+
     /*......GO FORWARD......*/ 
     case FORWARD:
       speed[LEFT]  = DEFAULT_SPEED;
@@ -209,9 +227,6 @@ static int drive_autopilot(void) {
       generate_target(&target, &curr_gps_pos);
       minus(&dir, &target, &curr_gps_pos);
       distance = norm(&dir);
-      
-      
-
       break;
     /*...... PAUSE ......*/ 
     case PAUSE:
@@ -254,13 +269,6 @@ static int drive_autopilot(void) {
   wb_motor_set_velocity(r_motor, speed[RIGHT]);
   return TIME_STEP;
 }
-
-
-
-
-
-
-
 
 
 static void initialize(void) {
