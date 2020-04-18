@@ -75,6 +75,7 @@ static Vector hard_code_targets[3] = {
 
 
 /*
+// Idea - future work: these targets could be generated externally through an app.
 static Vector targets[21] = 
 {
   {0, 0}, // n = 0
