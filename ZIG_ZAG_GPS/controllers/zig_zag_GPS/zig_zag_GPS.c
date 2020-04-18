@@ -5,6 +5,7 @@ To do:
 - Generate Zig-Zag patter based on GPS coordinates
 - Remove position sensors (i.e. rotary encoders)
 - Add snow plow/shredder and chute
+- Add snow to surface
 - Create new path when encountering obstacles
 */
 
@@ -13,8 +14,8 @@ To do:
    Dynamic Coverage Path Planning using RTK GPS */
 
 /*  
-  - Version: 0.0.1
-  - Date: 17.04.2020
+  - Version: 0.0.2
+  - Date: 18.04.2020
   - Engineers: V. Hansen, D. Kazokas
 */
 
@@ -23,7 +24,6 @@ To do:
 Sensors used:
   - Sonar & LiDAR: detect obstacles
   - Compass: navigation
-  - Position Sensors: measure distance travelled (to be removed)
   - GPS: Generate Zig-Zag path and define boundaries/no go zones
 */
 
@@ -33,11 +33,11 @@ Sensors used:
 /*.........................................*/
 #include <webots/motor.h>
 #include <webots/robot.h>
-#include <webots/distance_sensor.h>
+#include <webots/distance_sensor.h> // Sonar
 #include <webots/compass.h>
-#include <webots/position_sensor.h>
 #include <webots/keyboard.h>
 #include <webots/gps.h>
+#include <webots/lidar.h>
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
@@ -105,7 +105,7 @@ static WbDeviceTag sonar[NUM_SONAR];
 static WbDeviceTag l_motor, r_motor;
 static WbDeviceTag compass;
 static WbDeviceTag gps;
-static WbDeviceTag l_pos_sens, r_pos_sens; // remove
+
 /*.........................................*/
 
 double sonar_val[NUM_SONAR] = {0.0, 0.0, 0.0};
@@ -113,9 +113,6 @@ int state = INIT;
 int new_north = 0;
 double delta = 0.3;
 double distance = 0.0;
-double pos_val[2] = {0.0, 0.0};
-double inc_pos = 0.0;
-double avg_pos_val = 0.0;
 static bool autopilot = true;
 static bool old_autopilot = true;
 static int old_key = -1;
@@ -229,10 +226,6 @@ static int drive_autopilot(void) {
     sonar_val[i] = wb_distance_sensor_get_value(sonar[i]);
   }
   
-  pos_val[LEFT]  = wb_position_sensor_get_value(l_pos_sens);
-  pos_val[RIGHT] = wb_position_sensor_get_value(r_pos_sens);
-  avg_pos_val = (pos_val[LEFT]+pos_val[RIGHT])/2.0;
-  
   // used for calibration
   if (fmod(current_time, 2) == 0.0) {
     printf("(X, Z) = (%.4g, %.4g)\n", gps_pos[X], gps_pos[Z]);
@@ -326,12 +319,6 @@ static void initialize(void) {
   /*......ENABLE COMPASS......*/
   gps = wb_robot_get_device("gps");
   wb_gps_enable(gps, TIME_STEP);
-
-  /*......ENABLE POSITION SENSORS......*/
-  l_pos_sens = wb_robot_get_device("l_position_sensor");
-  r_pos_sens = wb_robot_get_device("r_position_sensor");
-  wb_position_sensor_enable(l_pos_sens, TIME_STEP);
-  wb_position_sensor_enable(r_pos_sens, TIME_STEP);
 }
 
 /*....................................*/ 

@@ -17,7 +17,7 @@ WorldInfo {
 }
 Viewpoint {
   orientation -0.35098627353012446 0.8670293842022603 0.35365050929312436 1.720478699910915
-  position 5.7650132277794555 5.506477787011297 5.988881495555741
+  position 2.6596266539499616 6.40716043372685 7.770487622885704
   follow "Snow-e"
   followType "None"
 }
@@ -40,7 +40,7 @@ RectangleArena {
   wallAppearance NULL
 }
 DEF TRACKED_ROBOT Robot {
-  translation -4.355386484087251 0.11639150443218926 7.92722903583122
+  translation 0.474541 0.121171 7.90058
   rotation -0.0004948305659051622 0.999999877570418 1.3639156188975094e-06 -3.136080011114548
   children [
     GPS {
@@ -252,9 +252,6 @@ DEF TRACKED_ROBOT Robot {
       physics Physics {
       }
       device [
-        PositionSensor {
-          name "l_position_sensor"
-        }
         LinearMotor {
           name "left motor"
         }
@@ -309,9 +306,6 @@ DEF TRACKED_ROBOT Robot {
       physics Physics {
       }
       device [
-        PositionSensor {
-          name "r_position_sensor"
-        }
         LinearMotor {
           name "right motor"
         }
@@ -328,6 +322,4 @@ DEF TRACKED_ROBOT Robot {
     mass 40
   }
   controller "zig_zag_GPS"
-  linearVelocity -0.09993552665231491 6.154826581611002e-16 0.0005509144770911152
-  angularVelocity -4.8640051147593556e-17 -2.4589807792301093e-17 -5.596311714801254e-17
 }
