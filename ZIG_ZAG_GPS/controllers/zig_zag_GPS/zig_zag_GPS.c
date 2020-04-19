@@ -68,42 +68,44 @@ typedef struct _Vector {
 
 
 // can hardcode no-go zones here
-static Vector hard_code_targets[3] = {
-  {-4.209318, -9.147717}, {0.946812, -9.404304},  {0.175989, 1.784311}
-};
-
+/*static Vector hard_code_targets[3] = {
+  {X, Z}, {X, Z},  {X, Z}
+};*/
 
 
 
 // Idea - future work: these targets could be generated externally through an app.
 
-// X: -5 -> 5
-// Z: -10 -> 10
+// X: -5 -> 5: total 10 m LENGTH
+// Z: -10 -> 10: total 20 m WIDTH
 // (0,0) is in the centre of the parking lot
 
-static Vector targets[21] = 
+#define startX -4.5
+#define startZ 9.5
+
+static Vector targets[21] =  // {X, Z}
 {
-  {4.5, 9.5}, // this should be at the corner of the parking lot
-  {0, PATH_LENGTH}, // n = 1
-  {TURN_WIDTH, PATH_LENGTH}, 
-  {TURN_WIDTH, 0},
-  {2*TURN_WIDTH, 0}, 
-  {2*TURN_WIDTH, PATH_LENGTH},
-  {3*TURN_WIDTH, PATH_LENGTH}, 
-  {3*TURN_WIDTH, 0},
-  {4*TURN_WIDTH, 0}, 
-  {4*TURN_WIDTH, PATH_LENGTH},
-  {5*TURN_WIDTH, PATH_LENGTH},
-  {5*TURN_WIDTH, 0},
-  {6*TURN_WIDTH, 0}, 
-  {6*TURN_WIDTH, PATH_LENGTH},
-  {7*TURN_WIDTH, PATH_LENGTH}, 
-  {7*TURN_WIDTH, 0},
-  {8*TURN_WIDTH, 0},
-  {8*TURN_WIDTH, PATH_LENGTH},
-  {9*TURN_WIDTH, PATH_LENGTH},
-  {9*TURN_WIDTH, 0},
-  {10*TURN_WIDTH, 0},
+  {startX,  startZ}, // this should be at the corner of the parking lot
+  {-startX, startZ}, // n = 1
+  {-startX, startZ-TURN_WIDTH}, // it will be startZ+TURN_WIDTH if startZ < 0
+  {startX,  startZ-TURN_WIDTH},
+  {startX,  startZ-2*TURN_WIDTH}, 
+  {-startX, startZ-2*TURN_WIDTH},
+  {-startX, startZ-3*TURN_WIDTH}, 
+  {startX,  startZ-3*TURN_WIDTH},
+  {startX,  startZ-4*TURN_WIDTH}, 
+  {-startX, startZ-4*TURN_WIDTH},
+  {-startX, startZ-5*TURN_WIDTH},
+  {startX,  startZ-5*TURN_WIDTH},
+  {startX,  startZ-6*TURN_WIDTH}, 
+  {-startX, startZ-6*TURN_WIDTH},
+  {-startX, startZ-7*TURN_WIDTH}, 
+  {startX,  startZ-7*TURN_WIDTH},
+  {startX,  startZ-8*TURN_WIDTH},
+  {-startX, startZ-8*TURN_WIDTH},
+  {-startX, startZ-9*TURN_WIDTH},
+  {startX,  startZ-9*TURN_WIDTH},
+  {startX,  startZ-10*TURN_WIDTH},
 }; 
 
 /*.........................................*/
@@ -111,7 +113,7 @@ static WbDeviceTag sonar[NUM_SONAR];
 static WbDeviceTag l_motor, r_motor;
 static WbDeviceTag compass;
 static WbDeviceTag gps;
-
+// add lidar
 /*.........................................*/
 
 double sonar_val[NUM_SONAR] = {0.0, 0.0, 0.0};
@@ -183,7 +185,6 @@ static void minus(Vector *nv, const Vector *vec1, const Vector *vec2) {
   nv->X_v = vec1->X_v - vec2->X_v;
 }
 
-
 // v = v/||v||
 static void normalize(Vector *vec) {
   double n = norm(vec);
@@ -199,7 +200,7 @@ static double vector_angle(const Vector *vec1, const Vector *vec2) {
 }
 
 
-// generate new target
+// generate new target when we detect obstacle
 // current pos + delta
 /*static void generate_target(Vector *tv, const Vector *vec1) {
   tv->Z_v = vec1->Z_v + delta;
