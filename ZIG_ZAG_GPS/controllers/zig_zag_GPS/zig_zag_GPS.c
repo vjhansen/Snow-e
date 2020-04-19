@@ -74,11 +74,16 @@ static Vector hard_code_targets[3] = {
 
 
 
-/*
+
 // Idea - future work: these targets could be generated externally through an app.
+
+// X: -5 -> 5
+// Z: -10 -> 10
+// (0,0) is in the centre of the parking lot
+
 static Vector targets[21] = 
 {
-  {0, 0}, // n = 0
+  {4.5, 9.5}, // this should be at the corner of the parking lot
   {0, PATH_LENGTH}, // n = 1
   {TURN_WIDTH, PATH_LENGTH}, 
   {TURN_WIDTH, 0},
@@ -99,7 +104,7 @@ static Vector targets[21] =
   {9*TURN_WIDTH, PATH_LENGTH},
   {9*TURN_WIDTH, 0},
   {10*TURN_WIDTH, 0},
-}; */
+}; 
 
 /*.........................................*/
 static WbDeviceTag sonar[NUM_SONAR];
@@ -117,6 +122,7 @@ double distance = 0.0;
 static bool autopilot = true;
 static bool old_autopilot = true;
 static int old_key = -1;
+static int target_index = 0;
 double gps_val[2] = {0.0, 0.0};
 double start_gps_pos[3] = {0.0, 0.0, 0.0};
 
@@ -193,15 +199,13 @@ static double vector_angle(const Vector *vec1, const Vector *vec2) {
 }
 
 
-// generate target
+// generate new target
 // current pos + delta
-static void generate_target(Vector *tv, const Vector *vec1) {
+/*static void generate_target(Vector *tv, const Vector *vec1) {
   tv->Z_v = vec1->Z_v + delta;
   tv->X_v = vec1->X_v + delta;
-
-}
+}*/
   
-
 
 /*.........................................*/
 static int drive_autopilot(void) {
@@ -215,10 +219,8 @@ static int drive_autopilot(void) {
   Vector curr_gps_pos = {gps_pos[X], gps_pos[Z]};
   
   Vector dir;
-  Vector target;
   //generate_target(&target, &curr_gps_pos);
-  //minus(&dir, &target, &curr_gps_pos);
-  minus(&dir, &hard_code_targets[0], &curr_gps_pos);
+  minus(&dir, &targets[target_index], &curr_gps_pos);
   distance = norm(&dir);
   
  
@@ -245,9 +247,6 @@ static int drive_autopilot(void) {
     case FORWARD:
       speed[LEFT]  = DEFAULT_SPEED;
       speed[RIGHT] = DEFAULT_SPEED;
-      generate_target(&target, &curr_gps_pos);
-      minus(&dir, &target, &curr_gps_pos);
-      distance = norm(&dir);
       break;
     /*...... PAUSE ......*/ 
     case PAUSE:
