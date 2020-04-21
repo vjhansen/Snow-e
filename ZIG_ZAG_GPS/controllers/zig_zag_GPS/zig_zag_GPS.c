@@ -237,8 +237,6 @@ static int drive_autopilot(void) {
     printf("distance: %.4g \n", distance);
   }
 
-
-
   /*...... FSM ......*/
   switch (state) {
     /*...... GET the x-direction (North/South) the robot is pointing to initially ......*/ 
@@ -251,23 +249,55 @@ static int drive_autopilot(void) {
     case FORWARD:
       speed[LEFT]  = DEFAULT_SPEED;
       speed[RIGHT] = DEFAULT_SPEED;
+      // going north
+      if (new_north >= 85 && new_north <= 95) {
+        // X_0 = 4
+        if (gps_pos[X] == startX) {
+          state = PAUSE;
+        }
+      }
+      // going south
+      else if (new_north >= -95 && new_north <= -85) {
+        if (gps_pos[X] == -startX) {
+          state = PAUSE;
+        }
+      }
+      else if (theta >= fabs(175) && theta <= fabs(185)) {
+        if (gps_pos[Z] == ) {
+          state = PAUSE;
+        }
+      }
       break;
     /*...... PAUSE ......*/ 
     case PAUSE:
       speed[LEFT]  = 0.0;
       speed[RIGHT] = 0.0;
+      // going north
+       if (new_north >= 85 && new_north <= 95) {
+          state = GO_RIGHT;
+      }
+      // going south
+      else if (new_north >= -95 && new_north <= -85) {
+          state = GO_LEFT;
+      }
 
       break;
     /*......GO LEFT......*/ 
     case GO_LEFT:
       speed[LEFT]  = -DEFAULT_SPEED;
-      speed[RIGHT] = DEFAULT_SPEED; 
+      speed[RIGHT] = DEFAULT_SPEED;
+      if (theta >= fabs(175) && theta <= fabs(185)) {
+          state = FORWARD;
+      }
 
       break;
     /*......GO RIGHT......*/ 
     case GO_RIGHT:
       speed[LEFT]  = DEFAULT_SPEED;
       speed[RIGHT] = -DEFAULT_SPEED;
+      if (theta >= fabs(175) && theta <= fabs(185)) {
+          state = FORWARD;
+      }
       break;
     /*......UTURN RIGHT......*/
     case UTURN_R: // from -90 (South) to 90 (North) turn right
