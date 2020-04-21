@@ -14,8 +14,8 @@ To do:
    Dynamic Coverage Path Planning using RTK GPS */
 
 /*  
-  - Version: 0.0.2
-  - Date: 18.04.2020
+  - Version: 0.0.3
+  - Date: 21.04.2020
   - Engineers: V. Hansen, D. Kazokas
 */
 
@@ -232,10 +232,13 @@ static int drive_autopilot(void) {
   
   // used for calibration
   if (fmod(current_time, 2) == 0.0) {
+    printf("(angle) = (%.4g)\n", theta);
     printf("(X, Z) = (%.4g, %.4g)\n", gps_pos[X], gps_pos[Z]);
     printf("distance: %.4g \n", distance);
   }
-    
+
+
+
   /*...... FSM ......*/
   switch (state) {
     /*...... GET the x-direction (North/South) the robot is pointing to initially ......*/ 
