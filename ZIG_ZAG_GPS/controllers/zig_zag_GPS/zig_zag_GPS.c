@@ -81,7 +81,7 @@ typedef struct _Vector {
 // (0,0) is in the centre of the parking lot
 
 #define startX -4.5
-#define startZ 9.5
+#define startZ -9.5
 
 static Vector targets[21] =  // {X, Z}
 {
@@ -251,7 +251,7 @@ static int drive_autopilot(void) {
       speed[RIGHT] = DEFAULT_SPEED;
       // going north
       if (new_north >= 85 && new_north <= 95) {
-        // X_0 = 4
+         target_index++;
         if (gps_pos[X] == startX) {
           state = PAUSE;
         }
