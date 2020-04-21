@@ -2,8 +2,6 @@
 To do:
 
 - Add LiDAR to enable 360 obstacle detection
-- Generate Zig-Zag patter based on GPS coordinates
-- Remove position sensors (i.e. rotary encoders)
 - Add snow plow/shredder and chute
 - Add snow to surface
 - Create new path when encountering obstacles
@@ -14,7 +12,7 @@ To do:
    Dynamic Coverage Path Planning using RTK GPS */
 
 /*  
-  - Version: 0.0.3
+  - Version: 0.0.4
   - Date: 21.04.2020
   - Engineers: V. Hansen, D. Kazokas
 */
@@ -55,7 +53,7 @@ Sensors used:
 
 enum SIDES { LEFT, RIGHT, MIDDLE };
 enum FSM { INIT, FORWARD, PAUSE, GO_LEFT, GO_RIGHT, 
-           UTURN_R, UTURN_L, R_OBSTACLE, STUCK, DONE };
+           UTURN_R, UTURN_L, OBSTACLE, STUCK, DONE };
 
 
 enum SONAR_Sensors { SONAR_MID, SONAR_L, SONAR_R };
@@ -80,35 +78,37 @@ typedef struct _Vector {
 // Z: -10 -> 10: total 20 m WIDTH
 // (0,0) is in the centre of the parking lot
 
-#define startX -4.5
+#define startX -4.5 
 #define startZ -9.5
 
 #define TARGET_POINTS_SIZE 21
 
+
+// targets could be stored in a separate file?
 static Vector targets[TARGET_POINTS_SIZE] =  // {X, Z}
 {
-  {startX,  startZ}, // this should be at the corner of the parking lot
-  {-startX, startZ}, // n = 1
-  {-startX, startZ+TURN_WIDTH}, // it will be startZ+TURN_WIDTH if startZ < 0
-  {startX,  startZ+TURN_WIDTH},
-  {startX,  startZ+2*TURN_WIDTH}, 
+  //{startX,  startZ}, // this should be at the corner of the parking lot
+  {-startX, startZ}, // n = 0
+  {-startX, startZ+TURN_WIDTH}, // it will be startZ+TURN_WIDTH if startZ < 0 
+  {startX,  startZ+TURN_WIDTH}, 
+  {startX,  startZ+2*TURN_WIDTH},
   {-startX, startZ+2*TURN_WIDTH},
-  {-startX, startZ+3*TURN_WIDTH}, 
+  {-startX, startZ+3*TURN_WIDTH},
   {startX,  startZ+3*TURN_WIDTH},
-  {startX,  startZ+4*TURN_WIDTH}, 
-  {-startX, startZ+4*TURN_WIDTH},
+  {startX,  startZ+4*TURN_WIDTH},
+  {-startX, startZ+4*TURN_WIDTH}, 
   {-startX, startZ+5*TURN_WIDTH},
-  {startX,  startZ+5*TURN_WIDTH},
-  {startX,  startZ+6*TURN_WIDTH}, 
-  {-startX, startZ+6*TURN_WIDTH},
-  {-startX, startZ+7*TURN_WIDTH}, 
+  {startX,  startZ+5*TURN_WIDTH}, 
+  {startX,  startZ+6*TURN_WIDTH},
+  {-startX, startZ+6*TURN_WIDTH}, 
+  {-startX, startZ+7*TURN_WIDTH},
   {startX,  startZ+7*TURN_WIDTH},
   {startX,  startZ+8*TURN_WIDTH},
   {-startX, startZ+8*TURN_WIDTH},
   {-startX, startZ+9*TURN_WIDTH},
   {startX,  startZ+9*TURN_WIDTH},
   {startX,  startZ+10*TURN_WIDTH},
-}; 
+};
 
 /*.........................................*/
 static WbDeviceTag sonar[NUM_SONAR];
@@ -117,6 +117,32 @@ static WbDeviceTag compass;
 static WbDeviceTag gps;
 // add lidar
 /*.........................................*/
+
+
+double X_target[TARGET_POINTS_SIZE] = { 
+  -startX, -startX, startX, startX, 
+  -startX, -startX, startX, startX, 
+  -startX, -startX, startX, startX, 
+  -startX, -startX, startX, startX, 
+  -startX, -startX, startX, startX 
+};
+
+
+double Z_target[TARGET_POINTS_SIZE] = { 
+  startZ, 
+  startZ+TURN_WIDTH, startZ+TURN_WIDTH 
+  startZ+2*TURN_WIDTH, startZ+2*TURN_WIDTH,
+  startZ+3*TURN_WIDTH, startZ+3*TURN_WIDTH,
+  startZ+4*TURN_WIDTH, startZ+4*TURN_WIDTH,
+  startZ+5*TURN_WIDTH, startZ+5*TURN_WIDTH,
+  startZ+6*TURN_WIDTH, startZ+6*TURN_WIDTH,
+  startZ+7*TURN_WIDTH, startZ+7*TURN_WIDTH,
+  startZ+8*TURN_WIDTH, startZ+8*TURN_WIDTH,
+  startZ+9*TURN_WIDTH, startZ+9*TURN_WIDTH,
+  startZ+10*TURN_WIDTH 
+};
+
+
 
 double sonar_val[NUM_SONAR] = {0.0, 0.0, 0.0};
 int state = INIT;
@@ -194,39 +220,29 @@ static void normalize(Vector *vec) {
   vec->X_v /= n;
 }
 
-
 // compute the angle between two vectors
 // return value: [0, 2Pi]
-static double vector_angle(const Vector *vec1, const Vector *vec2) {
+/*static double vector_angle(const Vector *vec1, const Vector *vec2) {
   return fmod(atan2(vec2->X_v, vec2->Z_v) - atan2(vec1->X_v, vec1->Z_v),  2.0*M_PI);
-}
-
-
-// generate new target when we detect obstacle
-// current pos + delta
-/*static void generate_target(Vector *tv, const Vector *vec1) {
-  tv->Z_v = vec1->Z_v + delta;
-  tv->X_v = vec1->X_v + delta;
 }*/
-  
+
 
 /*.........................................*/
 static int drive_autopilot(void) {
   double speed[2] = {0.0, 0.0};  
   double current_time = wb_robot_get_time();
-
   const double *north2D = wb_compass_get_values(compass);
   double theta = atan2(north2D[X], north2D[Z]) * (180/M_PI); // angle (in degrees) between x and z-axis 
-  
   const double *gps_pos = wb_gps_get_values(gps);
+  
   Vector curr_gps_pos = {gps_pos[X], gps_pos[Z]};
   
   Vector dir;
-  //generate_target(&target, &curr_gps_pos);
   minus(&dir, &targets[target_index], &curr_gps_pos);
-  distance = norm(&dir);
   
- 
+  distance = norm(&dir);
+  normalize(&dir);
+  
   // get sonar values
   for (int i=0; i<NUM_SONAR; i++) {
     sonar_val[i] = wb_distance_sensor_get_value(sonar[i]);
@@ -237,9 +253,10 @@ static int drive_autopilot(void) {
     printf("(angle) = (%.4g)\n", theta);
     printf("(X, Z) = (%.4g, %.4g)\n", gps_pos[X], gps_pos[Z]);
     printf("distance: %.4g \n", distance);
+    printf("tg_ix: %d\n", target_index);
   }
   
- if (distance <= 1.1) {
+  if (distance <= 1.1) {
     target_index++;
     target_index %= TARGET_POINTS_SIZE;
   }
@@ -252,90 +269,93 @@ static int drive_autopilot(void) {
       new_north = (int)theta;
       state = FORWARD;
       break;
-
     /*......GO FORWARD......*/ 
     case FORWARD:
-      speed[LEFT]  = DEFAULT_SPEED;
+      speed[LEFT] = DEFAULT_SPEED;
       speed[RIGHT] = DEFAULT_SPEED;
       // going north
-      if (new_north >= 85 && new_north <= 95) {
-        if (gps_pos[X] >= -startX) {
+      if (new_north>=89 && new_north<=91) {
+        if (gps_pos[X] >= X_target[target_index]) {
           state = PAUSE;
         }
       }
       // going south
-      else if (new_north >= -95 && new_north <= -85) {
-        if (gps_pos[X] <= startX) {
+      else if (new_north>=-91 && new_north<=-89) {
+        if (gps_pos[X] <= X_target[target_index]) {
           state = PAUSE;
         }
       }
-      /*else if (theta >= fabs(175.0) && theta <= fabs(185.0)) {
-        if (curr_gps_pos == targets[target_index] ) { // target index has to be incremented
-          state = PAUSE;
-        }
-      }*/
+      else if (target_index == TARGET_POINTS_SIZE-1) {
+        state = DONE;
+      }
+      
       break;
     /*...... PAUSE ......*/ 
     case PAUSE:
-      speed[LEFT]  = 0.0;
+      speed[LEFT] = 0.0;
       speed[RIGHT] = 0.0;
       // going north
-       if (new_north >= 85.00 && new_north <= 95.00) {
-          state = GO_RIGHT;
+      if (new_north>=89 && new_north<=91) {
+        state = GO_RIGHT;
       }
       // going south
-      else if (new_north >= -95 && new_north <= -85) {
-          state = GO_LEFT;
+      else if (new_north>=-91 && new_north<=-89) {
+        state = GO_LEFT;
       }
-
       break;
     /*......GO LEFT......*/ 
     case GO_LEFT:
-      speed[LEFT]  = -DEFAULT_SPEED;
+      speed[LEFT] = -DEFAULT_SPEED;
       speed[RIGHT] = DEFAULT_SPEED;
-      if (theta >= fabs(175.0) && theta <= fabs(185.0)) {
+      if (fabs(theta)>=179.0 && fabs(theta)<=181.0) {
          speed[LEFT] = DEFAULT_SPEED;
          speed[RIGHT] = DEFAULT_SPEED;
-         if (gps_pos[Z] >= startZ+TURN_WIDTH) {
+         if (gps_pos[Z] >= Z_target[target_index]) {
            state = UTURN_L;
          }
       }
-
       break;
     /*......GO RIGHT......*/ 
     case GO_RIGHT:
-      speed[LEFT]  = DEFAULT_SPEED;
+      speed[LEFT] = DEFAULT_SPEED;
       speed[RIGHT] = -DEFAULT_SPEED;
-      if (theta >= fabs(175.0) && theta <= fabs(185.0)) {
+      if (fabs(theta)>=179.0 && fabs(theta)<=181.0) {
          speed[LEFT] = DEFAULT_SPEED;
          speed[RIGHT] = DEFAULT_SPEED;
-         if (gps_pos[Z] >= startZ+TURN_WIDTH) {
+         if (gps_pos[Z] >= Z_target[target_index]) {
            state = UTURN_R;
          }
       }
       break;
     /*......UTURN RIGHT......*/
-    case UTURN_R: // from -90 (South) to 90 (North) turn right
-      speed[LEFT]  = DEFAULT_SPEED;
+    case UTURN_R:
+      speed[LEFT] = DEFAULT_SPEED;
       speed[RIGHT] = -DEFAULT_SPEED;
-      if (theta >= -95.0 && theta <= -85.0) {
+      if (theta>=-91.0 && theta<=-89.0) {
         new_north = -90;
         state = FORWARD;
       }
       break;
     /*......UTURN LEFT......*/   
-    case UTURN_L: // from 90 (North) to -90 (South) turn left
-      speed[LEFT]  = -DEFAULT_SPEED;
+    case UTURN_L:
+      speed[LEFT] = -DEFAULT_SPEED;
       speed[RIGHT] = DEFAULT_SPEED;
-      if (new_north >= 85.00 && new_north <= 95.00) {
+      if (theta>=89.0 && theta<=91.0) {
         new_north = 90;
         state = FORWARD;
       }
       break;
-
-    /*......if we are done with this area......*/ 
+      
+   /* case OBSTACLE:
+    
+    
+    
+    
+    break;*/
+    
+    /*......if we are at the last target......*/ 
     case DONE:
-      speed[LEFT]  = 0.0;
+      speed[LEFT] = 0.0;
       speed[RIGHT] = 0.0;
     /*....................................*/  
     default:
@@ -347,10 +367,8 @@ static int drive_autopilot(void) {
   return TIME_STEP;
 }
 
-
 static void initialize(void) {
-  printf("booting robot..\n");
-  
+  printf("booting robot..\n");  
   /*......ENABLE KEYBOARD......*/
   wb_keyboard_enable(TIME_STEP);
 
