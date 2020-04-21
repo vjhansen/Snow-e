@@ -263,7 +263,7 @@ static int drive_autopilot(void) {
         }
       }
       else if (theta >= fabs(175) && theta <= fabs(185)) {
-        if (gps_pos[Z] == ) {
+        if (curr_gps_pos == targets[target_index] ) { // target index has to be incremented
           state = PAUSE;
         }
       }
