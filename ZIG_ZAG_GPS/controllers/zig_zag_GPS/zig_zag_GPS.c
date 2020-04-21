@@ -83,29 +83,31 @@ typedef struct _Vector {
 #define startX -4.5
 #define startZ -9.5
 
-static Vector targets[21] =  // {X, Z}
+#define TARGET_POINTS_SIZE 21
+
+static Vector targets[TARGET_POINTS_SIZE] =  // {X, Z}
 {
   {startX,  startZ}, // this should be at the corner of the parking lot
   {-startX, startZ}, // n = 1
-  {-startX, startZ-TURN_WIDTH}, // it will be startZ+TURN_WIDTH if startZ < 0
-  {startX,  startZ-TURN_WIDTH},
-  {startX,  startZ-2*TURN_WIDTH}, 
-  {-startX, startZ-2*TURN_WIDTH},
-  {-startX, startZ-3*TURN_WIDTH}, 
-  {startX,  startZ-3*TURN_WIDTH},
-  {startX,  startZ-4*TURN_WIDTH}, 
-  {-startX, startZ-4*TURN_WIDTH},
-  {-startX, startZ-5*TURN_WIDTH},
-  {startX,  startZ-5*TURN_WIDTH},
-  {startX,  startZ-6*TURN_WIDTH}, 
-  {-startX, startZ-6*TURN_WIDTH},
-  {-startX, startZ-7*TURN_WIDTH}, 
-  {startX,  startZ-7*TURN_WIDTH},
-  {startX,  startZ-8*TURN_WIDTH},
-  {-startX, startZ-8*TURN_WIDTH},
-  {-startX, startZ-9*TURN_WIDTH},
-  {startX,  startZ-9*TURN_WIDTH},
-  {startX,  startZ-10*TURN_WIDTH},
+  {-startX, startZ+TURN_WIDTH}, // it will be startZ+TURN_WIDTH if startZ < 0
+  {startX,  startZ+TURN_WIDTH},
+  {startX,  startZ+2*TURN_WIDTH}, 
+  {-startX, startZ+2*TURN_WIDTH},
+  {-startX, startZ+3*TURN_WIDTH}, 
+  {startX,  startZ+3*TURN_WIDTH},
+  {startX,  startZ+4*TURN_WIDTH}, 
+  {-startX, startZ+4*TURN_WIDTH},
+  {-startX, startZ+5*TURN_WIDTH},
+  {startX,  startZ+5*TURN_WIDTH},
+  {startX,  startZ+6*TURN_WIDTH}, 
+  {-startX, startZ+6*TURN_WIDTH},
+  {-startX, startZ+7*TURN_WIDTH}, 
+  {startX,  startZ+7*TURN_WIDTH},
+  {startX,  startZ+8*TURN_WIDTH},
+  {-startX, startZ+8*TURN_WIDTH},
+  {-startX, startZ+9*TURN_WIDTH},
+  {startX,  startZ+9*TURN_WIDTH},
+  {startX,  startZ+10*TURN_WIDTH},
 }; 
 
 /*.........................................*/
@@ -236,6 +238,12 @@ static int drive_autopilot(void) {
     printf("(X, Z) = (%.4g, %.4g)\n", gps_pos[X], gps_pos[Z]);
     printf("distance: %.4g \n", distance);
   }
+  
+ if (distance <= 1.1) {
+    target_index++;
+    target_index %= TARGET_POINTS_SIZE;
+  }
+  
 
   /*...... FSM ......*/
   switch (state) {
@@ -251,29 +259,28 @@ static int drive_autopilot(void) {
       speed[RIGHT] = DEFAULT_SPEED;
       // going north
       if (new_north >= 85 && new_north <= 95) {
-         target_index++;
-        if (gps_pos[X] == startX) {
+        if (gps_pos[X] >= -startX) {
           state = PAUSE;
         }
       }
       // going south
       else if (new_north >= -95 && new_north <= -85) {
-        if (gps_pos[X] == -startX) {
+        if (gps_pos[X] <= startX) {
           state = PAUSE;
         }
       }
-      else if (theta >= fabs(175) && theta <= fabs(185)) {
+      /*else if (theta >= fabs(175.0) && theta <= fabs(185.0)) {
         if (curr_gps_pos == targets[target_index] ) { // target index has to be incremented
           state = PAUSE;
         }
-      }
+      }*/
       break;
     /*...... PAUSE ......*/ 
     case PAUSE:
       speed[LEFT]  = 0.0;
       speed[RIGHT] = 0.0;
       // going north
-       if (new_north >= 85 && new_north <= 95) {
+       if (new_north >= 85.00 && new_north <= 95.00) {
           state = GO_RIGHT;
       }
       // going south
@@ -286,8 +293,12 @@ static int drive_autopilot(void) {
     case GO_LEFT:
       speed[LEFT]  = -DEFAULT_SPEED;
       speed[RIGHT] = DEFAULT_SPEED;
-      if (theta >= fabs(175) && theta <= fabs(185)) {
-          state = FORWARD;
+      if (theta >= fabs(175.0) && theta <= fabs(185.0)) {
+         speed[LEFT] = DEFAULT_SPEED;
+         speed[RIGHT] = DEFAULT_SPEED;
+         if (gps_pos[Z] >= startZ+TURN_WIDTH) {
+           state = UTURN_L;
+         }
       }
 
       break;
@@ -295,19 +306,31 @@ static int drive_autopilot(void) {
     case GO_RIGHT:
       speed[LEFT]  = DEFAULT_SPEED;
       speed[RIGHT] = -DEFAULT_SPEED;
-      if (theta >= fabs(175) && theta <= fabs(185)) {
-          state = FORWARD;
+      if (theta >= fabs(175.0) && theta <= fabs(185.0)) {
+         speed[LEFT] = DEFAULT_SPEED;
+         speed[RIGHT] = DEFAULT_SPEED;
+         if (gps_pos[Z] >= startZ+TURN_WIDTH) {
+           state = UTURN_R;
+         }
       }
       break;
     /*......UTURN RIGHT......*/
     case UTURN_R: // from -90 (South) to 90 (North) turn right
       speed[LEFT]  = DEFAULT_SPEED;
       speed[RIGHT] = -DEFAULT_SPEED;
+      if (theta >= -95.0 && theta <= -85.0) {
+        new_north = -90;
+        state = FORWARD;
+      }
       break;
     /*......UTURN LEFT......*/   
     case UTURN_L: // from 90 (North) to -90 (South) turn left
       speed[LEFT]  = -DEFAULT_SPEED;
       speed[RIGHT] = DEFAULT_SPEED;
+      if (new_north >= 85.00 && new_north <= 95.00) {
+        new_north = 90;
+        state = FORWARD;
+      }
       break;
 
     /*......if we are done with this area......*/ 
