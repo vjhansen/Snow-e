@@ -12,8 +12,8 @@ To do:
    Dynamic Coverage Path Planning using RTK GPS */
 
 /*  
-  - Version: 0.0.4
-  - Date: 21.04.2020
+  - Version: 0.1.0
+  - Date: 22.04.2020
   - Engineers: V. Hansen, D. Kazokas
 */
 
@@ -53,6 +53,10 @@ Sensors used:
 enum SIDES { LEFT, RIGHT, MIDDLE };
 enum FSM { INIT, FORWARD, PAUSE, GO_LEFT, GO_RIGHT, 
            UTURN_R, UTURN_L, OBSTACLE, STUCK, DONE };
+           
+enum SUBSTATES {first_case, north_case, south_case,
+                sub_R, sub_L, sub_F, sub_UR,
+                sub_UL, sub_pause};
 
 enum SONAR_Sensors { SONAR_MID, SONAR_L, SONAR_R };
 enum XZComponents { X, Y, Z };
@@ -109,10 +113,10 @@ static WbDeviceTag sonar[NUM_SONAR];
 static WbDeviceTag l_motor, r_motor;
 static WbDeviceTag compass;
 static WbDeviceTag gps;
-// add lidar
+static WbDeviceTag lidar;
 /*.........................................*/
 
-
+// this could be done in a more elegant way
 double X_target[TARGET_POINTS_SIZE] = { 
   -startX, -startX, startX, startX, 
   -startX, -startX, startX, startX, 
@@ -124,7 +128,7 @@ double X_target[TARGET_POINTS_SIZE] = {
 
 double Z_target[TARGET_POINTS_SIZE] = { 
   startZ, 
-  startZ+TURN_WIDTH, startZ+TURN_WIDTH 
+  startZ+TURN_WIDTH,   startZ+TURN_WIDTH 
   startZ+2*TURN_WIDTH, startZ+2*TURN_WIDTH,
   startZ+3*TURN_WIDTH, startZ+3*TURN_WIDTH,
   startZ+4*TURN_WIDTH, startZ+4*TURN_WIDTH,
@@ -140,9 +144,12 @@ double Z_target[TARGET_POINTS_SIZE] = {
 
 double sonar_val[NUM_SONAR] = {0.0, 0.0, 0.0};
 int state = INIT;
+int sub_state = sub_pause;
 int new_north = 0;
-double delta = 0.3;
+double delta  = 0.3;
 double distance = 0.0;
+static double saved_z = 0.0;
+static double saved_x = 0.0;
 static bool autopilot = true;
 static bool old_autopilot = true;
 static int old_key = -1;
@@ -230,7 +237,6 @@ static int drive_autopilot(void) {
   const double *gps_pos = wb_gps_get_values(gps);
   
   Vector curr_gps_pos = {gps_pos[X], gps_pos[Z]};
-  
   Vector dir;
   minus(&dir, &targets[target_index], &curr_gps_pos);
   
@@ -248,7 +254,10 @@ static int drive_autopilot(void) {
     printf("(X, Z) = (%.4g, %.4g)\n", gps_pos[X], gps_pos[Z]);
     printf("distance: %.4g \n", distance);
     printf("tg_ix: %d\n", target_index);
-    printf("son val: %.4g\n", sonar_val[SONAR_MID]);
+    //printf("son val: %.4g\n", sonar_val[SONAR_MID]);
+    printf("save X: %.4g\n", saved_x);
+    printf("save Z: %.4g\n", saved_z);
+
   }
   
   if (distance <= 1.1) {
@@ -257,7 +266,6 @@ static int drive_autopilot(void) {
   }
   
   
-
   /*...... FSM ......*/
   switch (state) {
     /*...... GET the x-direction (North/South) the robot is pointing to initially ......*/ 
@@ -265,12 +273,16 @@ static int drive_autopilot(void) {
       new_north = (int)theta;
       state = FORWARD;
       break;
+      
+      
     /*......GO FORWARD......*/ 
     case FORWARD:
       speed[LEFT] = DEFAULT_SPEED;
       speed[RIGHT] = DEFAULT_SPEED;
       // going north
       if (sonar_val[SONAR_MID] > THRESHOLD) {
+        saved_z = gps_pos[Z];
+        saved_x = gps_pos[X];
         state = OBSTACLE;
       }
       else if (new_north>=89 && new_north<=91) {
@@ -289,6 +301,8 @@ static int drive_autopilot(void) {
       }
 
       break;
+      
+      
     /*...... PAUSE ......*/ 
     case PAUSE:
       speed[LEFT] = 0.0;
@@ -344,12 +358,90 @@ static int drive_autopilot(void) {
         state = FORWARD;
       }
       break;
-      
+/*-----------------------obstacle-----------------------*/         
     case OBSTACLE:
-     speed[LEFT] = -DEFAULT_SPEED;
-     speed[RIGHT] = -DEFAULT_SPEED;
+      switch (sub_state) {
+        /*----------------------------------------------*/   
+        case sub_pause:
+         speed[LEFT] = 0;
+         speed[RIGHT] = 0;
+         if (target_index == 0) {
+           sub_state = first_case;
+         }
+        break;
+        /*----------------------------------------------*/   
+        case first_case:
+          speed[LEFT] = DEFAULT_SPEED; // R
+          speed[RIGHT] = -DEFAULT_SPEED;
+            if (fabs(theta)>=179.0 && fabs(theta)<=181.0) {   
+                state = sub_F;
+           }
+        break;
+        /*----------------------------------------------*/   
+        case north_case:
+        break;
+        /*----------------------------------------------*/   
+        case south_case:
+        break;
+        /*----------------------------------------------*/   
+        case sub_L:
+          speed[LEFT] = -DEFAULT_SPEED;
+          speed[RIGHT] = DEFAULT_SPEED;
+          if (fabs(theta)<=1.0 && target_index == 0) {
+            speed[LEFT] = DEFAULT_SPEED;
+            speed[RIGHT] = DEFAULT_SPEED;
+            if (gps_pos[Z] >= Z_target[target_index]) {
+              state = sub_UR;
+            }
+
+          }
+          else if (fabs(theta)>=179.0 && fabs(theta)<=181.0 && target_index > 0 ) {
+            speed[LEFT] = DEFAULT_SPEED;
+            speed[RIGHT] = DEFAULT_SPEED;
+            if (gps_pos[Z] >= Z_target[target_index]) {
+              state = sub_UL;
+            }
+          }        
+        break;
+        /*----------------------------------------------*/   
+        case sub_R:
+        break;
+        /*----------------------------------------------*/    
+        case sub_F:
+          speed[LEFT]  = DEFAULT_SPEED;
+          speed[RIGHT] = DEFAULT_SPEED;
+          if (fabs(theta)>=179.0 && fabs(theta)<=181.0) {
+            if (gps_pos[Z] >= saved_z+delta) {
+              state = sub_UL;
+            }
+          }
+        break;
+        /*----------------------------------------------*/   
+        case sub_UR:
+        printf("abc\n");
+          speed[LEFT] = DEFAULT_SPEED;
+          speed[RIGHT] = -DEFAULT_SPEED;
+          if (theta>=89.0 && theta<=91.0 && target_index == 0) {
+            new_north = 90;
+            state = sub_F;
+        }
+
+        break;
+        /*----------------------------------------------*/   
+        case sub_UL:
+        printf("abc\n");
+          speed[LEFT] = -DEFAULT_SPEED;
+          speed[RIGHT] = DEFAULT_SPEED;
+          if (theta>=89.0 && theta<=91.0 && target_index == 0) {
+            new_north = 90;
+            state = sub_F;
+          }
+        break;
+      }
+    /*----------------------------------------------*/ 
     break;
     
+/*----------------------------------------------*/ 
     /*......if we are at the last target......*/ 
     case DONE:
       speed[LEFT] = 0.0;
