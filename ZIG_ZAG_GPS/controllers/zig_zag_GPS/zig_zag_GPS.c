@@ -50,11 +50,9 @@ Sensors used:
 #define TOTAL_PATH_LENGTH 100.0
 #define AREA 9.0 // floorSize 10x10
 
-
 enum SIDES { LEFT, RIGHT, MIDDLE };
 enum FSM { INIT, FORWARD, PAUSE, GO_LEFT, GO_RIGHT, 
            UTURN_R, UTURN_L, OBSTACLE, STUCK, DONE };
-
 
 enum SONAR_Sensors { SONAR_MID, SONAR_L, SONAR_R };
 enum XZComponents { X, Y, Z };
@@ -71,18 +69,14 @@ typedef struct _Vector {
 };*/
 
 
-
 // Idea - future work: these targets could be generated externally through an app.
-
 // X: -5 -> 5: total 10 m LENGTH
 // Z: -10 -> 10: total 20 m WIDTH
 // (0,0) is in the centre of the parking lot
 
 #define startX -4.5 
 #define startZ -9.5
-
 #define TARGET_POINTS_SIZE 21
-
 
 // targets could be stored in a separate file?
 static Vector targets[TARGET_POINTS_SIZE] =  // {X, Z}
@@ -254,12 +248,14 @@ static int drive_autopilot(void) {
     printf("(X, Z) = (%.4g, %.4g)\n", gps_pos[X], gps_pos[Z]);
     printf("distance: %.4g \n", distance);
     printf("tg_ix: %d\n", target_index);
+    printf("son val: %.4g\n", sonar_val[SONAR_MID]);
   }
   
   if (distance <= 1.1) {
     target_index++;
     target_index %= TARGET_POINTS_SIZE;
   }
+  
   
 
   /*...... FSM ......*/
@@ -274,7 +270,10 @@ static int drive_autopilot(void) {
       speed[LEFT] = DEFAULT_SPEED;
       speed[RIGHT] = DEFAULT_SPEED;
       // going north
-      if (new_north>=89 && new_north<=91) {
+      if (sonar_val[SONAR_MID] > THRESHOLD) {
+        state = OBSTACLE;
+      }
+      else if (new_north>=89 && new_north<=91) {
         if (gps_pos[X] >= X_target[target_index]) {
           state = PAUSE;
         }
@@ -288,7 +287,7 @@ static int drive_autopilot(void) {
       else if (target_index == TARGET_POINTS_SIZE-1) {
         state = DONE;
       }
-      
+
       break;
     /*...... PAUSE ......*/ 
     case PAUSE:
@@ -346,12 +345,10 @@ static int drive_autopilot(void) {
       }
       break;
       
-   /* case OBSTACLE:
-    
-    
-    
-    
-    break;*/
+    case OBSTACLE:
+     speed[LEFT] = -DEFAULT_SPEED;
+     speed[RIGHT] = -DEFAULT_SPEED;
+    break;
     
     /*......if we are at the last target......*/ 
     case DONE:
