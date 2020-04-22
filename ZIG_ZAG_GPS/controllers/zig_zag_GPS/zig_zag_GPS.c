@@ -144,8 +144,7 @@ double Z_target[TARGET_POINTS_SIZE] = {
 
 double sonar_val[NUM_SONAR] = {0.0, 0.0, 0.0};
 int state = INIT;
-int sub_state = sub_pause;
-int new_north = 0;
+int new_north = 90;
 double delta  = 0.3;
 double distance = 0.0;
 static double saved_z = 0.0;
@@ -274,7 +273,6 @@ static int drive_autopilot(void) {
       state = FORWARD;
       break;
       
-      
     /*......GO FORWARD......*/ 
     case FORWARD:
       speed[LEFT] = DEFAULT_SPEED;
@@ -285,7 +283,7 @@ static int drive_autopilot(void) {
         saved_x = gps_pos[X];
         state = OBSTACLE;
       }
-      else if (new_north>=89 && new_north<=91) {
+      else if (new_north>=89 && new_north<=91 && target_index>1 ) {
         if (gps_pos[X] >= X_target[target_index]) {
           state = PAUSE;
         }
@@ -298,6 +296,9 @@ static int drive_autopilot(void) {
       }
       else if (target_index == TARGET_POINTS_SIZE-1) {
         state = DONE;
+      }
+      else if (target_index<1 && gps_pos[X] >= saved_x+4*delta && gps_pos[Z] >=saved_z+delta) {
+        state = GO_LEFT;   // saved_x + "height" of object
       }
 
       break;
@@ -316,11 +317,21 @@ static int drive_autopilot(void) {
         state = GO_LEFT;
       }
       break;
+      
     /*......GO LEFT......*/ 
     case GO_LEFT:
       speed[LEFT] = -DEFAULT_SPEED;
       speed[RIGHT] = DEFAULT_SPEED;
-      if (fabs(theta)>=179.0 && fabs(theta)<=181.0) {
+      if (target_index<1) {
+        if (fabs(theta)<= 2.0) {
+          speed[LEFT] = DEFAULT_SPEED;
+          speed[RIGHT] = DEFAULT_SPEED;
+          if (gps_pos[Z] <= Z_target[target_index]) {
+            state = UTURN_R;
+          }
+        }
+      }
+      else if (target_index>1 && fabs(theta)>=179.0 && fabs(theta)<=181.0) {
          speed[LEFT] = DEFAULT_SPEED;
          speed[RIGHT] = DEFAULT_SPEED;
          if (gps_pos[Z] >= Z_target[target_index]) {
@@ -328,6 +339,7 @@ static int drive_autopilot(void) {
          }
       }
       break;
+      
     /*......GO RIGHT......*/ 
     case GO_RIGHT:
       speed[LEFT] = DEFAULT_SPEED;
@@ -335,20 +347,32 @@ static int drive_autopilot(void) {
       if (fabs(theta)>=179.0 && fabs(theta)<=181.0) {
          speed[LEFT] = DEFAULT_SPEED;
          speed[RIGHT] = DEFAULT_SPEED;
-         if (gps_pos[Z] >= Z_target[target_index]) {
+         if (target_index<1 && gps_pos[Z] >= saved_z+delta) {
+         // saved_z + "width" of object
+           state = UTURN_L;
+         }
+         else if (gps_pos[Z]>=Z_target[target_index] && target_index>1) {
            state = UTURN_R;
          }
       }
       break;
+      
     /*......UTURN RIGHT......*/
     case UTURN_R:
       speed[LEFT] = DEFAULT_SPEED;
       speed[RIGHT] = -DEFAULT_SPEED;
-      if (theta>=-91.0 && theta<=-89.0) {
+      if (target_index<1) {
+        if (theta>=89.0 && theta<=91.0) {
+          new_north = 90;
+          state = FORWARD;
+        }
+      }
+      else if (theta>=-91.0 && theta<=-89.0) {
         new_north = -90;
         state = FORWARD;
       }
       break;
+      
     /*......UTURN LEFT......*/   
     case UTURN_L:
       speed[LEFT] = -DEFAULT_SPEED;
@@ -358,90 +382,15 @@ static int drive_autopilot(void) {
         state = FORWARD;
       }
       break;
+      
 /*-----------------------obstacle-----------------------*/         
     case OBSTACLE:
-      switch (sub_state) {
-        /*----------------------------------------------*/   
-        case sub_pause:
-         speed[LEFT] = 0;
-         speed[RIGHT] = 0;
-         if (target_index == 0) {
-           sub_state = first_case;
-         }
-        break;
-        /*----------------------------------------------*/   
-        case first_case:
-          speed[LEFT] = DEFAULT_SPEED; // R
-          speed[RIGHT] = -DEFAULT_SPEED;
-            if (fabs(theta)>=179.0 && fabs(theta)<=181.0) {   
-                state = sub_F;
-           }
-        break;
-        /*----------------------------------------------*/   
-        case north_case:
-        break;
-        /*----------------------------------------------*/   
-        case south_case:
-        break;
-        /*----------------------------------------------*/   
-        case sub_L:
-          speed[LEFT] = -DEFAULT_SPEED;
-          speed[RIGHT] = DEFAULT_SPEED;
-          if (fabs(theta)<=1.0 && target_index == 0) {
-            speed[LEFT] = DEFAULT_SPEED;
-            speed[RIGHT] = DEFAULT_SPEED;
-            if (gps_pos[Z] >= Z_target[target_index]) {
-              state = sub_UR;
-            }
-
-          }
-          else if (fabs(theta)>=179.0 && fabs(theta)<=181.0 && target_index > 0 ) {
-            speed[LEFT] = DEFAULT_SPEED;
-            speed[RIGHT] = DEFAULT_SPEED;
-            if (gps_pos[Z] >= Z_target[target_index]) {
-              state = sub_UL;
-            }
-          }        
-        break;
-        /*----------------------------------------------*/   
-        case sub_R:
-        break;
-        /*----------------------------------------------*/    
-        case sub_F:
-          speed[LEFT]  = DEFAULT_SPEED;
-          speed[RIGHT] = DEFAULT_SPEED;
-          if (fabs(theta)>=179.0 && fabs(theta)<=181.0) {
-            if (gps_pos[Z] >= saved_z+delta) {
-              state = sub_UL;
-            }
-          }
-        break;
-        /*----------------------------------------------*/   
-        case sub_UR:
-        printf("abc\n");
-          speed[LEFT] = DEFAULT_SPEED;
-          speed[RIGHT] = -DEFAULT_SPEED;
-          if (theta>=89.0 && theta<=91.0 && target_index == 0) {
-            new_north = 90;
-            state = sub_F;
-        }
-
-        break;
-        /*----------------------------------------------*/   
-        case sub_UL:
-        printf("abc\n");
-          speed[LEFT] = -DEFAULT_SPEED;
-          speed[RIGHT] = DEFAULT_SPEED;
-          if (theta>=89.0 && theta<=91.0 && target_index == 0) {
-            new_north = 90;
-            state = sub_F;
-          }
-        break;
+      if (target_index < 1) {
+        state = GO_RIGHT;
       }
-    /*----------------------------------------------*/ 
     break;
     
-/*----------------------------------------------*/ 
+    
     /*......if we are at the last target......*/ 
     case DONE:
       speed[LEFT] = 0.0;
