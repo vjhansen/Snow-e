@@ -1,8 +1,8 @@
 #VRML_SIM R2020a utf8
 WorldInfo {
-  title "Snow-e Simulation ZIGZAG GPS V0.0.3"
+  title "Snow-e Simulation V0.1"
   basicTimeStep 8
-  FPS 17
+  FPS 15
   contactProperties [
     ContactProperties {
       material1 "track material"
@@ -16,35 +16,36 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation 0.35730239511529993 0.8349082909870044 0.41864441246244954 4.379821684488301
-  position -9.80205399697434 14.96198023461468 -9.643910892672059
+  orientation 0.3894709441848073 0.8294318052003096 0.4004438339617063 4.499223289250751
+  position -13.005437028962433 15.99519989507402 -6.361734205500618
   follow "Snow-e"
-  followType "None"
+  followType "Mounted Shot"
 }
 TexturedBackground {
+  texture "noon_building_overcast"
   skyColor [
     1 0.999969 0.999985
   ]
 }
 TexturedBackgroundLight {
+  luminosity 2
   castShadows FALSE
 }
 RectangleArena {
   floorSize 10 20
   floorAppearance Asphalt {
-    colorOverride 0.000106813 0.00175479 0.998215
-    IBLStrength 25
+    colorOverride 1 0.999969 0.999985
   }
   wallThickness 0.02
-  wallHeight 0.4
-  wallAppearance NULL
+  wallAppearance Asphalt {
+  }
 }
 OilBarrel {
   translation -0.99 0.44 -9.25
 }
 DEF TRACKED_ROBOT Robot {
-  translation -2.0009098326997803 0.11639150443218926 -8.773720619651288
-  rotation 0.0004932860381660953 -0.9968785514896314 0.07894878244038313 -0.012535320535769334
+  translation -2.89223 0.113896 -9.00953
+  rotation 0.0004901259163861198 0.9906808309930863 0.13620297676421708 0.00726601
   children [
     GPS {
     }
@@ -257,6 +258,7 @@ DEF TRACKED_ROBOT Robot {
       device [
         LinearMotor {
           name "left motor"
+          sound ""
         }
       ]
       textureAnimation -0.033 0
@@ -291,7 +293,7 @@ DEF TRACKED_ROBOT Robot {
       }
       geometriesCount 40
     }
-    Track {
+    DEF RIGHT_TRACK Track {
       translation 0 -0.05 0.16
       scale 0.5 0.5 0.5
       children [
@@ -311,6 +313,7 @@ DEF TRACKED_ROBOT Robot {
       device [
         LinearMotor {
           name "right motor"
+          sound ""
         }
       ]
       animatedGeometry USE ANIMATED_GEOM
@@ -325,6 +328,4 @@ DEF TRACKED_ROBOT Robot {
     mass 40
   }
   controller "zig_zag_GPS"
-  linearVelocity 0.09992924242827934 -5.261099368807395e-16 -0.0012488001222621318
-  angularVelocity 1.7244224548369999e-16 3.635956823465024e-17 -1.8488196388853633e-16
 }

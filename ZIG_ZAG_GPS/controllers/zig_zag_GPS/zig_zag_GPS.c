@@ -7,13 +7,14 @@ To do:
 - Create new path when encountering obstacles
 */
 
+// USN Kongsberg
 
 /* Snow-e Autonomous Snow Blower
    Dynamic Coverage Path Planning using RTK GPS */
 
 /*  
-  - Version: 0.1.0
-  - Date: 22.04.2020
+  - Version: 0.1.1
+  - Date: 23.04.2020
   - Engineers: V. Hansen, D. Kazokas
 */
 
@@ -145,7 +146,7 @@ double Z_target[TARGET_POINTS_SIZE] = {
 double sonar_val[NUM_SONAR] = {0.0, 0.0, 0.0};
 int state = INIT;
 int new_north = 90;
-double delta  = 0.3;
+double delta  = 0.5;
 double distance = 0.0;
 static double saved_z = 0.0;
 static double saved_x = 0.0;
@@ -220,12 +221,6 @@ static void normalize(Vector *vec) {
   vec->X_v /= n;
 }
 
-// compute the angle between two vectors
-// return value: [0, 2Pi]
-/*static double vector_angle(const Vector *vec1, const Vector *vec2) {
-  return fmod(atan2(vec2->X_v, vec2->Z_v) - atan2(vec1->X_v, vec1->Z_v),  2.0*M_PI);
-}*/
-
 
 /*.........................................*/
 static int drive_autopilot(void) {
@@ -234,11 +229,9 @@ static int drive_autopilot(void) {
   const double *north2D = wb_compass_get_values(compass);
   double theta = atan2(north2D[X], north2D[Z]) * (180/M_PI); // angle (in degrees) between x and z-axis 
   const double *gps_pos = wb_gps_get_values(gps);
-  
   Vector curr_gps_pos = {gps_pos[X], gps_pos[Z]};
   Vector dir;
   minus(&dir, &targets[target_index], &curr_gps_pos);
-  
   distance = norm(&dir);
   normalize(&dir);
   
@@ -277,7 +270,6 @@ static int drive_autopilot(void) {
     case FORWARD:
       speed[LEFT] = DEFAULT_SPEED;
       speed[RIGHT] = DEFAULT_SPEED;
-      // going north
       if (sonar_val[SONAR_MID] > THRESHOLD) {
         saved_z = gps_pos[Z];
         saved_x = gps_pos[X];
@@ -288,7 +280,6 @@ static int drive_autopilot(void) {
           state = PAUSE;
         }
       }
-      // going south
       else if (new_north>=-91 && new_north<=-89) {
         if (gps_pos[X] <= X_target[target_index]) {
           state = PAUSE;
@@ -297,7 +288,7 @@ static int drive_autopilot(void) {
       else if (target_index == TARGET_POINTS_SIZE-1) {
         state = DONE;
       }
-      else if (target_index<1 && gps_pos[X] >= saved_x+4*delta && gps_pos[Z] >=saved_z+delta) {
+      else if (target_index<1 && gps_pos[X]>=saved_x+2 && gps_pos[Z]>=saved_z) {
         state = GO_LEFT;   // saved_x + "height" of object
       }
 
@@ -318,15 +309,15 @@ static int drive_autopilot(void) {
       }
       break;
       
-    /*......GO LEFT......*/ 
+/*--------------GO LEFT--------------*/ 
     case GO_LEFT:
       speed[LEFT] = -DEFAULT_SPEED;
       speed[RIGHT] = DEFAULT_SPEED;
       if (target_index<1) {
-        if (fabs(theta)<= 2.0) {
+        if (fabs(theta)<= 2.0) { // east
           speed[LEFT] = DEFAULT_SPEED;
           speed[RIGHT] = DEFAULT_SPEED;
-          if (gps_pos[Z] <= Z_target[target_index]) {
+          if (gps_pos[Z] <= Z_target[target_index]) { // -Z_0
             state = UTURN_R;
           }
         }
@@ -334,13 +325,16 @@ static int drive_autopilot(void) {
       else if (target_index>1 && fabs(theta)>=179.0 && fabs(theta)<=181.0) {
          speed[LEFT] = DEFAULT_SPEED;
          speed[RIGHT] = DEFAULT_SPEED;
-         if (gps_pos[Z] >= Z_target[target_index]) {
+         if (gps_pos[Z] >= Z_target[target_index] && target_index>2) {
            state = UTURN_L;
          }
+         else if (gps_pos[Z]>=saved_z+2*delta && target_index==2) {
+           state = GO_RIGHT;
+        }
       }
       break;
       
-    /*......GO RIGHT......*/ 
+/*--------------GO RIGHT--------------*/ 
     case GO_RIGHT:
       speed[LEFT] = DEFAULT_SPEED;
       speed[RIGHT] = -DEFAULT_SPEED;
@@ -357,7 +351,7 @@ static int drive_autopilot(void) {
       }
       break;
       
-    /*......UTURN RIGHT......*/
+/*--------------UTURN RIGHT--------------*/
     case UTURN_R:
       speed[LEFT] = DEFAULT_SPEED;
       speed[RIGHT] = -DEFAULT_SPEED;
@@ -373,7 +367,7 @@ static int drive_autopilot(void) {
       }
       break;
       
-    /*......UTURN LEFT......*/   
+/*--------------UTURN LEFT--------------*/   
     case UTURN_L:
       speed[LEFT] = -DEFAULT_SPEED;
       speed[RIGHT] = DEFAULT_SPEED;
@@ -383,19 +377,22 @@ static int drive_autopilot(void) {
       }
       break;
       
-/*-----------------------obstacle-----------------------*/         
+/*--------------obstacle--------------*/         
     case OBSTACLE:
       if (target_index < 1) {
         state = GO_RIGHT;
       }
+      else if (gps_pos[Z]>=Z_target[0] && target_index>1) {
+        state = GO_LEFT;
+      }
     break;
     
     
-    /*......if we are at the last target......*/ 
+/*......if we are at the last target......*/ 
     case DONE:
       speed[LEFT] = 0.0;
       speed[RIGHT] = 0.0;
-    /*....................................*/  
+/*------------------------------------------*/  
     default:
       break;
   }
