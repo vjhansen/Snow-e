@@ -7,7 +7,11 @@
 
 ---
 ### Upload changes
-Get updates:
+Go into directory where the repo is located, e.g.:
+```
+cd ~/Documents/GitHub/Snow-e
+```
+Get updates done by other collaborators:
 ```
 git fetch origin              
 git status 
