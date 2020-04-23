@@ -1,6 +1,6 @@
 #VRML_SIM R2020a utf8
 WorldInfo {
-  title "Snow-e Simulation - Scenario 1"
+  title "Snow-e Simulation - Scenario 2"
   basicTimeStep 8
   FPS 15
   contactProperties [
@@ -10,14 +10,15 @@ WorldInfo {
         -1
       ]
       softCFM 0.0001
-      bumpSound "sounds/roll.wav"
-      slideSound "sounds/roll.wav"
+      bumpSound ""
+      rollSound ""
+      slideSound ""
     }
   ]
 }
 Viewpoint {
-  orientation 0.41186061372284005 0.8117515959344213 0.4140412797798854 4.500158754652224
-  position -5.3693486174129665 3.5636632935266226 -8.44156644467412
+  orientation -0.5087645958560479 -0.7100314216153844 -0.48684080182567774 1.8648619384493312
+  position -8.01117117925996 13.34336494394162 -7.616063911205089
   follow "Snow-e"
 }
 TexturedBackground {
@@ -40,9 +41,12 @@ RectangleArena {
   wallAppearance Asphalt {
   }
 }
+OilBarrel {
+  translation -2.36 0.44 -9.39
+}
 DEF TRACKED_ROBOT Robot {
-  translation -3.3447659217757675 0.11639150443218893 -8.971724328383868
-  rotation 0.0002674076298712647 -0.5404023429684283 0.8414067008334274 -0.0011761983092114057
+  translation -4.09507 0.11736 -9.12288
+  rotation 0.0004919447409611917 -0.9941679326698192 -0.10784191968520335 0.009176898097291395
   children [
     GPS {
     }
@@ -50,19 +54,16 @@ DEF TRACKED_ROBOT Robot {
     }
     DistanceSensor {
       translation 0.25 0.01 0
-      rotation 1 0 0 0
+      rotation 0 0 1 0.2617996938995747
       name "sfm0"
-      recognitionColors [
-        0.986252 0.00712596 0.0274357
-      ]
       lookupTable [
-        0.05 1000 0.1
-        0.4 1000 0
-        0.6 0 0
+        0.7 1000 0
+        0.8 1000 0
+        1 0 0
       ]
       type "sonar"
-      numberOfRays 2
-      aperture 1.5709
+      numberOfRays 7
+      aperture 0.5
     }
     DistanceSensor {
       translation 0.1 0.02 -0.2
@@ -77,7 +78,6 @@ DEF TRACKED_ROBOT Robot {
         0.5 0 0
       ]
       type "sonar"
-      numberOfRays 2
     }
     DistanceSensor {
       translation 0.1 0.02 0.2
@@ -92,7 +92,6 @@ DEF TRACKED_ROBOT Robot {
         0.5 0 0
       ]
       type "sonar"
-      numberOfRays 2
     }
     DEF GEOM Shape {
       appearance CorrugatedPvc {
@@ -325,55 +324,4 @@ DEF TRACKED_ROBOT Robot {
     mass 40
   }
   controller "zig_zag_GPS"
-  linearVelocity -5.130769438938919e-19 -5.473799367111685e-16 3.0602178766901594e-17
-  angularVelocity 2.4116793529283124e-16 4.039424637416462e-19 -3.166500662613555e-17
-}
-Robot {
-  children [
-    Display {
-      translation 0 0.01 0
-      children [
-        Shape {
-          appearance PBRAppearance {
-            baseColorMap ImageTexture {
-              url [
-                "textures/snow.jpg"
-              ]
-            }
-            transparency 0.9
-            roughness 0.5
-            metalness 0
-          }
-          geometry Plane {
-            size 9.9 19.9
-          }
-        }
-      ]
-      name "ground_display"
-      width 512
-      height 512
-    }
-    Transform {
-      translation -4.95 0 -4.95
-      children [
-        Shape {
-          appearance Asphalt {
-            textureTransform TextureTransform {
-              scale 7 7
-            }
-          }
-          geometry ElevationGrid {
-            xDimension 1
-            xSpacing 1.65
-            zDimension 1
-            zSpacing 1.65
-          }
-        }
-      ]
-    }
-  ]
-  name "ground_snow_removal"
-  locked TRUE
-  controller "ground"
-  supervisor TRUE
 }

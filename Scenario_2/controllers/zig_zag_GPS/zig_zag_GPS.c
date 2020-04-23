@@ -1,8 +1,8 @@
 // USN Kongsberg
-// Scenario 1
+// Scenario 2 - Static Obstacles
 
 /* Snow-e Autonomous Snow Blower
-   Dynamic Coverage Path Planning using RTK GPS */
+   Dynamic Coverage Path Planning using GPS */
 
 
 /*  
@@ -16,13 +16,12 @@
 To do:
   - Add LiDAR to enable 360 obstacle detection
   - Add snow plow/shredder and chute
-  - Create new path when encountering obstacles
 */
 
 
 /* 
 Sensors used:
-  - Sonar & LiDAR: detect obstacles
+  - Sonar: detect obstacles
   - Compass: navigation
   - GPS: Generate Zig-Zag path and define boundaries/no go zones
 */
@@ -30,7 +29,7 @@ Sensors used:
 
 // some functions (norm, minus) are based on concepts from webots/moose_path_following.c
 
-/*.........................................*/
+/*-----------------------------------------------*/
 #include <webots/motor.h>
 #include <webots/robot.h>
 #include <webots/distance_sensor.h> // Sonar
@@ -41,7 +40,7 @@ Sensors used:
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
-/*.........................................*/
+/*-----------------------------------------------*/
 
 #define THRESHOLD 900.0
 #define TIME_STEP 8
@@ -56,7 +55,7 @@ enum FSM { INIT, FORWARD, PAUSE, GO_LEFT, GO_RIGHT,
 
 enum SONAR_Sensors { SONAR_MID, SONAR_L, SONAR_R };
 enum XZComponents { X, Y, Z };
-
+/*-----------------------------------------------*/
 typedef struct _Vector {
   double Z_v;
   double X_v;
@@ -77,7 +76,7 @@ typedef struct _Vector {
 #define startX -4.5
 #define startZ -9.5
 #define TARGET_POINTS_SIZE 21
-
+/*-----------------------------------------------*/
 // targets could be stored in a separate file?
 static Vector targets[TARGET_POINTS_SIZE] =  // {X, Z}
 {
@@ -103,15 +102,14 @@ static Vector targets[TARGET_POINTS_SIZE] =  // {X, Z}
   {startX,  startZ+9*TURN_WIDTH},
   {startX,  startZ+10*TURN_WIDTH},
 };
-
-/*.........................................*/
+/*-----------------------------------------------*/
 static WbDeviceTag sonar[NUM_SONAR];
 static WbDeviceTag l_motor, r_motor;
 static WbDeviceTag compass;
 static WbDeviceTag gps;
 static WbDeviceTag lidar;
-/*.........................................*/
 
+/*-----------------------------------------------*/
 // this could be done in a more elegant way
 double X_target[TARGET_POINTS_SIZE] = { 
   -startX, -startX, startX, startX, 
@@ -121,15 +119,12 @@ double X_target[TARGET_POINTS_SIZE] = {
   -startX, -startX, startX, startX 
 };
 
-
+/*-----------------------------------------------*/
 double Z_target[TARGET_POINTS_SIZE] = { 
   startZ, startZ+TURN_WIDTH, startZ+TURN_WIDTH,
-  startZ+2*TURN_WIDTH, 
-  startZ+2*TURN_WIDTH,
-  startZ+3*TURN_WIDTH, 
-  startZ+3*TURN_WIDTH,
-  startZ+4*TURN_WIDTH, 
-  startZ+4*TURN_WIDTH,
+  startZ+2*TURN_WIDTH, startZ+2*TURN_WIDTH,
+  startZ+3*TURN_WIDTH, startZ+3*TURN_WIDTH,
+  startZ+4*TURN_WIDTH, startZ+4*TURN_WIDTH,
   startZ+5*TURN_WIDTH, startZ+5*TURN_WIDTH,
   startZ+6*TURN_WIDTH, startZ+6*TURN_WIDTH,
   startZ+7*TURN_WIDTH, startZ+7*TURN_WIDTH,
@@ -137,8 +132,7 @@ double Z_target[TARGET_POINTS_SIZE] = {
   startZ+9*TURN_WIDTH, startZ+9*TURN_WIDTH,
   startZ+10*TURN_WIDTH 
 };
-
-
+/*-----------------------------------------------*/
 double sonar_val[NUM_SONAR] = {0.0, 0.0, 0.0};
 int state = INIT;
 int new_north = 90;
@@ -153,8 +147,7 @@ static int old_key = -1;
 static int target_index = 0;
 double gps_val[2] = {0.0, 0.0};
 double start_gps_pos[3] = {0.0, 0.0, 0.0};
-
-/*.........................................*/
+/*-----------------------------------------------*/
 static void drive_manual() {
   double speed[2] = {0.0, 0.0};
   int key = wb_keyboard_get_key();
@@ -241,10 +234,11 @@ static int drive_autopilot(void) {
     printf("(angle) = (%.4g)\n", theta);
     printf("(X, Z) = (%.4g, %.4g)\n", gps_pos[X], gps_pos[Z]);
     printf("(Xt, Zt) = (%.4g, %.4g)\n", X_target[target_index], Z_target[target_index]);
+    printf("(sonar mid) = (%.4g)\n", sonar_val[SONAR_MID]);
     
   }
   
-  if (distance <= 0.9) {
+  if (distance <= 1.1) {
     target_index++;
   }
   
@@ -303,7 +297,7 @@ static int drive_autopilot(void) {
     case GO_LEFT:
       speed[LEFT]  = -DEFAULT_SPEED;
       speed[RIGHT] = DEFAULT_SPEED;
-      if (target_index < 1) {
+      if (target_index < 1) { // special case
         if (fabs(theta) <= 2.0) { // east
           speed[LEFT]  = DEFAULT_SPEED;
           speed[RIGHT] = DEFAULT_SPEED;
@@ -312,13 +306,14 @@ static int drive_autopilot(void) {
           }
         }
       }
+      // Normal case
       else if (target_index > 1 && fabs(theta) >= 179.0 && fabs(theta) <= 181.0) {
          speed[LEFT]  = DEFAULT_SPEED;
          speed[RIGHT] = DEFAULT_SPEED;
          if (gps_pos[Z] >= Z_target[target_index] && target_index >= 2 && gps_pos[X] <= X_target[target_index]) {
            state = UTURN_L;
          }
-         else if (gps_pos[Z] >= saved_z+2*delta && target_index == 2) {
+         else if (gps_pos[Z] >= saved_z+2*delta && target_index == 2) { // special case
            state = GO_RIGHT;
         }
       }
@@ -331,7 +326,7 @@ static int drive_autopilot(void) {
       if (fabs(theta) >= 179.0 && fabs(theta) <= 181.0) {
          speed[LEFT]  = DEFAULT_SPEED;
          speed[RIGHT] = DEFAULT_SPEED;
-         if (target_index < 1 && gps_pos[Z] >= saved_z+delta) {
+         if (target_index < 1 && gps_pos[Z] >= saved_z+delta) { // special case
          // saved_z + "width" of object
            state = UTURN_L;
          }
@@ -345,7 +340,7 @@ static int drive_autopilot(void) {
     case UTURN_R:
       speed[LEFT]  = DEFAULT_SPEED;
       speed[RIGHT] = -DEFAULT_SPEED;
-      if (target_index < 1) {
+      if (target_index < 1) { // special case
         if (theta >= 89.0 && theta <= 91.0) {
           new_north = 90;
           state = FORWARD;
@@ -369,7 +364,7 @@ static int drive_autopilot(void) {
       
 /*--------------obstacle--------------*/         
     case OBSTACLE:
-      if (target_index < 1) {
+      if (target_index < 1) { // special case
         state = GO_RIGHT;
       }
       else if (gps_pos[Z] >= Z_target[0] && target_index > 1) {
@@ -377,7 +372,7 @@ static int drive_autopilot(void) {
       }
     break;
     
-    
+/*-----------------------------------------------*/
 /*......if we are at the last target......*/ 
     case DONE:
       speed[LEFT]  = 0.0;
@@ -392,6 +387,8 @@ static int drive_autopilot(void) {
   return TIME_STEP;
 }
 
+
+/*--------------Initialize Robot--------------*/ 
 static void initialize(void) {
   printf("booting robot..\n");  
   /*......ENABLE KEYBOARD......*/
@@ -421,7 +418,7 @@ static void initialize(void) {
   wb_gps_enable(gps, TIME_STEP);
 }
 
-/*....................................*/ 
+/*--------------MAIN--------------*/ 
 int main(int argc, char **argv) {
   wb_robot_init();
   initialize();
