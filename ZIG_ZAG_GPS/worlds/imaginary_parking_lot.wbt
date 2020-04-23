@@ -1,7 +1,7 @@
 #VRML_SIM R2020a utf8
 WorldInfo {
   title "Snow-e Simulation V0.1"
-  basicTimeStep 8
+  basicTimeStep 4
   FPS 15
   contactProperties [
     ContactProperties {
@@ -16,8 +16,8 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation 0.3894709441848073 0.8294318052003096 0.4004438339617063 4.499223289250751
-  position -12.93735705809877 15.997813705059292 -6.362224273762575
+  orientation 0.43245461491935905 0.7990707341951387 0.41769482614438846 4.52393496653102
+  position -9.74415239944845 14.440633436170994 -5.2183156844972896
   follow "Snow-e"
 }
 TexturedBackground {
@@ -41,11 +41,11 @@ RectangleArena {
   }
 }
 OilBarrel {
-  translation -0.99 0.44 -9.25
+  translation -0.99 0.44 -3.89
 }
 DEF TRACKED_ROBOT Robot {
-  translation -2.756090535191823 0.1163915044321892 -9.01050998920643
-  rotation -0.0004902191729579851 0.9906807435236785 -0.1362036126412734 0.007266010641635018
+  translation -4.35021 0.121389 -9.12726
+  rotation -0.00045721088765405247 0.9951021784454704 0.09885062170408213 -0.009296005026615324
   children [
     GPS {
     }
@@ -328,6 +328,53 @@ DEF TRACKED_ROBOT Robot {
     mass 40
   }
   controller "zig_zag_GPS"
-  linearVelocity 0.09993445602152841 4.855540471918986e-16 -0.0007193703610764265
-  angularVelocity -3.73662024186906e-16 1.5966191888376834e-17 -3.7433043666580775e-17
+}
+Robot {
+  children [
+    Display {
+      translation 0 0.01 0
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColorMap ImageTexture {
+              url [
+                "textures/snow.jpg"
+              ]
+            }
+            transparency 0.9
+            roughness 0.5
+            metalness 0
+          }
+          geometry Plane {
+            size 9.9 19.9
+          }
+        }
+      ]
+      name "ground_display"
+      width 512
+      height 512
+    }
+    Transform {
+      translation -4.95 0 -4.95
+      children [
+        Shape {
+          appearance Asphalt {
+            textureTransform TextureTransform {
+              scale 7 7
+            }
+          }
+          geometry ElevationGrid {
+            xDimension 1
+            xSpacing 1.65
+            zDimension 1
+            zSpacing 1.65
+          }
+        }
+      ]
+    }
+  ]
+  name "ground_snow_removal"
+  locked TRUE
+  controller "ground"
+  supervisor TRUE
 }
