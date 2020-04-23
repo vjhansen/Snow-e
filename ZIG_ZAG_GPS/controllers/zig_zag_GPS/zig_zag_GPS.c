@@ -1,22 +1,24 @@
-/*
-To do:
-
-- Add LiDAR to enable 360 obstacle detection
-- Add snow plow/shredder and chute
-- Add snow to surface
-- Create new path when encountering obstacles
-*/
-
 // USN Kongsberg
 
 /* Snow-e Autonomous Snow Blower
    Dynamic Coverage Path Planning using RTK GPS */
+
 
 /*  
   - Version: 0.1.1
   - Date: 23.04.2020
   - Engineers: V. Hansen, D. Kazokas
 */
+
+
+/*
+To do:
+  - Add LiDAR to enable 360 obstacle detection
+  - Add snow plow/shredder and chute
+  - Add snow to surface
+  - Create new path when encountering obstacles
+*/
+
 
 
 /* 
@@ -46,18 +48,12 @@ Sensors used:
 #define TIME_STEP 8
 #define NUM_SONAR 3
 #define DEFAULT_SPEED 0.1
-#define TURN_WIDTH 0.4
-#define PATH_LENGTH 7.0
-#define TOTAL_PATH_LENGTH 100.0
+#define TURN_WIDTH 0.6
 #define AREA 9.0 // floorSize 10x10
 
 enum SIDES { LEFT, RIGHT, MIDDLE };
 enum FSM { INIT, FORWARD, PAUSE, GO_LEFT, GO_RIGHT, 
            UTURN_R, UTURN_L, OBSTACLE, STUCK, DONE };
-           
-enum SUBSTATES {first_case, north_case, south_case,
-                sub_R, sub_L, sub_F, sub_UR,
-                sub_UL, sub_pause};
 
 enum SONAR_Sensors { SONAR_MID, SONAR_L, SONAR_R };
 enum XZComponents { X, Y, Z };
@@ -79,7 +75,7 @@ typedef struct _Vector {
 // Z: -10 -> 10: total 20 m WIDTH
 // (0,0) is in the centre of the parking lot
 
-#define startX -4.5 
+#define startX -4.5
 #define startZ -9.5
 #define TARGET_POINTS_SIZE 21
 
@@ -88,7 +84,7 @@ static Vector targets[TARGET_POINTS_SIZE] =  // {X, Z}
 {
   //{startX,  startZ}, // this should be at the corner of the parking lot
   {-startX, startZ}, // n = 0
-  {-startX, startZ+TURN_WIDTH}, // it will be startZ+TURN_WIDTH if startZ < 0 
+  {-startX, startZ+TURN_WIDTH}, 
   {startX,  startZ+TURN_WIDTH}, 
   {startX,  startZ+2*TURN_WIDTH},
   {-startX, startZ+2*TURN_WIDTH},
@@ -128,11 +124,13 @@ double X_target[TARGET_POINTS_SIZE] = {
 
 
 double Z_target[TARGET_POINTS_SIZE] = { 
-  startZ, 
-  startZ+TURN_WIDTH,   startZ+TURN_WIDTH 
-  startZ+2*TURN_WIDTH, startZ+2*TURN_WIDTH,
-  startZ+3*TURN_WIDTH, startZ+3*TURN_WIDTH,
-  startZ+4*TURN_WIDTH, startZ+4*TURN_WIDTH,
+  startZ, startZ+TURN_WIDTH, startZ+TURN_WIDTH,
+  startZ+2*TURN_WIDTH, 
+  startZ+2*TURN_WIDTH,
+  startZ+3*TURN_WIDTH, 
+  startZ+3*TURN_WIDTH,
+  startZ+4*TURN_WIDTH, 
+  startZ+4*TURN_WIDTH,
   startZ+5*TURN_WIDTH, startZ+5*TURN_WIDTH,
   startZ+6*TURN_WIDTH, startZ+6*TURN_WIDTH,
   startZ+7*TURN_WIDTH, startZ+7*TURN_WIDTH,
@@ -140,7 +138,6 @@ double Z_target[TARGET_POINTS_SIZE] = {
   startZ+9*TURN_WIDTH, startZ+9*TURN_WIDTH,
   startZ+10*TURN_WIDTH 
 };
-
 
 
 double sonar_val[NUM_SONAR] = {0.0, 0.0, 0.0};
@@ -152,6 +149,7 @@ static double saved_z = 0.0;
 static double saved_x = 0.0;
 static bool autopilot = true;
 static bool old_autopilot = true;
+static bool ob_flag = false;
 static int old_key = -1;
 static int target_index = 0;
 double gps_val[2] = {0.0, 0.0};
@@ -221,7 +219,6 @@ static void normalize(Vector *vec) {
   vec->X_v /= n;
 }
 
-
 /*.........................................*/
 static int drive_autopilot(void) {
   double speed[2] = {0.0, 0.0};  
@@ -244,43 +241,38 @@ static int drive_autopilot(void) {
   if (fmod(current_time, 2) == 0.0) {
     printf("(angle) = (%.4g)\n", theta);
     printf("(X, Z) = (%.4g, %.4g)\n", gps_pos[X], gps_pos[Z]);
-    printf("distance: %.4g \n", distance);
-    printf("tg_ix: %d\n", target_index);
-    //printf("son val: %.4g\n", sonar_val[SONAR_MID]);
-    printf("save X: %.4g\n", saved_x);
-    printf("save Z: %.4g\n", saved_z);
-
+    printf("(Xt, Zt) = (%.4g, %.4g)\n", X_target[target_index], Z_target[target_index]);
+    
   }
   
   if (distance <= 1.1) {
     target_index++;
-    target_index %= TARGET_POINTS_SIZE;
   }
   
-  
-  /*...... FSM ......*/
+/*----------------------------*/ 
   switch (state) {
     /*...... GET the x-direction (North/South) the robot is pointing to initially ......*/ 
     case INIT:
       new_north = (int)theta;
       state = FORWARD;
       break;
-      
-    /*......GO FORWARD......*/ 
+/*--------------FORWARD--------------*/
     case FORWARD:
-      speed[LEFT] = DEFAULT_SPEED;
+      speed[LEFT]  = DEFAULT_SPEED;
       speed[RIGHT] = DEFAULT_SPEED;
       if (sonar_val[SONAR_MID] > THRESHOLD) {
         saved_z = gps_pos[Z];
         saved_x = gps_pos[X];
         state = OBSTACLE;
       }
-      else if (new_north>=89 && new_north<=91 && target_index>1 ) {
+      // Going North
+      else if (new_north >= 89 && new_north <= 91 && target_index > 1 ) {
         if (gps_pos[X] >= X_target[target_index]) {
           state = PAUSE;
         }
       }
-      else if (new_north>=-91 && new_north<=-89) {
+      // Going South
+      else if (new_north >= -91 && new_north <= -89) {
         if (gps_pos[X] <= X_target[target_index]) {
           state = PAUSE;
         }
@@ -288,47 +280,46 @@ static int drive_autopilot(void) {
       else if (target_index == TARGET_POINTS_SIZE-1) {
         state = DONE;
       }
-      else if (target_index<1 && gps_pos[X]>=saved_x+2 && gps_pos[Z]>=saved_z) {
+      else if (target_index < 1 && gps_pos[X] >= saved_x+2 && gps_pos[Z] >= saved_z) {
+        ob_flag = false;
         state = GO_LEFT;   // saved_x + "height" of object
       }
-
       break;
       
-      
-    /*...... PAUSE ......*/ 
+/*--------------PAUSE--------------*/ 
     case PAUSE:
-      speed[LEFT] = 0.0;
+      speed[LEFT]  = 0.0;
       speed[RIGHT] = 0.0;
       // going north
-      if (new_north>=89 && new_north<=91) {
+      if (new_north >= 89 && new_north <= 91) {
         state = GO_RIGHT;
       }
       // going south
-      else if (new_north>=-91 && new_north<=-89) {
+      else if (new_north >= -91 && new_north <= -89) {
         state = GO_LEFT;
       }
       break;
       
 /*--------------GO LEFT--------------*/ 
     case GO_LEFT:
-      speed[LEFT] = -DEFAULT_SPEED;
+      speed[LEFT]  = -DEFAULT_SPEED;
       speed[RIGHT] = DEFAULT_SPEED;
-      if (target_index<1) {
-        if (fabs(theta)<= 2.0) { // east
-          speed[LEFT] = DEFAULT_SPEED;
+      if (target_index < 1) {
+        if (fabs(theta) <= 2.0) { // east
+          speed[LEFT]  = DEFAULT_SPEED;
           speed[RIGHT] = DEFAULT_SPEED;
           if (gps_pos[Z] <= Z_target[target_index]) { // -Z_0
             state = UTURN_R;
           }
         }
       }
-      else if (target_index>1 && fabs(theta)>=179.0 && fabs(theta)<=181.0) {
-         speed[LEFT] = DEFAULT_SPEED;
+      else if (target_index > 1 && fabs(theta) >= 179.0 && fabs(theta) <= 181.0) {
+         speed[LEFT]  = DEFAULT_SPEED;
          speed[RIGHT] = DEFAULT_SPEED;
-         if (gps_pos[Z] >= Z_target[target_index] && target_index>2) {
+         if (gps_pos[Z] >= Z_target[target_index] && target_index >= 2 && gps_pos[X] <= X_target[target_index]) {
            state = UTURN_L;
          }
-         else if (gps_pos[Z]>=saved_z+2*delta && target_index==2) {
+         else if (gps_pos[Z] >= saved_z+2*delta && target_index == 2) {
            state = GO_RIGHT;
         }
       }
@@ -336,16 +327,16 @@ static int drive_autopilot(void) {
       
 /*--------------GO RIGHT--------------*/ 
     case GO_RIGHT:
-      speed[LEFT] = DEFAULT_SPEED;
+      speed[LEFT]  = DEFAULT_SPEED;
       speed[RIGHT] = -DEFAULT_SPEED;
-      if (fabs(theta)>=179.0 && fabs(theta)<=181.0) {
-         speed[LEFT] = DEFAULT_SPEED;
+      if (fabs(theta) >= 179.0 && fabs(theta) <= 181.0) {
+         speed[LEFT]  = DEFAULT_SPEED;
          speed[RIGHT] = DEFAULT_SPEED;
-         if (target_index<1 && gps_pos[Z] >= saved_z+delta) {
+         if (target_index < 1 && gps_pos[Z] >= saved_z+delta) {
          // saved_z + "width" of object
            state = UTURN_L;
          }
-         else if (gps_pos[Z]>=Z_target[target_index] && target_index>1) {
+         else if (gps_pos[Z] >= Z_target[target_index] && target_index > 1) {
            state = UTURN_R;
          }
       }
@@ -353,15 +344,15 @@ static int drive_autopilot(void) {
       
 /*--------------UTURN RIGHT--------------*/
     case UTURN_R:
-      speed[LEFT] = DEFAULT_SPEED;
+      speed[LEFT]  = DEFAULT_SPEED;
       speed[RIGHT] = -DEFAULT_SPEED;
-      if (target_index<1) {
-        if (theta>=89.0 && theta<=91.0) {
+      if (target_index < 1) {
+        if (theta >= 89.0 && theta <= 91.0) {
           new_north = 90;
           state = FORWARD;
         }
       }
-      else if (theta>=-91.0 && theta<=-89.0) {
+      else if (theta >= -91.0 && theta <= -89.0) {
         new_north = -90;
         state = FORWARD;
       }
@@ -369,9 +360,9 @@ static int drive_autopilot(void) {
       
 /*--------------UTURN LEFT--------------*/   
     case UTURN_L:
-      speed[LEFT] = -DEFAULT_SPEED;
+      speed[LEFT]  = -DEFAULT_SPEED;
       speed[RIGHT] = DEFAULT_SPEED;
-      if (theta>=89.0 && theta<=91.0) {
+      if (theta >= 89.0 && theta <= 91.0) {
         new_north = 90;
         state = FORWARD;
       }
@@ -382,7 +373,7 @@ static int drive_autopilot(void) {
       if (target_index < 1) {
         state = GO_RIGHT;
       }
-      else if (gps_pos[Z]>=Z_target[0] && target_index>1) {
+      else if (gps_pos[Z] >= Z_target[0] && target_index > 1) {
         state = GO_LEFT;
       }
     break;
@@ -390,7 +381,7 @@ static int drive_autopilot(void) {
     
 /*......if we are at the last target......*/ 
     case DONE:
-      speed[LEFT] = 0.0;
+      speed[LEFT]  = 0.0;
       speed[RIGHT] = 0.0;
 /*------------------------------------------*/  
     default:
@@ -417,7 +408,7 @@ static void initialize(void) {
   
   /*......ENABLE SONAR......*/
   char sonar_names[NUM_SONAR][5] = {"sfm0", "sfl0", "sfr0"};
-  for (int i=0; i<NUM_SONAR; i++) {
+  for (int i = 0; i < NUM_SONAR; i++) {
     sonar[i] = wb_robot_get_device(sonar_names[i]);
     wb_distance_sensor_enable(sonar[i], TIME_STEP);
   }
