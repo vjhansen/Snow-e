@@ -1,0 +1,379 @@
+#VRML_SIM R2020a utf8
+WorldInfo {
+  title "Snow-e Simulation - Scenario 1"
+  basicTimeStep 8
+  FPS 15
+  contactProperties [
+    ContactProperties {
+      material1 "track material"
+      coulombFriction [
+        -1
+      ]
+      softCFM 0.0001
+      bumpSound "sounds/roll.wav"
+      slideSound "sounds/roll.wav"
+    }
+  ]
+}
+Viewpoint {
+  orientation 0.41186061372284005 0.8117515959344213 0.4140412797798854 4.500158754652224
+  position -5.3693486174129665 3.5636632935266226 -8.44156644467412
+  follow "Snow-e"
+}
+TexturedBackground {
+  texture "noon_building_overcast"
+  skyColor [
+    1 0.999969 0.999985
+  ]
+}
+TexturedBackgroundLight {
+  luminosity 2
+  castShadows FALSE
+}
+RectangleArena {
+  floorSize 10 20
+  floorAppearance Asphalt {
+    colorOverride 1 0.999969 0.999985
+  }
+  wallThickness 0.02
+  wallHeight 0.04
+  wallAppearance Asphalt {
+  }
+}
+DEF TRACKED_ROBOT Robot {
+  translation -3.3447659217757675 0.11639150443218893 -8.971724328383868
+  rotation 0.0002674076298712647 -0.5404023429684283 0.8414067008334274 -0.0011761983092114057
+  children [
+    GPS {
+    }
+    Compass {
+    }
+    DistanceSensor {
+      translation 0.25 0.01 0
+      rotation 1 0 0 0
+      name "sfm0"
+      recognitionColors [
+        0.986252 0.00712596 0.0274357
+      ]
+      lookupTable [
+        0.05 1000 0.1
+        0.4 1000 0
+        0.6 0 0
+      ]
+      type "sonar"
+      numberOfRays 2
+      aperture 1.5709
+    }
+    DistanceSensor {
+      translation 0.1 0.02 -0.2
+      rotation 0 1 0 1.5707996938995747
+      name "sfl0"
+      recognitionColors [
+        0.986252 0.00712596 0.0274357
+      ]
+      lookupTable [
+        0.05 1000 0.1
+        0.4 1000 0
+        0.5 0 0
+      ]
+      type "sonar"
+      numberOfRays 2
+    }
+    DistanceSensor {
+      translation 0.1 0.02 0.2
+      rotation 0 1 0 -1.5708
+      name "sfr0"
+      recognitionColors [
+        0.986252 0.00712596 0.0274357
+      ]
+      lookupTable [
+        0.05 1000 0.1
+        0.4 1000 0
+        0.5 0 0
+      ]
+      type "sonar"
+      numberOfRays 2
+    }
+    DEF GEOM Shape {
+      appearance CorrugatedPvc {
+        IBLStrength 12
+      }
+      geometry Box {
+        size 0.4 0.15 0.3
+      }
+    }
+    DEF LEFT_TRACK Track {
+      translation 0 -0.05 -0.16
+      scale 0.5 0.5 0.5
+      children [
+        DEF WHEEL1 TrackWheel {
+          position -0.3 0.015
+          radius 0.092
+          children [
+            DEF TRACK_WHEEL_BIG Transform {
+              rotation 1 0 0 1.5708
+              children [
+                Shape {
+                  appearance PBRAppearance {
+                    baseColorMap ImageTexture {
+                      url [
+                        "textures/tank_wheel.jpg"
+                      ]
+                    }
+                    roughness 1
+                    metalness 0
+                  }
+                  geometry Cylinder {
+                    height 0.03
+                    radius 0.092
+                    subdivision 20
+                  }
+                }
+              ]
+            }
+          ]
+        }
+        DEF WHEEL2 TrackWheel {
+          position 0.288 0.015
+          radius 0.092
+          children [
+            USE TRACK_WHEEL_BIG
+          ]
+        }
+        DEF WHEEL3 TrackWheel {
+          position 0.185 -0.088
+          radius 0.04
+          children [
+            DEF TRACK_WHEEL_SMALL Transform {
+              rotation 1 0 0 1.5708
+              children [
+                Shape {
+                  appearance PBRAppearance {
+                    baseColorMap ImageTexture {
+                      url [
+                        "textures/tank_wheel.jpg"
+                      ]
+                    }
+                    roughness 1
+                    metalness 0
+                  }
+                  geometry Cylinder {
+                    height 0.02
+                    radius 0.04
+                    subdivision 20
+                  }
+                }
+              ]
+            }
+          ]
+        }
+        DEF WHEEL4 TrackWheel {
+          position 0.09135 -0.088
+          radius 0.04
+          children [
+            USE TRACK_WHEEL_SMALL
+          ]
+        }
+        DEF WHEEL5 TrackWheel {
+          position -0.00245 -0.088
+          radius 0.04
+          children [
+            USE TRACK_WHEEL_SMALL
+          ]
+        }
+        DEF WHEEL6 TrackWheel {
+          position -0.09625 -0.088
+          radius 0.04
+          children [
+            USE TRACK_WHEEL_SMALL
+          ]
+        }
+        DEF WHEEL7 TrackWheel {
+          position -0.19 -0.088
+          radius 0.04
+          children [
+            USE TRACK_WHEEL_SMALL
+          ]
+        }
+      ]
+      name "left track"
+      contactMaterial "track material"
+      boundingObject DEF TRACK_BO Group {
+        children [
+          Transform {
+            translation 0 -0.009 0
+            children [
+              Box {
+                size 0.39 0.248 0.03
+              }
+            ]
+          }
+          Transform {
+            translation 0.237434 -0.0691798 0
+            rotation 0 0 -1 5.85646
+            children [
+              Box {
+                size 0.13 0.08 0.03
+              }
+            ]
+            translationStep 0.001
+            rotationStep 0.00261799
+          }
+          Transform {
+            translation -0.242803 -0.0708334 0
+            rotation 0 0 1 5.87479
+            children [
+              Box {
+                size 0.13 0.08 0.03
+              }
+            ]
+            translationStep 0.001
+            rotationStep 0.00261799
+          }
+          Transform {
+            translation -0.302 0.017 0
+            rotation 1 0 0 1.5708
+            children [
+              DEF WHEEL_BO Cylinder {
+                height 0.03
+                radius 0.1
+                subdivision 16
+              }
+            ]
+          }
+          Transform {
+            translation 0.288 0.017 0
+            rotation 1 0 0 1.5708
+            children [
+              USE WHEEL_BO
+            ]
+          }
+        ]
+      }
+      physics Physics {
+      }
+      device [
+        LinearMotor {
+          name "left motor"
+          sound ""
+        }
+      ]
+      textureAnimation -0.033 0
+      animatedGeometry DEF ANIMATED_GEOM Group {
+        children [
+          Shape {
+            appearance PBRAppearance {
+              baseColor 0.141176 0.141176 0.141176
+              roughness 1
+              metalness 0
+            }
+            geometry Box {
+              size 0.044 0.005 0.03
+            }
+          }
+          Transform {
+            translation 0 0.003 0
+            children [
+              Shape {
+                appearance PBRAppearance {
+                  baseColor 0.141176 0.141176 0.141176
+                  roughness 1
+                  metalness 0
+                }
+                geometry Box {
+                  size 0.02 0.006 0.03
+                }
+              }
+            ]
+          }
+        ]
+      }
+      geometriesCount 40
+    }
+    DEF RIGHT_TRACK Track {
+      translation 0 -0.05 0.16
+      scale 0.5 0.5 0.5
+      children [
+        USE WHEEL1
+        USE WHEEL2
+        USE WHEEL3
+        USE WHEEL4
+        USE WHEEL5
+        USE WHEEL6
+        USE WHEEL7
+      ]
+      name "right track"
+      contactMaterial "track material"
+      boundingObject USE TRACK_BO
+      physics Physics {
+      }
+      device [
+        LinearMotor {
+          name "right motor"
+          sound ""
+        }
+      ]
+      animatedGeometry USE ANIMATED_GEOM
+      geometriesCount 40
+    }
+  ]
+  name "Snow-e"
+  description "Autonomous Snow Blower"
+  boundingObject USE GEOM
+  physics Physics {
+    density -1
+    mass 40
+  }
+  controller "zig_zag_GPS"
+  linearVelocity -5.130769438938919e-19 -5.473799367111685e-16 3.0602178766901594e-17
+  angularVelocity 2.4116793529283124e-16 4.039424637416462e-19 -3.166500662613555e-17
+}
+Robot {
+  children [
+    Display {
+      translation 0 0.01 0
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColorMap ImageTexture {
+              url [
+                "textures/snow.jpg"
+              ]
+            }
+            transparency 0.9
+            roughness 0.5
+            metalness 0
+          }
+          geometry Plane {
+            size 9.9 19.9
+          }
+        }
+      ]
+      name "ground_display"
+      width 512
+      height 512
+    }
+    Transform {
+      translation -4.95 0 -4.95
+      children [
+        Shape {
+          appearance Asphalt {
+            textureTransform TextureTransform {
+              scale 7 7
+            }
+          }
+          geometry ElevationGrid {
+            xDimension 1
+            xSpacing 1.65
+            zDimension 1
+            zSpacing 1.65
+          }
+        }
+      ]
+    }
+  ]
+  name "ground_snow_removal"
+  locked TRUE
+  controller "ground"
+  supervisor TRUE
+}

@@ -4,17 +4,27 @@
 /* Snow-e Autonomous Snow Blower
    Dynamic Coverage Path Planning using RTK GPS */
 
+
 /*  
-  - Version: 0.1.1
+  - Version: 0.1.2
   - Date: 23.04.2020
   - Engineers: V. J. Hansen
 */
 
 
-/*  Sensors used:
-  - Sonar: detect obstacles
+/*
+To do:
+  - Add LiDAR to enable 360 obstacle detection
+  - Add snow plow/shredder and chute
+  - Create new path when encountering obstacles
+*/
+
+
+/* 
+Sensors used:
+  - Sonar & LiDAR: detect obstacles
   - Compass: navigation
-  - GPS: Generate Zig-Zag path 
+  - GPS: Generate Zig-Zag path and define boundaries/no go zones
 */
 
 
@@ -27,6 +37,7 @@
 #include <webots/compass.h>
 #include <webots/keyboard.h>
 #include <webots/gps.h>
+#include <webots/lidar.h>
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
@@ -52,10 +63,22 @@ typedef struct _Vector {
 } Vector;
 
 
+// can hardcode no-go zones here
+/*static Vector hard_code_targets[3] = {
+  {X, Z}, {X, Z},  {X, Z}
+};*/
+
+
+// Idea - future work: these targets could be generated externally through an app.
+// X: -5 -> 5: total 10 m LENGTH
+// Z: -10 -> 10: total 20 m WIDTH
+// (0,0) is in the centre of the parking lot
+
 #define startX -4.5
 #define startZ -9.5
 #define TARGET_POINTS_SIZE 21
 
+// targets could be stored in a separate file?
 static Vector targets[TARGET_POINTS_SIZE] =  // {X, Z}
 {
   //{startX,  startZ}, // this should be at the corner of the parking lot
@@ -89,6 +112,7 @@ static WbDeviceTag gps;
 static WbDeviceTag lidar;
 /*.........................................*/
 
+// this could be done in a more elegant way
 double X_target[TARGET_POINTS_SIZE] = { 
   -startX, -startX, startX, startX, 
   -startX, -startX, startX, startX, 
@@ -96,6 +120,7 @@ double X_target[TARGET_POINTS_SIZE] = {
   -startX, -startX, startX, startX, 
   -startX, -startX, startX, startX 
 };
+
 
 double Z_target[TARGET_POINTS_SIZE] = { 
   startZ, startZ+TURN_WIDTH, startZ+TURN_WIDTH,
@@ -169,7 +194,7 @@ static void drive_manual() {
       printf("manual control, use WASD.\n");
   }
 
-  /*......SET SPEED......*/
+   /*......SET SPEED......*/
   wb_motor_set_velocity(l_motor, speed[LEFT]);
   wb_motor_set_velocity(r_motor, speed[RIGHT]);
   old_key = key;
@@ -216,6 +241,7 @@ static int drive_autopilot(void) {
     printf("(angle) = (%.4g)\n", theta);
     printf("(X, Z) = (%.4g, %.4g)\n", gps_pos[X], gps_pos[Z]);
     printf("(Xt, Zt) = (%.4g, %.4g)\n", X_target[target_index], Z_target[target_index]);
+    
   }
   
   if (distance <= 0.9) {
@@ -297,6 +323,7 @@ static int drive_autopilot(void) {
         }
       }
       break;
+      
 /*--------------GO RIGHT--------------*/ 
     case GO_RIGHT:
       speed[LEFT]  = DEFAULT_SPEED;
@@ -313,6 +340,7 @@ static int drive_autopilot(void) {
          }
       }
       break;
+      
 /*--------------UTURN RIGHT--------------*/
     case UTURN_R:
       speed[LEFT]  = DEFAULT_SPEED;
@@ -328,6 +356,7 @@ static int drive_autopilot(void) {
         state = FORWARD;
       }
       break;
+      
 /*--------------UTURN LEFT--------------*/   
     case UTURN_L:
       speed[LEFT]  = -DEFAULT_SPEED;
@@ -337,6 +366,7 @@ static int drive_autopilot(void) {
         state = FORWARD;
       }
       break;
+      
 /*--------------obstacle--------------*/         
     case OBSTACLE:
       if (target_index < 1) {
@@ -346,6 +376,8 @@ static int drive_autopilot(void) {
         state = GO_LEFT;
       }
     break;
+    
+    
 /*......if we are at the last target......*/ 
     case DONE:
       speed[LEFT]  = 0.0;
