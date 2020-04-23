@@ -1,5 +1,8 @@
 # Snow-e :snowflake:
 ## Autonomous Snow Blower Simulation
+
+### Deivy - add how to do this in Windows :neckbeard:
+
 * Requires [Webots](https://www.cyberbotics.com/) Open Source Robot Simulator
 * Clone repo
 ```
