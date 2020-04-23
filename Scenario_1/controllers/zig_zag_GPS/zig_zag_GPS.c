@@ -1,4 +1,5 @@
 // USN Kongsberg
+// Scenario 1
 
 /* Snow-e Autonomous Snow Blower
    Dynamic Coverage Path Planning using RTK GPS */
@@ -7,7 +8,7 @@
 /*  
   - Version: 0.1.1
   - Date: 23.04.2020
-  - Engineers: V. Hansen, D. Kazokas
+  - Engineers: V. J. Hansen
 */
 
 
@@ -245,7 +246,7 @@ static int drive_autopilot(void) {
     
   }
   
-  if (distance <= 1.1) {
+  if (distance <= 0.9) {
     target_index++;
   }
   

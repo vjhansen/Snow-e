@@ -1,7 +1,7 @@
 #VRML_SIM R2020a utf8
 WorldInfo {
-  title "Snow-e Simulation V0.1"
-  basicTimeStep 4
+  title "Snow-e Simulation - Scenario 1"
+  basicTimeStep 8
   FPS 15
   contactProperties [
     ContactProperties {
@@ -16,8 +16,8 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation 0.43245461491935905 0.7990707341951387 0.41769482614438846 4.52393496653102
-  position -9.74415239944845 14.440633436170994 -5.2183156844972896
+  orientation 0.41186061372284005 0.8117515959344213 0.4140412797798854 4.500158754652224
+  position -5.3693486174129665 3.5636632935266226 -8.44156644467412
   follow "Snow-e"
 }
 TexturedBackground {
@@ -40,12 +40,9 @@ RectangleArena {
   wallAppearance Asphalt {
   }
 }
-OilBarrel {
-  translation -0.99 0.44 -3.89
-}
 DEF TRACKED_ROBOT Robot {
-  translation -4.35021 0.121389 -9.12726
-  rotation -0.00045721088765405247 0.9951021784454704 0.09885062170408213 -0.009296005026615324
+  translation -3.3447659217757675 0.11639150443218893 -8.971724328383868
+  rotation 0.0002674076298712647 -0.5404023429684283 0.8414067008334274 -0.0011761983092114057
   children [
     GPS {
     }
@@ -328,6 +325,8 @@ DEF TRACKED_ROBOT Robot {
     mass 40
   }
   controller "zig_zag_GPS"
+  linearVelocity -5.130769438938919e-19 -5.473799367111685e-16 3.0602178766901594e-17
+  angularVelocity 2.4116793529283124e-16 4.039424637416462e-19 -3.166500662613555e-17
 }
 Robot {
   children [
