@@ -78,7 +78,7 @@ static Vector targets[TARGET_POINTS_SIZE] =  // {X, Z}
   {-startX, startZ+8*TURN_WIDTH},
   {-startX, startZ+9*TURN_WIDTH},
   {startX,  startZ+9*TURN_WIDTH},
-  {startX,  startZ+10*TURN_WIDTH},
+  {startX,  startZ+10*TURN_WIDTH}
 };
 
 /*.........................................*/
