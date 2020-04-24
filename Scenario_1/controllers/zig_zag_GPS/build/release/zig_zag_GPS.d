@@ -6,6 +6,4 @@ build/release/zig_zag_GPS.o: zig_zag_GPS.c \
   /Applications/Webots.app/include/controller/c/webots/distance_sensor.h \
   /Applications/Webots.app/include/controller/c/webots/compass.h \
   /Applications/Webots.app/include/controller/c/webots/keyboard.h \
-  /Applications/Webots.app/include/controller/c/webots/gps.h \
-  /Applications/Webots.app/include/controller/c/webots/lidar.h \
-  /Applications/Webots.app/include/controller/c/webots/lidar_point.h
+  /Applications/Webots.app/include/controller/c/webots/gps.h

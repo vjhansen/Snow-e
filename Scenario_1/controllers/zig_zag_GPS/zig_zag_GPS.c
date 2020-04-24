@@ -5,8 +5,8 @@
    Dynamic Coverage Path Planning using RTK GPS */
 
 /*  
-  - Version: 0.1.1
-  - Date: 23.04.2020
+  - Version: 0.1.2
+  - Date: 24.04.2020
   - Engineers: V. J. Hansen
 */
 
@@ -17,13 +17,10 @@
   - GPS: Generate Zig-Zag path 
 */
 
-
-// some functions (norm, minus) are based on concepts from webots/moose_path_following.c
-
 /*.........................................*/
 #include <webots/motor.h>
 #include <webots/robot.h>
-#include <webots/distance_sensor.h> // Sonar
+#include <webots/distance_sensor.h>
 #include <webots/compass.h>
 #include <webots/keyboard.h>
 #include <webots/gps.h>
@@ -36,8 +33,12 @@
 #define TIME_STEP 8
 #define NUM_SONAR 3
 #define DEFAULT_SPEED 0.1
-#define TURN_WIDTH 0.6
-#define AREA 9.0 // floorSize 10x10
+#define delta  0.6
+#define size_x 9 
+#define size_z 19
+#define startX -4.5
+#define startZ -9.5
+
 
 enum SIDES { LEFT, RIGHT, MIDDLE };
 enum FSM { INIT, FORWARD, PAUSE, GO_LEFT, GO_RIGHT, 
@@ -47,79 +48,23 @@ enum SONAR_Sensors { SONAR_MID, SONAR_L, SONAR_R };
 enum XZComponents { X, Y, Z };
 
 typedef struct _Vector {
-  double Z_v;
   double X_v;
+  double Z_v;
 } Vector;
-
-
-#define startX -4.5
-#define startZ -9.5
-#define TARGET_POINTS_SIZE 21
-
-// generate these automatically
-static Vector targets[TARGET_POINTS_SIZE] =  // {X, Z}
-{
-  //{startX,  startZ}, // this should be at the corner of the parking lot
-  {-startX, startZ}, // n = 0
-  {-startX, startZ+TURN_WIDTH}, 
-  {startX,  startZ+TURN_WIDTH}, 
-  {startX,  startZ+2*TURN_WIDTH},
-  {-startX, startZ+2*TURN_WIDTH},
-  {-startX, startZ+3*TURN_WIDTH},
-  {startX,  startZ+3*TURN_WIDTH},
-  {startX,  startZ+4*TURN_WIDTH},
-  {-startX, startZ+4*TURN_WIDTH}, 
-  {-startX, startZ+5*TURN_WIDTH},
-  {startX,  startZ+5*TURN_WIDTH}, 
-  {startX,  startZ+6*TURN_WIDTH},
-  {-startX, startZ+6*TURN_WIDTH}, 
-  {-startX, startZ+7*TURN_WIDTH},
-  {startX,  startZ+7*TURN_WIDTH},
-  {startX,  startZ+8*TURN_WIDTH},
-  {-startX, startZ+8*TURN_WIDTH},
-  {-startX, startZ+9*TURN_WIDTH},
-  {startX,  startZ+9*TURN_WIDTH},
-  {startX,  startZ+10*TURN_WIDTH}
-};
-
 
 /*.........................................*/
 static WbDeviceTag sonar[NUM_SONAR];
 static WbDeviceTag l_motor, r_motor;
 static WbDeviceTag compass;
 static WbDeviceTag gps;
-static WbDeviceTag lidar;
 /*.........................................*/
 
-double X_target[TARGET_POINTS_SIZE] = { 
-  -startX, -startX, startX, startX, 
-  -startX, -startX, startX, startX, 
-  -startX, -startX, startX, startX, 
-  -startX, -startX, startX, startX, 
-  -startX, -startX, startX, startX 
-};
-
-double Z_target[TARGET_POINTS_SIZE] = { 
-  startZ, startZ+TURN_WIDTH, startZ+TURN_WIDTH,
-  startZ+2*TURN_WIDTH, 
-  startZ+2*TURN_WIDTH,
-  startZ+3*TURN_WIDTH, 
-  startZ+3*TURN_WIDTH,
-  startZ+4*TURN_WIDTH, 
-  startZ+4*TURN_WIDTH,
-  startZ+5*TURN_WIDTH, startZ+5*TURN_WIDTH,
-  startZ+6*TURN_WIDTH, startZ+6*TURN_WIDTH,
-  startZ+7*TURN_WIDTH, startZ+7*TURN_WIDTH,
-  startZ+8*TURN_WIDTH, startZ+8*TURN_WIDTH,
-  startZ+9*TURN_WIDTH, startZ+9*TURN_WIDTH,
-  startZ+10*TURN_WIDTH 
-};
-
-
+static Vector targets[100];
+double *Z_target;
+double *X_target;
 double sonar_val[NUM_SONAR] = {0.0, 0.0, 0.0};
 int state = INIT;
 int new_north = 90;
-double delta  = 0.5;
 double distance = 0.0;
 static double saved_z = 0.0;
 static double saved_x = 0.0;
@@ -127,9 +72,10 @@ static bool autopilot = true;
 static bool old_autopilot = true;
 static bool ob_flag = false;
 static int old_key = -1;
-static int target_index = 0;
+static int target_index = 1; // = 0 is where we start
 double gps_val[2] = {0.0, 0.0};
 double start_gps_pos[3] = {0.0, 0.0, 0.0};
+int target_points = 2*(size_z/delta);
 
 /*.........................................*/
 static void drive_manual() {
@@ -177,22 +123,32 @@ static void drive_manual() {
   old_key = key;
 }
 
+
+double *generate_x(int num_points) {
+    static double x[100];
+    for (int n = 0; n < num_points; n++) {
+        x[n] = (-size_x/2.0) * (1 + 3*n + pow(n,2) + 2*(pow(n,3)) - 4*(floor(0.25 * (2+ 3*n + pow(n,2) + 2*(pow(n,3))))));
+    }
+    return x;
+}
+
+double *generate_z(int num_points) {
+    static double z[100];
+    for (int n = 0; n < num_points; n++) {
+        z[n] = (-size_z/2.0) + delta*ceil(n/2);
+    }
+    return z;
+}
+
 // Euclidean Norm, i.e. distance between 
 static double norm(const Vector *vec) {
   return sqrt(vec->Z_v*vec->Z_v + vec->X_v*vec->X_v);
 }
 
 // new vector = vector 1 - vector 2
-static void minus(Vector *nv, const Vector *vec1, const Vector *vec2) {
-  nv->Z_v = vec1->Z_v - vec2->Z_v;
-  nv->X_v = vec1->X_v - vec2->X_v;
-}
-
-// v = v/||v||
-static void normalize(Vector *vec) {
-  double n = norm(vec);
-  vec->Z_v /= n;
-  vec->X_v /= n;
+static void minus(Vector *diff, const Vector *trgt, const Vector *gpsPos) {
+  diff->X_v = trgt->X_v - gpsPos->X_v;
+  diff->Z_v = trgt->Z_v - gpsPos->Z_v;
 }
 
 /*.........................................*/
@@ -202,11 +158,11 @@ static int drive_autopilot(void) {
   const double *north2D = wb_compass_get_values(compass);
   double theta = atan2(north2D[X], north2D[Z]) * (180/M_PI); // angle (in degrees) between x and z-axis 
   const double *gps_pos = wb_gps_get_values(gps);
+  
   Vector curr_gps_pos = {gps_pos[X], gps_pos[Z]};
-  Vector dir;
-  minus(&dir, &targets[target_index], &curr_gps_pos);
+  Vector dir; 
+  minus(&dir, &targets[target_index], &curr_gps_pos); 
   distance = norm(&dir);
-  normalize(&dir);
   
   // get sonar values
   for (int i=0; i<NUM_SONAR; i++) {
@@ -215,12 +171,11 @@ static int drive_autopilot(void) {
   
   // used for calibration
   if (fmod(current_time, 2) == 0.0) {
-    printf("(angle) = (%.4g)\n", theta);
-    printf("(X, Z) = (%.4g, %.4g)\n", gps_pos[X], gps_pos[Z]);
-    printf("(Xt, Zt) = (%.4g, %.4g)\n", X_target[target_index], Z_target[target_index]);
+    printf("(dist = (%.4g)\n", distance);
+    printf("(xt = (%.4g)\n", X_target[target_index]);
   }
   
-  if (distance <= 0.9) {
+  if (distance <= 1.1) {
     target_index++;
   }
   
@@ -252,7 +207,7 @@ static int drive_autopilot(void) {
           state = PAUSE;
         }
       }
-      else if (target_index == TARGET_POINTS_SIZE-1) {
+      else if (target_index == target_points-1) {
         state = DONE;
       }
       else if (target_index < 1 && gps_pos[X] >= saved_x+2 && gps_pos[Z] >= saved_z) {
@@ -395,6 +350,15 @@ static void initialize(void) {
 int main(int argc, char **argv) {
   wb_robot_init();
   initialize();
+  X_target = generate_x(target_points);
+  Z_target = generate_z(target_points);
+  
+  // fill target-vector with X and Z way points
+  for (int i=0; i<target_points; i++) {
+    targets[i].X_v = X_target[i];
+    targets[i].Z_v = Z_target[i];
+  }
+  
   printf("Press 'P' to toggle autopilot/manual mode\n");
   while (wb_robot_step(TIME_STEP) != -1) { 
     drive_manual();
