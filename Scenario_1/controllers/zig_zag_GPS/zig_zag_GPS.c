@@ -56,6 +56,7 @@ typedef struct _Vector {
 #define startZ -9.5
 #define TARGET_POINTS_SIZE 21
 
+// generate these automatically
 static Vector targets[TARGET_POINTS_SIZE] =  // {X, Z}
 {
   //{startX,  startZ}, // this should be at the corner of the parking lot
@@ -80,6 +81,7 @@ static Vector targets[TARGET_POINTS_SIZE] =  // {X, Z}
   {startX,  startZ+9*TURN_WIDTH},
   {startX,  startZ+10*TURN_WIDTH}
 };
+
 
 /*.........................................*/
 static WbDeviceTag sonar[NUM_SONAR];
