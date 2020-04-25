@@ -2,12 +2,12 @@
 // Scenario 1
 
 /* Snow-e Autonomous Snow Blower
-   Dynamic Coverage Path Planning using RTK GPS */
+   Dynamic Coverage Path Planning using GPS */
 
 /*  
   - Version: 0.1.2
-  - Date: 24.04.2020
-  - Engineers: V. J. Hansen
+  - Update: 25.04.2020
+  - Engineer(s): V. J. Hansen
 */
 
 
@@ -17,25 +17,28 @@
   - GPS: Generate Zig-Zag path 
 */
 
-/*.........................................*/
+
+/* Webots libraries */
 #include <webots/motor.h>
 #include <webots/robot.h>
 #include <webots/distance_sensor.h>
 #include <webots/compass.h>
 #include <webots/keyboard.h>
 #include <webots/gps.h>
+
+/* C libraries */
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
-/*.........................................*/
 
-#define THRESHOLD 900.0
-#define TIME_STEP 8
-#define NUM_SONAR 3
+/* macro definitions */
+#define THRESHOLD     900.0
+#define TIME_STEP     8
+#define NUM_SONAR     3
 #define DEFAULT_SPEED 0.1
-#define delta  0.6
-#define size_x 9 
-#define size_z 19
+#define delta         0.6
+#define size_x        9 
+#define size_z        19
 #define startX -4.5
 #define startZ -9.5
 
@@ -64,7 +67,7 @@ double *Z_target;
 double *X_target;
 double sonar_val[NUM_SONAR] = {0.0, 0.0, 0.0};
 int state = INIT;
-int new_north = 90;
+int front_dir = 90;
 double distance = 0.0;
 static double saved_z = 0.0;
 static double saved_x = 0.0;
@@ -77,33 +80,33 @@ double gps_val[2] = {0.0, 0.0};
 double start_gps_pos[3] = {0.0, 0.0, 0.0};
 int target_points = 2*(size_z/delta);
 
-/*.........................................*/
+/* Drive snow blower by using keyboard*/
 static void drive_manual() {
   double speed[2] = {0.0, 0.0};
   int key = wb_keyboard_get_key();
   if (key >= 0) {
     switch (key) {
-      case WB_KEYBOARD_UP:
+      case WB_KEYBOARD_UP:  // go forward
         speed[LEFT]  = DEFAULT_SPEED;
         speed[RIGHT] = DEFAULT_SPEED;
         autopilot = false;
         break;
-      case WB_KEYBOARD_DOWN:
+      case WB_KEYBOARD_DOWN: // go backwards
         speed[LEFT]  = -DEFAULT_SPEED;
         speed[RIGHT] = -DEFAULT_SPEED;
         autopilot = false;
         break;
-      case WB_KEYBOARD_RIGHT:
+      case WB_KEYBOARD_RIGHT: // turn right
         speed[LEFT]  = DEFAULT_SPEED;
         speed[RIGHT] = -DEFAULT_SPEED;
         autopilot = false;
         break;
-      case WB_KEYBOARD_LEFT:
+      case WB_KEYBOARD_LEFT: // turn left
         speed[LEFT]  = -DEFAULT_SPEED;
         speed[RIGHT] = DEFAULT_SPEED;
         autopilot = false;
         break;
-      case 'P':
+      case 'P': // switch between autopilot and manual driving
         if (key != old_key)
           autopilot = !autopilot;
         break;
@@ -123,7 +126,7 @@ static void drive_manual() {
   old_key = key;
 }
 
-
+// generate X coordinates
 double *generate_x(int num_points) {
     static double x[100];
     for (int n = 0; n < num_points; n++) {
@@ -132,6 +135,7 @@ double *generate_x(int num_points) {
     return x;
 }
 
+// generate Z coordinates
 double *generate_z(int num_points) {
     static double z[100];
     for (int n = 0; n < num_points; n++) {
@@ -139,6 +143,7 @@ double *generate_z(int num_points) {
     }
     return z;
 }
+
 
 // Euclidean Norm, i.e. distance between 
 static double norm(const Vector *vec) {
@@ -151,12 +156,12 @@ static void minus(Vector *diff, const Vector *trgt, const Vector *gpsPos) {
   diff->Z_v = trgt->Z_v - gpsPos->Z_v;
 }
 
-/*.........................................*/
+/* Autopilot */
 static int drive_autopilot(void) {
-  double speed[2] = {0.0, 0.0};  
-  double current_time = wb_robot_get_time();
+  double speed[2]       = {0.0, 0.0};  
+  double current_time   = wb_robot_get_time();
   const double *north2D = wb_compass_get_values(compass);
-  double theta = atan2(north2D[X], north2D[Z]) * (180/M_PI); // angle (in degrees) between x and z-axis 
+  double theta          = atan2(north2D[X], north2D[Z]) * (180/M_PI); // angle (in degrees) between x and z-axis 
   const double *gps_pos = wb_gps_get_values(gps);
   
   Vector curr_gps_pos = {gps_pos[X], gps_pos[Z]};
@@ -165,7 +170,7 @@ static int drive_autopilot(void) {
   distance = norm(&dir);
   
   // get sonar values
-  for (int i=0; i<NUM_SONAR; i++) {
+  for (int i = 0; i < NUM_SONAR; i++) {
     sonar_val[i] = wb_distance_sensor_get_value(sonar[i]);
   }
   
@@ -183,7 +188,7 @@ static int drive_autopilot(void) {
   switch (state) {
     /*...... GET the x-direction (North/South) the robot is pointing to initially ......*/ 
     case INIT:
-      new_north = (int)theta;
+      front_dir = (int)theta;
       state = FORWARD;
       break;
 /*--------------FORWARD--------------*/
@@ -196,13 +201,13 @@ static int drive_autopilot(void) {
         state = OBSTACLE;
       }
       // Going North
-      else if (new_north >= 89 && new_north <= 91 && target_index > 1 ) {
+      else if (front_dir >= 89 && front_dir <= 91 && target_index > 1 ) {
         if (gps_pos[X] >= X_target[target_index]) {
           state = PAUSE;
         }
       }
       // Going South
-      else if (new_north >= -91 && new_north <= -89) {
+      else if (front_dir >= -91 && front_dir <= -89) {
         if (gps_pos[X] <= X_target[target_index]) {
           state = PAUSE;
         }
@@ -221,11 +226,11 @@ static int drive_autopilot(void) {
       speed[LEFT]  = 0.0;
       speed[RIGHT] = 0.0;
       // going north
-      if (new_north >= 89 && new_north <= 91) {
+      if (front_dir >= 89 && front_dir <= 91) {
         state = GO_RIGHT;
       }
       // going south
-      else if (new_north >= -91 && new_north <= -89) {
+      else if (front_dir >= -91 && front_dir <= -89) {
         state = GO_LEFT;
       }
       break;
@@ -276,12 +281,12 @@ static int drive_autopilot(void) {
       speed[RIGHT] = -DEFAULT_SPEED;
       if (target_index < 1) {
         if (theta >= 89.0 && theta <= 91.0) {
-          new_north = 90;
+          front_dir = 90;
           state = FORWARD;
         }
       }
       else if (theta >= -91.0 && theta <= -89.0) {
-        new_north = -90;
+        front_dir = -90;
         state = FORWARD;
       }
       break;
@@ -290,11 +295,11 @@ static int drive_autopilot(void) {
       speed[LEFT]  = -DEFAULT_SPEED;
       speed[RIGHT] = DEFAULT_SPEED;
       if (theta >= 89.0 && theta <= 91.0) {
-        new_north = 90;
+        front_dir = 90;
         state = FORWARD;
       }
       break;
-/*--------------obstacle--------------*/         
+/*--------------OBSTACLE--------------*/         
     case OBSTACLE:
       if (target_index < 1) {
         state = GO_RIGHT;
@@ -341,7 +346,7 @@ static void initialize(void) {
   compass = wb_robot_get_device("compass");
   wb_compass_enable(compass, TIME_STEP);
   
-  /*......ENABLE COMPASS......*/
+  /*......ENABLE GPS......*/
   gps = wb_robot_get_device("gps");
   wb_gps_enable(gps, TIME_STEP);
 }
