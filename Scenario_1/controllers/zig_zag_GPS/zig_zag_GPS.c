@@ -5,8 +5,8 @@
    Dynamic Coverage Path Planning using GPS */
 
 /*  
-  - Version: 0.1.2
-  - Update: 25.04.2020
+  - Version: 0.1.3
+  - Update: 27.04.2020
   - Engineer(s): V. J. Hansen
 */
 
@@ -36,7 +36,7 @@
 #define TIME_STEP     8
 #define NUM_SONAR     3
 #define DEFAULT_SPEED 0.1
-#define delta         0.6
+#define delta         0.5
 #define size_x        9 
 #define size_z        19
 #define startX -4.5
@@ -45,7 +45,7 @@
 
 enum SIDES { LEFT, RIGHT, MIDDLE };
 enum FSM { INIT, FORWARD, PAUSE, GO_LEFT, GO_RIGHT, 
-           UTURN_R, UTURN_L, OBSTACLE, STUCK, DONE };
+           UTURN_R, UTURN_L, OBSTACLE, DONE };
 
 enum SONAR_Sensors { SONAR_MID, SONAR_L, SONAR_R };
 enum XZComponents { X, Y, Z };
@@ -69,11 +69,8 @@ double sonar_val[NUM_SONAR] = {0.0, 0.0, 0.0};
 int state = INIT;
 int front_dir = 90;
 double distance = 0.0;
-static double saved_z = 0.0;
-static double saved_x = 0.0;
 static bool autopilot = true;
 static bool old_autopilot = true;
-static bool ob_flag = false;
 static int old_key = -1;
 static int target_index = 1; // = 0 is where we start
 double gps_val[2] = {0.0, 0.0};
@@ -177,7 +174,6 @@ static int drive_autopilot(void) {
   // used for calibration
   if (fmod(current_time, 2) == 0.0) {
     printf("(dist = (%.4g)\n", distance);
-    printf("(xt = (%.4g)\n", X_target[target_index]);
   }
   
   if (distance <= 1.1) {
@@ -195,13 +191,8 @@ static int drive_autopilot(void) {
     case FORWARD:
       speed[LEFT]  = DEFAULT_SPEED;
       speed[RIGHT] = DEFAULT_SPEED;
-      if (sonar_val[SONAR_MID] > THRESHOLD) {
-        saved_z = gps_pos[Z];
-        saved_x = gps_pos[X];
-        state = OBSTACLE;
-      }
       // Going North
-      else if (front_dir >= 89 && front_dir <= 91 && target_index > 1 ) {
+      if (front_dir >= 89 && front_dir <= 91) {
         if (gps_pos[X] >= X_target[target_index]) {
           state = PAUSE;
         }
@@ -214,10 +205,6 @@ static int drive_autopilot(void) {
       }
       else if (target_index == target_points-1) {
         state = DONE;
-      }
-      else if (target_index < 1 && gps_pos[X] >= saved_x+2 && gps_pos[Z] >= saved_z) {
-        ob_flag = false;
-        state = GO_LEFT;   // saved_x + "height" of object
       }
       break;
       
@@ -239,24 +226,12 @@ static int drive_autopilot(void) {
     case GO_LEFT:
       speed[LEFT]  = -DEFAULT_SPEED;
       speed[RIGHT] = DEFAULT_SPEED;
-      if (target_index < 1) {
-        if (fabs(theta) <= 2.0) { // east
-          speed[LEFT]  = DEFAULT_SPEED;
-          speed[RIGHT] = DEFAULT_SPEED;
-          if (gps_pos[Z] <= Z_target[target_index]) { // -Z_0
-            state = UTURN_R;
-          }
-        }
-      }
-      else if (target_index > 1 && fabs(theta) >= 179.0 && fabs(theta) <= 181.0) {
+      if (fabs(theta) >= 179.0 && fabs(theta) <= 181.0) {
          speed[LEFT]  = DEFAULT_SPEED;
          speed[RIGHT] = DEFAULT_SPEED;
-         if (gps_pos[Z] >= Z_target[target_index] && target_index >= 2 && gps_pos[X] <= X_target[target_index]) {
+         if (gps_pos[Z] >= Z_target[target_index] && gps_pos[X] <= X_target[target_index]) {
            state = UTURN_L;
          }
-         else if (gps_pos[Z] >= saved_z+2*delta && target_index == 2) {
-           state = GO_RIGHT;
-        }
       }
       break;
 /*--------------GO RIGHT--------------*/ 
@@ -266,11 +241,7 @@ static int drive_autopilot(void) {
       if (fabs(theta) >= 179.0 && fabs(theta) <= 181.0) {
          speed[LEFT]  = DEFAULT_SPEED;
          speed[RIGHT] = DEFAULT_SPEED;
-         if (target_index < 1 && gps_pos[Z] >= saved_z+delta) {
-         // saved_z + "width" of object
-           state = UTURN_L;
-         }
-         else if (gps_pos[Z] >= Z_target[target_index] && target_index > 1) {
+         if (gps_pos[Z] >= Z_target[target_index]) {
            state = UTURN_R;
          }
       }
@@ -279,13 +250,7 @@ static int drive_autopilot(void) {
     case UTURN_R:
       speed[LEFT]  = DEFAULT_SPEED;
       speed[RIGHT] = -DEFAULT_SPEED;
-      if (target_index < 1) {
-        if (theta >= 89.0 && theta <= 91.0) {
-          front_dir = 90;
-          state = FORWARD;
-        }
-      }
-      else if (theta >= -91.0 && theta <= -89.0) {
+      if (theta >= -91.0 && theta <= -89.0) {
         front_dir = -90;
         state = FORWARD;
       }
@@ -299,15 +264,6 @@ static int drive_autopilot(void) {
         state = FORWARD;
       }
       break;
-/*--------------OBSTACLE--------------*/         
-    case OBSTACLE:
-      if (target_index < 1) {
-        state = GO_RIGHT;
-      }
-      else if (gps_pos[Z] >= Z_target[0] && target_index > 1) {
-        state = GO_LEFT;
-      }
-    break;
 /*......if we are at the last target......*/ 
     case DONE:
       speed[LEFT]  = 0.0;
