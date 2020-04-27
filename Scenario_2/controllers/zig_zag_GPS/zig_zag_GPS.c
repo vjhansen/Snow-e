@@ -5,8 +5,8 @@
    Dynamic Coverage Path Planning using GPS */
 
 /*  
-  - Version: 0.1.2
-  - Date: 24.04.2020
+  - Version: 0.2.1
+  - Date: 27.04.2020
   - Engineers: V. J. Hansen
 */
 
@@ -28,7 +28,6 @@ To do:
 #include <webots/distance_sensor.h>
 #include <webots/compass.h>
 #include <webots/keyboard.h>
-#include <webots/lidar.h>
 #include <webots/gps.h>
 #include <stdio.h>
 #include <math.h>
@@ -39,8 +38,8 @@ To do:
 #define NUM_SONAR     3
 #define DEFAULT_SPEED 0.1
 #define DELTA         0.7
-#define SIZE_X        9 
-#define SIZE_Z        19
+#define SIZE_X        4 
+#define SIZE_Z       19 
 /*--------------------------------------------------------*/ 
 enum SIDES { LEFT, RIGHT, MIDDLE };
 enum FSM { INIT, FORWARD, PAUSE, GO_LEFT, GO_RIGHT, UTURN_R, UTURN_L, OBSTACLE, STUCK, DONE };
@@ -165,6 +164,11 @@ static int drive_autopilot(void) {
   // used for calibration
   if (fmod(current_time, 2) == 0.0) {
     printf("(angle) = (%.4g)\n", theta);
+    printf("(dist) = (%.4g)\n", distance);
+    printf("(X_t) = (%.4g)\n", X_target[target_index]);
+    printf("(X_p) = (%.4g)\n", gps_pos[X]);
+    printf("(Z_t) = (%.4g)\n", Z_target[target_index]);
+    printf("(Z_p) = (%.4g)\n", gps_pos[Z]);
   }
 
   if (distance <= 1.1) {
@@ -225,6 +229,18 @@ static int drive_autopilot(void) {
     case GO_LEFT:
       speed[LEFT]  = -DEFAULT_SPEED;
       speed[RIGHT] = DEFAULT_SPEED;
+      
+      if (obs_flag == true) {
+        if (fabs(theta) <= 2.0) {
+         speed[LEFT]  = DEFAULT_SPEED;
+         speed[RIGHT] = DEFAULT_SPEED;
+          if (gps_pos[Z] <= Z_target[target_index-1]) { // -Z_0
+            state = UTURN_R;
+          }
+      }
+      }
+      
+      
       if (target_index < 2) { // special case
         if (fabs(theta) <= 2.0) { // east
           speed[LEFT]  = DEFAULT_SPEED;
@@ -234,6 +250,7 @@ static int drive_autopilot(void) {
           }
         }
       }
+      
       else if (target_index > 2 && fabs(theta) >= 179.0 && fabs(theta) <= 181.0) {
          speed[LEFT]  = DEFAULT_SPEED;
          speed[RIGHT] = DEFAULT_SPEED;
@@ -244,6 +261,7 @@ static int drive_autopilot(void) {
            state = GO_RIGHT;
         }
       }
+      
       break;
 /*--------------GO RIGHT--------------*/ 
     case GO_RIGHT:
@@ -291,9 +309,21 @@ static int drive_autopilot(void) {
       if (target_index < 2) { // special case
         state = GO_RIGHT;
       }
-      else if (gps_pos[Z] >= Z_target[0] && target_index > 2) {
+    /*  else if (gps_pos[Z] >= Z_target[0] && target_index > 2) {
+        obs_flag = true;
+        state = GO_LEFT;
+      } */
+     else  if (theta >= 89.0 && theta <= 91.0 && target_index > 2) {
+        new_north = 90;
+        obs_flag = true;
         state = GO_LEFT;
       }
+      else if (theta >= -91.0 && theta <= -89.0 && target_index > 2) {
+        new_north = -90;
+        obs_flag = true;
+        state = GO_RIGHT;
+      }
+
     break;
 /*......if we are at the last target......*/ 
     case DONE:
