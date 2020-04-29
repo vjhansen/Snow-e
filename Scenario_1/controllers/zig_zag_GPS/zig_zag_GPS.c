@@ -17,7 +17,7 @@
   - GPS: Generate Zig-Zag path 
 */
 
-
+#include <webots/lidar.h>
 /* Webots libraries */
 #include <webots/motor.h>
 #include <webots/robot.h>
@@ -305,6 +305,13 @@ static void initialize(void) {
   /*......ENABLE GPS......*/
   gps = wb_robot_get_device("gps");
   wb_gps_enable(gps, TIME_STEP);
+  
+  
+  WbDeviceTag lidar = wb_robot_get_device("lidar");
+  wb_lidar_enable(lidar, TIME_STEP);
+  wb_lidar_enable_point_cloud(lidar);
+  
+  
 }
 
 /*....................................*/ 
