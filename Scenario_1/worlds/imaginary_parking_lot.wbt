@@ -16,8 +16,8 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation 0.41186061372284005 0.8117515959344213 0.4140412797798854 4.500158754652224
-  position -8.189800825378786 7.447927294218038 -7.806387087760181
+  orientation -0.3615178626730732 0.930640277412845 -0.05668782078397262 5.949337858777645
+  position -4.399178482087579 0.19828228813914275 -7.104695168478305
   follow "Snow-e"
 }
 TexturedBackground {
@@ -41,11 +41,11 @@ RectangleArena {
   }
 }
 DEF TRACKED_ROBOT Robot {
-  translation -3.3447659217757675 0.11639150443218893 -8.971724328383868
-  rotation 0.0002674076298712647 -0.5404023429684283 0.8414067008334274 -0.0011761983092114057
+  translation -3.3445895158843544 0.10302036228242371 -8.971720039524678
+  rotation 0.0003967713329275436 -0.567092536421075 0.823653991496442 -0.0011210441700650916
   children [
     RobotisLds01 {
-      translation 0 0.17 0
+      translation 0 0.1 0
       name "lidar"
     }
     GPS {
@@ -107,8 +107,8 @@ DEF TRACKED_ROBOT Robot {
       }
     }
     DEF LEFT_TRACK Track {
-      translation 0 -0.05 -0.16
-      scale 0.5 0.5 0.5
+      translation 0 -0.01 -0.19
+      scale 0.7 0.7 0.7
       children [
         DEF WHEEL1 TrackWheel {
           position -0.3 0.015
@@ -272,11 +272,11 @@ DEF TRACKED_ROBOT Robot {
               metalness 0
             }
             geometry Box {
-              size 0.044 0.005 0.03
+              size 0.044 0.005 0.1
             }
           }
           Transform {
-            translation 0 0.003 0
+            translation 0 0.005 0
             children [
               Shape {
                 appearance PBRAppearance {
@@ -295,8 +295,8 @@ DEF TRACKED_ROBOT Robot {
       geometriesCount 40
     }
     DEF RIGHT_TRACK Track {
-      translation 0 -0.05 0.16
-      scale 0.5 0.5 0.5
+      translation 0 -0.01 0.19
+      scale 0.7 0.7 0.7
       children [
         USE WHEEL1
         USE WHEEL2
@@ -329,8 +329,8 @@ DEF TRACKED_ROBOT Robot {
     mass 40
   }
   controller "zig_zag_GPS"
-  linearVelocity -5.130769438938919e-19 -5.473799367111685e-16 3.0602178766901594e-17
-  angularVelocity 2.4116793529283124e-16 4.039424637416462e-19 -3.166500662613555e-17
+  linearVelocity -5.277975786528361e-16 7.588210866027897e-16 1.1319295543649125e-17
+  angularVelocity 1.4308051653046091e-16 2.3841869312167804e-18 5.136102801497252e-15
 }
 Robot {
   children [

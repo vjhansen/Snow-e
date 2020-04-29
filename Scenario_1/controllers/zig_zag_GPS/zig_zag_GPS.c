@@ -5,8 +5,8 @@
    Dynamic Coverage Path Planning using GPS */
 
 /*  
-  - Version: 0.1.3
-  - Update: 27.04.2020
+  - Version: 0.1.4
+  - Update: 29.04.2020
   - Engineer(s): V. J. Hansen
 */
 
@@ -17,14 +17,14 @@
   - GPS: Generate Zig-Zag path 
 */
 
-#include <webots/lidar.h>
+
 /* Webots libraries */
 #include <webots/motor.h>
 #include <webots/robot.h>
 #include <webots/distance_sensor.h>
 #include <webots/compass.h>
-#include <webots/keyboard.h>
 #include <webots/gps.h>
+#include <webots/lidar.h>
 
 /* C libraries */
 #include <stdio.h>
@@ -39,8 +39,6 @@
 #define delta         0.5
 #define size_x        9 
 #define size_z        19
-#define startX -4.5
-#define startZ -9.5
 
 
 enum SIDES { LEFT, RIGHT, MIDDLE };
@@ -69,59 +67,11 @@ double sonar_val[NUM_SONAR] = {0.0, 0.0, 0.0};
 int state = INIT;
 int front_dir = 90;
 double distance = 0.0;
-static bool autopilot = true;
-static bool old_autopilot = true;
-static int old_key = -1;
 static int target_index = 1; // = 0 is where we start
 double gps_val[2] = {0.0, 0.0};
 double start_gps_pos[3] = {0.0, 0.0, 0.0};
 int target_points = 2*(size_z/delta);
 
-/* Drive snow blower by using keyboard*/
-static void drive_manual() {
-  double speed[2] = {0.0, 0.0};
-  int key = wb_keyboard_get_key();
-  if (key >= 0) {
-    switch (key) {
-      case WB_KEYBOARD_UP:  // go forward
-        speed[LEFT]  = DEFAULT_SPEED;
-        speed[RIGHT] = DEFAULT_SPEED;
-        autopilot = false;
-        break;
-      case WB_KEYBOARD_DOWN: // go backwards
-        speed[LEFT]  = -DEFAULT_SPEED;
-        speed[RIGHT] = -DEFAULT_SPEED;
-        autopilot = false;
-        break;
-      case WB_KEYBOARD_RIGHT: // turn right
-        speed[LEFT]  = DEFAULT_SPEED;
-        speed[RIGHT] = -DEFAULT_SPEED;
-        autopilot = false;
-        break;
-      case WB_KEYBOARD_LEFT: // turn left
-        speed[LEFT]  = -DEFAULT_SPEED;
-        speed[RIGHT] = DEFAULT_SPEED;
-        autopilot = false;
-        break;
-      case 'P': // switch between autopilot and manual driving
-        if (key != old_key)
-          autopilot = !autopilot;
-        break;
-    }
-  }
-  if (autopilot != old_autopilot) {
-    old_autopilot = autopilot;
-    if (autopilot)
-      printf("autopilot\n");
-    else
-      printf("manual control, use WASD.\n");
-  }
-
-  /*......SET SPEED......*/
-  wb_motor_set_velocity(l_motor, speed[LEFT]);
-  wb_motor_set_velocity(r_motor, speed[RIGHT]);
-  old_key = key;
-}
 
 // generate X coordinates
 double *generate_x(int num_points) {
@@ -280,8 +230,6 @@ static int drive_autopilot(void) {
 
 static void initialize(void) {
   printf("booting robot..\n");  
-  /*......ENABLE KEYBOARD......*/
-  wb_keyboard_enable(TIME_STEP);
 
   /*......ENABLE MOTORS......*/
   l_motor = wb_robot_get_device("left motor");
@@ -306,11 +254,10 @@ static void initialize(void) {
   gps = wb_robot_get_device("gps");
   wb_gps_enable(gps, TIME_STEP);
   
-  
+  /*......ENABLE LIDAR......*/
   WbDeviceTag lidar = wb_robot_get_device("lidar");
   wb_lidar_enable(lidar, TIME_STEP);
   wb_lidar_enable_point_cloud(lidar);
-  
   
 }
 
@@ -326,13 +273,9 @@ int main(int argc, char **argv) {
     targets[i].X_v = X_target[i];
     targets[i].Z_v = Z_target[i];
   }
-  
-  printf("Press 'P' to toggle autopilot/manual mode\n");
+
   while (wb_robot_step(TIME_STEP) != -1) { 
-    drive_manual();
-    if (autopilot) {
       drive_autopilot();
-    }
   };
   wb_robot_cleanup();
   return 0;
