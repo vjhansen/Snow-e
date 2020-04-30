@@ -39,7 +39,7 @@ int main() {
   int width = wb_display_get_width(display);
   int height = wb_display_get_height(display);
 
-  WbNodeRef mybot = wb_supervisor_node_get_from_def("TRACKED_ROBOT");
+  WbNodeRef mybot = wb_supervisor_node_get_from_def("Snow-e");
   WbFieldRef translationField = wb_supervisor_node_get_field(mybot, "translation");
 
   // set the background (otherwise an empty ground is displayed at this step)
