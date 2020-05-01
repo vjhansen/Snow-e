@@ -1,20 +1,20 @@
-// USN Kongsberg
-// Scenario 1
+/* 
+__Project Description__
+  USN Campus Kongsberg
+  Snow-e Autonomous Snow Blower
+  Dynamic Coverage Path Planning using GPS
+  Scenario 1
 
-/* Snow-e Autonomous Snow Blower
-   Dynamic Coverage Path Planning using GPS */
+__Version History__
+  - Version:      0.1.5
+  - Update:       30.04.2020
+  - Engineer(s):  V. J. Hansen, D. Kazokas
 
-/*  
-  - Version: 0.1.3
-  - Update: 27.04.2020
-  - Engineer(s): V. J. Hansen
-*/
-
-
-/*  Sensors used:
-  - Sonar: detect obstacles
-  - Compass: navigation
-  - GPS: Generate Zig-Zag path 
+__Sensors used__
+  - Sonar:        Obstacle Detection
+  - Lidar:        Obstacle Detection
+  - Compass:      Navigation
+  - GPS:          Generate Zig-Zag path 
 */
 
 
@@ -27,13 +27,12 @@
 #include <webots/gps.h>
 #include <webots/lidar.h>
 
-
 /* C libraries */
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
 
-/* macro definitions */
+/* Macro Definitions */
 #define THRESHOLD     900.0
 #define TIME_STEP     8
 #define NUM_SONAR     3
@@ -41,30 +40,30 @@
 #define delta         0.5
 #define size_x        9 
 #define size_z        19
-#define startX -4.5
+#define startX        -4.5
+#define startZ        -9.5
 
-#define startZ -9.5
-
-
-enum SIDES { FRONT_LEFT, FRONT_RIGHT, LEFT, RIGHT };
+/* Enum Data Types */
+enum SONAR_Sensors { Sonar_L, Sonar_R, Sonar_M };
+enum SIDES { LEFT, RIGHT, MIDDLE };
+enum XZComponents { X, Y, Z };
 enum FSM { INIT, FORWARD, PAUSE, GO_LEFT, GO_RIGHT, 
            UTURN_R, UTURN_L, OBSTACLE, DONE };
 
-enum SONAR_Sensors { SONAR_MID, SONAR_L, SONAR_R };
-enum XZComponents { X, Y, Z };
+/* Webots Sensors */
+static WbDeviceTag sonar[NUM_SONAR];
+static WbDeviceTag lidar;
+static WbDeviceTag l_motor, r_motor;
+static WbDeviceTag compass;
+static WbDeviceTag gps;
 
+
+/* Alternative Naming */
 typedef struct _Vector {
   double X_v;
   double Z_v;
 } Vector;
 
-/*.........................................*/
-static WbDeviceTag sonar[NUM_SONAR];
-static WbDeviceTag l_motor, r_motor;
-static WbDeviceTag compass;
-static WbDeviceTag gps;
-static WbDeviceTag lidar;
-/*.........................................*/
 
 static Vector targets[100];
 double *Z_target;
@@ -73,16 +72,13 @@ double sonar_val[NUM_SONAR] = {0.0, 0.0, 0.0};
 int state = INIT;
 int front_dir = 90;
 double distance = 0.0;
-static bool autopilot = true;
-static bool old_autopilot = true;
-static int old_key = -1;
 static int target_index = 1; // = 0 is where we start
 double gps_val[2] = {0.0, 0.0};
 double start_gps_pos[3] = {0.0, 0.0, 0.0};
 int target_points = 2*(size_z/delta);
 
 
-// generate X coordinates
+/* Generate X Coordinates */
 double *generate_x(int num_points) {
     static double x[100];
     for (int n = 0; n < num_points; n++) {
@@ -91,7 +87,7 @@ double *generate_x(int num_points) {
     return x;
 }
 
-// generate Z coordinates
+/* Generate Z Coordinates */
 double *generate_z(int num_points) {
     static double z[100];
     for (int n = 0; n < num_points; n++) {
@@ -101,7 +97,7 @@ double *generate_z(int num_points) {
 }
 
 
-// Euclidean Norm, i.e. distance between 
+/* Euclidean Norm, i.e. distance between */
 static double norm(const Vector *vec) {
   return sqrt(vec->Z_v*vec->Z_v + vec->X_v*vec->X_v);
 }
@@ -112,7 +108,44 @@ static void minus(Vector *diff, const Vector *trgt, const Vector *gpsPos) {
   diff->Z_v = trgt->Z_v - gpsPos->Z_v;
 }
 
-/* Autopilot */
+
+/*__________ Initialize Function __________*/
+static void initialize(void) {
+  //..... Boot Message .....
+  printf("\nInitializing Snow-e Robot...\n");  
+  
+  //..... Enable Motors .....
+  l_motor = wb_robot_get_device("left motor");
+  r_motor = wb_robot_get_device("right motor");
+  wb_motor_set_position(l_motor, INFINITY);
+  wb_motor_set_position(r_motor, INFINITY);
+  wb_motor_set_velocity(l_motor, 0.0);
+  wb_motor_set_velocity(r_motor, 0.0);
+  
+  //..... Enable Sonar .....
+  char sonar_names[NUM_SONAR][8] = {"Sonar_L", "Sonar_R", "Sonar_M"};
+  for (int i = 0; i < NUM_SONAR; i++) {
+    sonar[i] = wb_robot_get_device(sonar_names[i]);
+    wb_distance_sensor_enable(sonar[i], TIME_STEP);
+  }
+  
+  //..... Enable Compass .....
+  compass = wb_robot_get_device("compass");
+  wb_compass_enable(compass, TIME_STEP);
+  
+  //..... Enable GPS .....
+  gps = wb_robot_get_device("gps");
+  wb_gps_enable(gps, TIME_STEP);
+  
+  //..... Enable Lidar .....
+  lidar = wb_robot_get_device("lidar");
+  wb_lidar_enable(lidar, TIME_STEP);
+  wb_lidar_enable_point_cloud(lidar);
+}
+/*_________________________________________*/
+
+
+/*__________ Autopilot Function __________*/
 static int drive_autopilot(void) {
   double speed[2]       = {0.0, 0.0};  
   double current_time   = wb_robot_get_time();
@@ -139,14 +172,15 @@ static int drive_autopilot(void) {
     target_index++;
   }
   
-/*----------------------------*/ 
+  /*----------------------------*/ 
   switch (state) {
-    /*...... GET the x-direction (North/South) the robot is pointing to initially ......*/ 
+    //..... GET the x-direction (North/South) the robot is pointing to initially ..... 
     case INIT:
       front_dir = (int)theta;
       state = FORWARD;
       break;
-/*--------------FORWARD--------------*/
+
+    //..... Forward .....
     case FORWARD:
       speed[LEFT]  = DEFAULT_SPEED;
       speed[RIGHT] = DEFAULT_SPEED;
@@ -166,8 +200,8 @@ static int drive_autopilot(void) {
         state = DONE;
       }
       break;
-      
-/*--------------PAUSE--------------*/ 
+
+    //..... Pause .....
     case PAUSE:
       speed[LEFT]  = 0.0;
       speed[RIGHT] = 0.0;
@@ -180,8 +214,8 @@ static int drive_autopilot(void) {
         state = GO_LEFT;
       }
       break;
-      
-/*--------------GO LEFT--------------*/ 
+    
+    //..... Go Left .....
     case GO_LEFT:
       speed[LEFT]  = -DEFAULT_SPEED;
       speed[RIGHT] = DEFAULT_SPEED;
@@ -193,7 +227,8 @@ static int drive_autopilot(void) {
          }
       }
       break;
-/*--------------GO RIGHT--------------*/ 
+
+    //..... Go Right .....
     case GO_RIGHT:
       speed[LEFT]  = DEFAULT_SPEED;
       speed[RIGHT] = -DEFAULT_SPEED;
@@ -205,7 +240,8 @@ static int drive_autopilot(void) {
          }
       }
       break;
-/*--------------UTURN RIGHT--------------*/
+    
+    //..... Uturn Right .....
     case UTURN_R:
       speed[LEFT]  = DEFAULT_SPEED;
       speed[RIGHT] = -DEFAULT_SPEED;
@@ -214,7 +250,8 @@ static int drive_autopilot(void) {
         state = FORWARD;
       }
       break;
-/*--------------UTURN LEFT--------------*/   
+    
+    //..... Uturn Left .....  
     case UTURN_L:
       speed[LEFT]  = -DEFAULT_SPEED;
       speed[RIGHT] = DEFAULT_SPEED;
@@ -223,55 +260,25 @@ static int drive_autopilot(void) {
         state = FORWARD;
       }
       break;
-/*......if we are at the last target......*/ 
+    
+    //..... Done ..... 
     case DONE:
       speed[LEFT]  = 0.0;
       speed[RIGHT] = 0.0;
-/*------------------------------------------*/  
+    /*------------------------------------------*/  
     default:
       break;
   }
-  /*......SET SPEED......*/
+  
+  //..... Set Speed .....
   wb_motor_set_velocity(l_motor, speed[LEFT]);
   wb_motor_set_velocity(r_motor, speed[RIGHT]);
   return TIME_STEP;
 }
+/*_________________________________________*/
 
-static void initialize(void) {
-  printf("booting robot..\n");  
-  /*......ENABLE KEYBOARD......*/
-  wb_keyboard_enable(TIME_STEP);
 
-  /*......ENABLE MOTORS......*/
-  l_motor = wb_robot_get_device("left motor");
-  r_motor = wb_robot_get_device("right motor");
-  wb_motor_set_position(l_motor, INFINITY);
-  wb_motor_set_position(r_motor, INFINITY);
-  wb_motor_set_velocity(l_motor, 0.0);
-  wb_motor_set_velocity(r_motor, 0.0);
-  
-  /*......ENABLE SONAR......*/
-  char sonar_names[NUM_SONAR][5] = {"sfm0", "sfl0", "sfr0"};
-  for (int i = 0; i < NUM_SONAR; i++) {
-    sonar[i] = wb_robot_get_device(sonar_names[i]);
-    wb_distance_sensor_enable(sonar[i], TIME_STEP);
-  }
-  
-  /*......ENABLE COMPASS......*/
-  compass = wb_robot_get_device("compass");
-  wb_compass_enable(compass, TIME_STEP);
-  
-  /*......ENABLE GPS......*/
-  gps = wb_robot_get_device("gps");
-  wb_gps_enable(gps, TIME_STEP);
-  
-  /*......ENABLE Lidar......*/
-  lidar = wb_robot_get_device("lidar");
-  wb_lidar_enable(lidar, TIME_STEP);
-  wb_lidar_enable_point_cloud(lidar);
-}
-
-/*....................................*/ 
+/*__________ Main Function __________*/
 int main(int argc, char **argv) {
   wb_robot_init();
   initialize();
@@ -284,13 +291,11 @@ int main(int argc, char **argv) {
     targets[i].Z_v = Z_target[i];
   }
   
-  printf("Press 'P' to toggle autopilot/manual mode\n");
+  printf("\nStarting Snow-e in Autopilot Mode...\n\n");
   while (wb_robot_step(TIME_STEP) != -1) { 
-    //drive_manual();
-    //if (autopilot) {
-      drive_autopilot();
-    //}
+    drive_autopilot();
   };
   wb_robot_cleanup();
   return 0;
 }
+/*_________________________________________*/
