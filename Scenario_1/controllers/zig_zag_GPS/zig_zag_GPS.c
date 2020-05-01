@@ -24,7 +24,7 @@
 #include <webots/distance_sensor.h>
 #include <webots/compass.h>
 #include <webots/gps.h>
-#include <webots/lidar.h>
+//#include <webots/lidar.h>
 
 /* C libraries */
 #include <stdio.h>
@@ -255,10 +255,13 @@ static void initialize(void) {
   wb_gps_enable(gps, TIME_STEP);
   
   /*......ENABLE LIDAR......*/
-  WbDeviceTag lidar = wb_robot_get_device("lidar");
-  wb_lidar_enable(lidar, TIME_STEP);
-  wb_lidar_enable_point_cloud(lidar);
+  //WbDeviceTag lidar = wb_robot_get_device("lidar");
+  //wb_lidar_enable(lidar, TIME_STEP);
+  //wb_lidar_enable_point_cloud(lidar);
   
+  WbDeviceTag rot_motor = wb_robot_get_device("rotational motor");
+  wb_motor_set_position(rot_motor, INFINITY);
+  wb_motor_set_velocity(rot_motor, 0.5);
 }
 
 /*....................................*/ 

@@ -1,3 +1,11 @@
+# Boustrophedon Cellular Decomposition
+# V. J. Hansen
+# Version 0.1 - 01.05.2020
+
+# based on:
+# https://github.com/samialperen/boustrophedon_cellular_decomposition
+
+##################################################
 import numpy as np
 import cv2
 from matplotlib import pyplot as plt
@@ -7,24 +15,13 @@ import itertools
 
 Slice = List[Tuple[int, int]]
 
+##################################################
 def calc_connectivity(slice: np.ndarray) -> Tuple[int, Slice]:
-    """
-    Calculates the connectivity of a slice and returns the connected area of ​​the slice.
+    """ Calculates the connectivity of a slice and returns the connected area of ​​the slice.
+    Args:       slice: rows. A slice of map.
 
-    Args:
-        slice: rows. A slice of map.
-
-    Returns:
-        The connectivity number and connectivity parts.
-        connectivity --> total number of connected parts
-
-    Examples:
-        >>> data = np.array([0,0,0,0,1,1,1,0,1,0,0,0,1,1,0,1,1,0])
-        >>> print(calc_connectivity(data))
-        (4, [(4, 7), (8, 9), (12, 14), (15, 17)])
-        (4,7) --> 4 is the point where connectivity is started
-              --> 7 is the point where it finished
-    """
+    Returns:    The connectivity number and connectivity parts.
+                connectivity --> total number of connected parts """
     connectivity = 0
     last_data = 0
     open_part = False
@@ -38,64 +35,48 @@ def calc_connectivity(slice: np.ndarray) -> Tuple[int, Slice]:
             connectivity += 1
             end_point = i
             connective_parts.append((start_point, end_point))
-
         last_data = data
     return connectivity, connective_parts
 
-
+##################################################
 def get_adjacency_matrix(parts_left: Slice, parts_right: Slice) -> np.ndarray:
-    """
-    Get adjacency matrix of 2 neighborhood slices.
-
-    Args:
-        slice_left: left slice
-        slice_right: right slice
-
-    Returns:
-        [L, R] Adjacency matrix.
-    """
-    adjacency_matrix = np.zeros([len(parts_left), len(parts_right)])
+    """ Get adjacency matrix of 2 neighborhood slices.
+    Args:       slice_left: left slice, slice_right: right slice
+    Returns:    [L, R] Adjacency matrix. """
+    adjacency_matrix = np.zeros( [len(parts_left), len(parts_right)] )
     for l, lparts in enumerate(parts_left):
         for r, rparts in enumerate(parts_right):
             if min(lparts[1], rparts[1]) - max(lparts[0], rparts[0]) > 0:
                 adjacency_matrix[l, r] = 1
-
     return adjacency_matrix
 
+##################################################
 def remove_duplicates(in_list):
-    """
-        This function removes duplicates in the input list, where
+    """ This function removes duplicates in the input list, where
         input list is composed of unhashable elements
         Example:
             in_list = [[1,2],[1,2],[2,3]]
             output = remove_duplicates(in_list)
-            output --> [[1,2].[2,3]]
-    """
+            output --> [[1,2].[2,3]] """
     out_list = []
     in_list.sort()
     out_list = list(in_list for in_list, _ in itertools.groupby(in_list))
-    #print("input_list: ", in_list)
-    #print("output list: ",out_list)
     return out_list
 
+##################################################
 def bcd(erode_img: np.ndarray) -> Tuple[np.ndarray, int]:
-    """
-    Boustrophedon Cellular Decomposition
+    """ Boustrophedon Cellular Decomposition
 
-    Args:
-        erode_img: [H, W], eroded map. The pixel value 0 represents obstacles and 1 for free space.
+    Args:   erode_img: [H, W], eroded map. The pixel value 0 represents obstacles and 1 for free space.
 
     Returns:
-        [H, W], separated map. The pixel value 0 represents obstacles and others for its' cell number.
+        [H, W], separated map. The pixel value 0 represents obstacles for its' cell number.
         current_cell and seperate_img is for display purposes --> which is used to show
         decomposed cells into a separate figure
         all_cell_numbers --> contains all cell index numbers
         cell_boundaries --> contains all cell boundary coordinates (only y coordinate)
         non_neighboor_cells --> contains cell index numbers of non_neighboor_cells, i.e.
-        cells which are separated by the objects
-    """
-    
-    assert len(erode_img.shape) == 2, 'Map should be single channel.'
+        cells which are separated by the objects """   
     last_connectivity = 0
     last_connectivity_parts = []
     current_cell = 1
@@ -106,8 +87,7 @@ def bcd(erode_img: np.ndarray) -> Tuple[np.ndarray, int]:
 
     for col in range(erode_img.shape[1]):
         current_slice = erode_img[:, col]
-        connectivity, connective_parts = calc_connectivity(current_slice)
-        
+        connectivity, connective_parts = calc_connectivity(current_slice)     
         if last_connectivity == 0:
             current_cells = []
             for i in range(connectivity): #slice intersects with the object for the first time
@@ -156,20 +136,18 @@ def bcd(erode_img: np.ndarray) -> Tuple[np.ndarray, int]:
             # if their cell number are adjacent to each other
             # like cell1 is neighboor to cell2
             for i in range(len(current_cells)):
-                # current cells list doesn't need cell -1 operation 
-                # it is already in the proper form
                 cell_index = current_cells[i]
                 # connective_parts and current_cells contain more than one
-                # cell info which are separated by the object ,so we are iterating
+                # cell info which are separated by the object, so we are iterating
                 # with the for loop to reach all the cells
                 cell_boundaries.setdefault(cell_index,[])
                 cell_boundaries[cell_index].append(connective_parts[i])
-    # Cell 1 is the left most cell and cell n is the right most cell
-    # where n is the total cell number
+    # Cell 1 is the left most cell and cell n is the right most cell where n is the total cell number
     all_cell_numbers = cell_boundaries.keys()
     non_neighboor_cells = remove_duplicates(non_neighboor_cells)
     return separate_img, current_cell, list(all_cell_numbers), cell_boundaries, non_neighboor_cells
 
+##################################################
 def display_separate_map(separate_map, cells):
     display_img = np.empty([*separate_map.shape, 3], dtype=np.uint8)
     random_colors = np.random.randint(0, 255, [cells, 3])

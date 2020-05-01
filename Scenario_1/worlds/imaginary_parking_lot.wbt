@@ -16,8 +16,8 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation -0.3615178626730732 0.930640277412845 -0.05668782078397262 5.949337858777645
-  position -4.399178482087579 0.19828228813914275 -7.104695168478305
+  orientation 0.46541103309519727 0.8238585640935564 0.3234959607830747 4.8815542492052755
+  position -2.571040954326992 1.2961398614064361 -8.469425693251996
   follow "Snow-e"
 }
 TexturedBackground {
@@ -41,12 +41,28 @@ RectangleArena {
   }
 }
 DEF TRACKED_ROBOT Robot {
-  translation -3.3445895158843544 0.10302036228242371 -8.971720039524678
-  rotation 0.0003967713329275436 -0.567092536421075 0.823653991496442 -0.0011210441700650916
+  translation -0.7687888474670439 0.1030029869241241 -8.973967324760954
+  rotation 0.019557945655864755 -0.8813533431962683 0.4720527207828412 -0.0015750678863274642
   children [
-    RobotisLds01 {
-      translation 0 0.1 0
-      name "lidar"
+    Hinge2Joint {
+      jointParameters HingeJointParameters {
+        position 4.169277851980675
+      }
+      device [
+        RotationalMotor {
+        }
+      ]
+      endPoint Solid {
+        translation -0.193491 0.5 0.0267924
+        rotation 0.770111348866416 0.5552836266919146 0.3139882231470218 -2.3216852704518907
+        boundingObject Capsule {
+          height 0.1
+          radius 0.05
+          subdivision 16
+        }
+        physics Physics {
+        }
+      }
     }
     GPS {
     }
@@ -329,8 +345,8 @@ DEF TRACKED_ROBOT Robot {
     mass 40
   }
   controller "zig_zag_GPS"
-  linearVelocity -5.277975786528361e-16 7.588210866027897e-16 1.1319295543649125e-17
-  angularVelocity 1.4308051653046091e-16 2.3841869312167804e-18 5.136102801497252e-15
+  linearVelocity 0.09975825430239592 -7.19227542063612e-05 -0.000189997148120938
+  angularVelocity -0.0005898561425256451 0.00011115531942769987 0.0017588661454863864
 }
 Robot {
   children [
