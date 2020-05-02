@@ -3,7 +3,6 @@
 # V. J. Hansen
 # 02.05.2020
 
-
 # https://stackoverflow.com/questions/50234485/drawing-rectangle-in-opencv-python/50235566
 # https://stackoverflow.com/questions/50368683/set-white-color-outside-boundingbox-python-opencv
 
@@ -76,9 +75,6 @@ while True:
     # press 'q' to quit
     elif key == ord("q"):
         resized_img = cv2.resize(white_bg, (251,221))
-        #b_channel, g_channel, r_channel = cv2.split(resized_img)
-        #alpha_channel = np.ones(b_channel.shape, dtype=b_channel.dtype) * 50 #creating a dummy alpha channel image.
-        #img_BGRA = cv2.merge((b_channel, g_channel, r_channel, alpha_channel))
         row, col = resized_img.shape[:2]
         bottom = resized_img[row-2:row, 0:col]
         mean = cv2.mean(bottom)[0]
