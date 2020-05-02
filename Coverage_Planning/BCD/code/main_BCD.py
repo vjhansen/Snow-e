@@ -10,6 +10,45 @@
 from matplotlib import pyplot as plt
 import bcd  # Boustrophedon Cellular decomposition 
 import cv2
+import mlrose
+import numpy as np
+import timeit
+
+
+##################################################
+def distance(x_coordinates,y_coordinates,cell1,cell2):
+    """
+    Input: x_coordinates, y_coordinates --> they hold mean coordinate values of each cell
+                                            they are dictionaries
+    Output: distance between city1 and city2
+    """
+    cell1 += 1 # Real cell numbers start from 1, but mlrose requires zero indices
+    cell2 += 1 # x_coordinates,y_coordinates have real cell numbers, i.e. starts from one
+    a = np.array([x_coordinates[cell1],y_coordinates[cell1]])
+    b = np.array([x_coordinates[cell2],y_coordinates[cell2]])
+    return np.linalg.norm(a-b)
+
+
+##################################################
+def genetic_algorithm(problem,pop_size,mutation_prob,max_attemp):
+    """
+    Genetic algorithm implementation to minimize TSP
+    Inputs: 
+            fitness --> fitness distances required by mlrose
+            problem --> optimization problem object required by mlrose
+            pop_size --> population_size: genetic algorithm parameter
+            mutation_prob --> mutation_probability: genetic algorithm parameter
+            max_attemp --> maximum attemps per step: genetic algorithm parameter
+    Outputs: 
+            optimized_cells --> cells to visit
+    """
+    optimized_cells, _ = mlrose.genetic_alg(problem, mutation_prob = mutation_prob,\
+                                        max_attempts = max_attemp, random_state = 2)
+    
+    # Add 1 to all cells since in our case, cell numbers start from one not zero!
+    optimized_cells += 1
+
+    return list(optimized_cells)
 
 ##################################################
 # Depth-first Search Algorithm
@@ -78,7 +117,7 @@ def calculate_x_coordinates(x_size, y_size, cells_to_visit, cell_boundaries, non
 if __name__ == '__main__':
     # Read the original data
     # image: Export as -> Check Transparent Background and Selection Only -> Export
-    original_map = bcd.cv2.imread("../data/map5.png")
+    original_map = bcd.cv2.imread("new_map.png")
     
     # Show the original data
     fig1 = plt.figure()
