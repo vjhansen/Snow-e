@@ -75,9 +75,6 @@ while True:
     # press 'q' to quit
     elif key == ord("q"):
         resized_img = cv2.resize(white_bg, (251,221))
-        row, col = resized_img.shape[:2]
-        bottom = resized_img[row-2:row, 0:col]
-        mean = cv2.mean(bottom)[0]
         bordersize = 1
         border = cv2.copyMakeBorder(
                         resized_img,
