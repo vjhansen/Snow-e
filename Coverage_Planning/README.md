@@ -1,7 +1,5 @@
-# Motion Planning
 
-## Python
-
+### Python
 Python code for several path planning algorithms is located inside
 [python_src](https://github.com/RuslanAgishev/motion_planning/tree/master/python_src) folder.
 Let's go through a couple of examples.
@@ -17,9 +15,3 @@ python python_src/exploration/random_goals_following/main.py
 python python_src/exploration/random_walk/main.py
 ```
 <img src="https://github.com/RuslanAgishev/motion_planning/blob/master/figures/exploration/autonomous_exploration.gif" width="400"/> <img src="https://github.com/RuslanAgishev/motion_planning/blob/master/figures/exploration/random_walk.png" width="400"/>
-
-Coverage path planning for unknown map exploration. Robot's kinematics is taken into account in velocity motion model.
-```bash
-python python_src/exploration/coverage_path_planning/main3D.py
-```
-<img src="https://github.com/RuslanAgishev/motion_planning/blob/master/figures/coverage_path_planning/cpp_3D_view.png" width="500"/>
