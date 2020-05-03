@@ -8,80 +8,18 @@
 from matplotlib import pyplot as plt
 import bcd  # Boustrophedon Cellular decomposition 
 import cv2
-import mlrose
 import numpy as np
 import csv
 
 ##################################################
-def distance(x_coordinates,y_coordinates,cell1,cell2):
-    """
-    Input: x_coordinates, y_coordinates --> they hold mean coordinate values of each cell
-                                            they are dictionaries
-    Output: distance between city1 and city2
-    """
-    cell1 += 1 # Real cell numbers start from 1, but mlrose requires zero indices
-    cell2 += 1 # x_coordinates,y_coordinates have real cell numbers, i.e. starts from one
-    a = np.array([x_coordinates[cell1],y_coordinates[cell1]])
-    b = np.array([x_coordinates[cell2],y_coordinates[cell2]])
-    return np.linalg.norm(a-b)
-
-
-##################################################
-def genetic_algorithm(problem,pop_size,mutation_prob,max_attemp):
-    """
-    Genetic algorithm implementation to minimize TSP
-    Inputs: 
-            fitness --> fitness distances required by mlrose
-            problem --> optimization problem object required by mlrose
-            pop_size --> population_size: genetic algorithm parameter
-            mutation_prob --> mutation_probability: genetic algorithm parameter
-            max_attemp --> maximum attemps per step: genetic algorithm parameter
-    Outputs: 
-            optimized_cells --> cells to visit
-    """
-    optimized_cells, _ = mlrose.genetic_alg(problem, mutation_prob = mutation_prob,\
-                                        max_attempts = max_attemp, random_state = 2)
-    
-    # Add 1 to all cells since in our case, cell numbers start from one not zero!
-    optimized_cells += 1
-
-    return list(optimized_cells)
-
-##################################################
-# Depth-first Search Algorithm
-def dfs(cleaned, graph, node):
-    if node not in cleaned:
-        cleaned.append(node)
-        for neighbour in graph[node]:
-            dfs(cleaned, graph, neighbour)
-
-##################################################
-# Breadth First Search Algorithm
-# visits all the nodes of a graph (connected component) using BFS
-def bfs(cleaned, graph, start):
-    # keep track of nodes to be checked
-    queue = [start]
-    # keep looping until there are nodes still to be checked
-    while queue:
-        # pop shallowest node (first node) from queue
-        node = queue.pop(0)
-        if node not in cleaned:
-            # add node to list of checked nodes
-            cleaned.append(node)
-            neighbours = graph[node]
-            # add neighbours of node to queue
-            for neighbour in neighbours:
-                queue.append(neighbour)
-
-##################################################
-    """
+"""
         Input: cells_to_visit --> It contains the order of cells to visit
         Input: cell_boundaries --> It contains y coordinates of each cell
             x coordinates will be calculated in this function based on cell number 
             since first cell starts from the left and moves towards right
         Input: Nonneighbors --> This shows cels which are separated by the objects, so these cells should have the same x coordinates.
         Output: cells_x_coordinates --> x coordinates of each cell
-    """
+"""
 def calculate_x_coordinates(x_size, y_size, cells_to_visit, cell_boundaries, nonneighbors):
     total_cell_number = len(cells_to_visit)
     # Find the total length of the axises
@@ -177,33 +115,32 @@ if __name__ == '__main__':
     #gps = ((gps_max-gps_min)/(px_max-px_min))*(px-px_min)+gps_min
     
     # the values for Z will have to be divided into segments of equal size.
-    # name of csv file  
+    # name of csv file
     filename = "coordinates.csv"
 
     # writing to csv file  
     with open(filename, 'w') as csvfile:  
-        # creating a csv writer object  
+        # creating a csv writer object
         csvwriter = csv.writer(csvfile)  
             
-        # writing the fields  
+        # writing the fields
         csvwriter.writerow(fields)  
 
         for i in range(len(x_coordinates)):
-            # data rows of csv file   # first and last y_coordinates are special (4D)
+            # data rows of csv file   # first, middle and last y_coordinates are special (4D)
             cell_idx = i+1
-            if ( (cell_idx == 1) | (cell_idx == len(x_coordinates)) | (cell_idx == ((len(x_coordinates)+1)/2))):
+            if ( (cell_idx == 1) | (cell_idx == len(x_coordinates)) | (cell_idx == ((len(x_coordinates)+1)/2)) ):
                 rows = [    [ cell_numbers[i], x_coordinates[cell_idx][0], x_coordinates[cell_idx][len(x_coordinates[cell_idx])-1], y_coordinates[cell_idx][0][0][0], y_coordinates[cell_idx][0][0][1],
                                         ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][0])+Z_min, ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][len(x_coordinates[cell_idx])-1])+Z_min,
                                         ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][0][0])+X_min, ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][0][1])+X_min ] ]  
 
-            elif ( (cell_idx != 1) | (cell_idx != len(x_coordinates))):
+            elif ( (cell_idx != 1) | (cell_idx != len(x_coordinates)) ):
                 rows = [ [cell_numbers[i], x_coordinates[cell_idx][0], x_coordinates[cell_idx][len(x_coordinates[cell_idx])-1], y_coordinates[cell_idx][0][0], y_coordinates[cell_idx][0][1],
                             ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][0])+Z_min, ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][len(x_coordinates[cell_idx])-1])+Z_min,
                             ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][0])+X_min, ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][1])+X_min ] ]
 
             # writing the data rows  
             csvwriter.writerows(rows)
-
 
     for i in range(len(x_coordinates)):
         cell_idx = i+1 #i starts from zero, but cell numbers start from 1

@@ -1,7 +1,7 @@
 # Create binary map from image
 
 # V. J. Hansen
-# 02.05.2020
+# 03.05.2020
 
 # https://stackoverflow.com/questions/50234485/drawing-rectangle-in-opencv-python/50235566
 # https://stackoverflow.com/questions/50368683/set-white-color-outside-boundingbox-python-opencv
@@ -12,7 +12,6 @@ import cv2
 import argparse
 import os
 import numpy as np
-
 
 # initialize the list of reference point
 ref_point = []
@@ -74,18 +73,18 @@ while True:
 
     # press 'q' to quit
     elif key == ord("q"):
-        resized_img = cv2.resize(white_bg, (251,221))
+        resized_img = cv2.resize(white_bg, (251, 221))
         bordersize = 1
         border = cv2.copyMakeBorder(
                         resized_img,
-                        top=bordersize,
-                        bottom=bordersize,
-                        left=bordersize,
-                        right=bordersize,
-                        borderType=cv2.BORDER_CONSTANT,
-                        value=[0,0,0] # black
+                        top = bordersize,
+                        bottom = bordersize,
+                        left = bordersize,
+                        right = bordersize,
+                        borderType = cv2.BORDER_CONSTANT,
+                        value = [0,0,0] # black
         )
         cv2.imwrite("new_map.png", border)
         print('Successfully saved') 
         break
-cv2.destroyAllWindows() 
+cv2.destroyAllWindows()
