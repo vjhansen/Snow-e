@@ -162,56 +162,47 @@ if __name__ == '__main__':
     mean_y_coordinates = {}
     
     # field names  
-    fields = ['Cell', 'x start[px]', 'x end[px]', 'y range[px]', 'y end[px]', 'Z_start[m]', 'Z_end[m]', 'X_start[m]', 'X_end[m]']  
+    fields = ['Cell', 'x start[px]', 'x end[px]', 'y start[px]', 'y end[px]', 'Z_start[m]', 'Z_end[m]', 'X_start[m]', 'X_end[m]']  
 
-    X_max = 10      # [m], these will be related to y_coordinates of image
-    X_min = 0.5     # [m], these will be related to y_coordinates of image
+    # X is the length of the parking lot, which is 10 meters
+    X_max = 5   # [m], these will be related to y_coordinates of image
+    X_min = -5  # [m], these will be related to y_coordinates of image   
 
-    Z_max = 20      # [m], these will be related to x_coordinates of image
-    Z_min = 0.5     # [m], these will be related to x_coordinates of image
-
-    #x_length = 253 px
-    #y_length = 223 px
+    # Z is the width of the parking lot, which is 20 meters
+    Z_max = 10   # [m], these will be related to x_coordinates of image
+    Z_min = -10  # [m], these will be related to x_coordinates of image
 
     # https://www.divize.com/techinfo/4-20ma-calculator.html
     #px = ((px_max-px_min)/(gps_max-gps_min))*(gps-gps_min)+px_min
     #gps = ((gps_max-gps_min)/(px_max-px_min))*(px-px_min)+gps_min
     
-
-    #use for loop here
-    # data rows of csv file   # first and last y_coordinates are special (4D)
-    rows = [    [ cell_numbers[0], x_coordinates[1][0], x_coordinates[1][len(x_coordinates[1])-1], y_coordinates[1][0][0][0], y_coordinates[1][0][0][1],
-                ((Z_max-Z_min)/(x_length))*(x_coordinates[1][0])+Z_min, ((Z_max-Z_min)/(x_length))*(x_coordinates[1][len(x_coordinates[1])-1])+Z_min,
-                ((X_max-X_min)/(y_length))*(y_coordinates[1][0][0][0])+X_min, ((X_max-X_min)/(y_length))*(y_coordinates[1][0][0][1])+X_min ],  
-             
-             
-                [ cell_numbers[1], x_coordinates[2][0], x_coordinates[2][len(x_coordinates[2])-1], y_coordinates[2][0][0], y_coordinates[2][0][1],
-                ((Z_max-Z_min)/(x_length))*(x_coordinates[2][0])+Z_min, ((Z_max-Z_min)/(x_length))*(x_coordinates[2][len(x_coordinates[2])-1])+Z_min,
-                ((X_max-X_min)/(y_length))*(y_coordinates[2][0][0])+X_min, ((X_max-X_min)/(y_length))*(y_coordinates[2][0][1])+X_min ], 
-             
-             
-                [ cell_numbers[2], x_coordinates[3][0], x_coordinates[3][len(x_coordinates[3])-1], y_coordinates[3][0][0], y_coordinates[3][0][1],
-                ((Z_max-Z_min)/(x_length))*(x_coordinates[3][0])+Z_min, ((Z_max-Z_min)/(x_length))*(x_coordinates[3][len(x_coordinates[3])-1])+Z_min,
-                ((X_max-X_min)/(y_length))*(y_coordinates[3][0][0])+X_min, ((X_max-X_min)/(y_length))*(y_coordinates[3][0][1])+X_min ],    
-             
-             
-                [ cell_numbers[3], x_coordinates[4][0], x_coordinates[4][len(x_coordinates[4])-1], y_coordinates[4][0][0][0], y_coordinates[4][0][0][1],
-                ((Z_max-Z_min)/(x_length))*(x_coordinates[4][0])+Z_min, ((Z_max-Z_min)/(x_length))*(x_coordinates[4][len(x_coordinates[4])-1])+Z_min,
-                ((X_max-X_min)/(y_length))*(y_coordinates[4][0][0][0])+X_min, ((X_max-X_min)/(y_length))*(y_coordinates[4][0][0][1])+X_min ] ]  
-
+    # the values for Z will have to be divided into segments of equal size.
     # name of csv file  
     filename = "coordinates.csv"
-        
+
     # writing to csv file  
     with open(filename, 'w') as csvfile:  
         # creating a csv writer object  
-        csvwriter = csv.writer(csvfile, dialect='excel', delimiter = ',')  
+        csvwriter = csv.writer(csvfile)  
             
         # writing the fields  
         csvwriter.writerow(fields)  
-            
-        # writing the data rows  
-        csvwriter.writerows(rows)
+
+        for i in range(len(x_coordinates)):
+            # data rows of csv file   # first and last y_coordinates are special (4D)
+            cell_idx = i+1
+            if ( (cell_idx == 1) | (cell_idx == len(x_coordinates)) | (cell_idx == ((len(x_coordinates)+1)/2))):
+                rows = [    [ cell_numbers[i], x_coordinates[cell_idx][0], x_coordinates[cell_idx][len(x_coordinates[cell_idx])-1], y_coordinates[cell_idx][0][0][0], y_coordinates[cell_idx][0][0][1],
+                                        ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][0])+Z_min, ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][len(x_coordinates[cell_idx])-1])+Z_min,
+                                        ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][0][0])+X_min, ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][0][1])+X_min ] ]  
+
+            elif ( (cell_idx != 1) | (cell_idx != len(x_coordinates))):
+                rows = [ [cell_numbers[i], x_coordinates[cell_idx][0], x_coordinates[cell_idx][len(x_coordinates[cell_idx])-1], y_coordinates[cell_idx][0][0], y_coordinates[cell_idx][0][1],
+                            ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][0])+Z_min, ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][len(x_coordinates[cell_idx])-1])+Z_min,
+                            ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][0])+X_min, ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][1])+X_min ] ]
+
+            # writing the data rows  
+            csvwriter.writerows(rows)
 
 
     for i in range(len(x_coordinates)):
