@@ -1,8 +1,6 @@
 # Apply Boustrophedon Cellular Decomposition to a map
 # V. J. Hansen
-# Version 0.1 - 01.05.2020
-
-# need to extract waypoints from the generated cells.
+# Version 0.3 - 03.05.2020
 
 # based on:
 # https://github.com/samialperen/boustrophedon_cellular_decomposition
@@ -12,8 +10,7 @@ import bcd  # Boustrophedon Cellular decomposition
 import cv2
 import mlrose
 import numpy as np
-import timeit
-
+import csv
 
 ##################################################
 def distance(x_coordinates,y_coordinates,cell1,cell2):
@@ -120,9 +117,9 @@ if __name__ == '__main__':
     original_map = bcd.cv2.imread("new_map.png")
     
     # Show the original data
-    fig1 = plt.figure()
-    plt.imshow(original_map)
-    plt.title("Original Map Image")
+    #fig1 = plt.figure()
+    #plt.imshow(original_map)
+    #plt.title("Original Map Image")
     
     # We need binary image - 1's represents free space while 0's represents objects/walls
     if len(original_map.shape) > 2:
@@ -163,6 +160,59 @@ if __name__ == '__main__':
     y_coordinates = cell_boundaries
     mean_x_coordinates = {}
     mean_y_coordinates = {}
+    
+    # field names  
+    fields = ['Cell', 'x start[px]', 'x end[px]', 'y range[px]', 'y end[px]', 'Z_start[m]', 'Z_end[m]', 'X_start[m]', 'X_end[m]']  
+
+    X_max = 10      # [m], these will be related to y_coordinates of image
+    X_min = 0.5     # [m], these will be related to y_coordinates of image
+
+    Z_max = 20      # [m], these will be related to x_coordinates of image
+    Z_min = 0.5     # [m], these will be related to x_coordinates of image
+
+    #x_length = 253 px
+    #y_length = 223 px
+
+    # https://www.divize.com/techinfo/4-20ma-calculator.html
+    #px = ((px_max-px_min)/(gps_max-gps_min))*(gps-gps_min)+px_min
+    #gps = ((gps_max-gps_min)/(px_max-px_min))*(px-px_min)+gps_min
+    
+
+    #use for loop here
+    # data rows of csv file   # first and last y_coordinates are special (4D)
+    rows = [    [ cell_numbers[0], x_coordinates[1][0], x_coordinates[1][len(x_coordinates[1])-1], y_coordinates[1][0][0][0], y_coordinates[1][0][0][1],
+                ((Z_max-Z_min)/(x_length))*(x_coordinates[1][0])+Z_min, ((Z_max-Z_min)/(x_length))*(x_coordinates[1][len(x_coordinates[1])-1])+Z_min,
+                ((X_max-X_min)/(y_length))*(y_coordinates[1][0][0][0])+X_min, ((X_max-X_min)/(y_length))*(y_coordinates[1][0][0][1])+X_min ],  
+             
+             
+                [ cell_numbers[1], x_coordinates[2][0], x_coordinates[2][len(x_coordinates[2])-1], y_coordinates[2][0][0], y_coordinates[2][0][1],
+                ((Z_max-Z_min)/(x_length))*(x_coordinates[2][0])+Z_min, ((Z_max-Z_min)/(x_length))*(x_coordinates[2][len(x_coordinates[2])-1])+Z_min,
+                ((X_max-X_min)/(y_length))*(y_coordinates[2][0][0])+X_min, ((X_max-X_min)/(y_length))*(y_coordinates[2][0][1])+X_min ], 
+             
+             
+                [ cell_numbers[2], x_coordinates[3][0], x_coordinates[3][len(x_coordinates[3])-1], y_coordinates[3][0][0], y_coordinates[3][0][1],
+                ((Z_max-Z_min)/(x_length))*(x_coordinates[3][0])+Z_min, ((Z_max-Z_min)/(x_length))*(x_coordinates[3][len(x_coordinates[3])-1])+Z_min,
+                ((X_max-X_min)/(y_length))*(y_coordinates[3][0][0])+X_min, ((X_max-X_min)/(y_length))*(y_coordinates[3][0][1])+X_min ],    
+             
+             
+                [ cell_numbers[3], x_coordinates[4][0], x_coordinates[4][len(x_coordinates[4])-1], y_coordinates[4][0][0][0], y_coordinates[4][0][0][1],
+                ((Z_max-Z_min)/(x_length))*(x_coordinates[4][0])+Z_min, ((Z_max-Z_min)/(x_length))*(x_coordinates[4][len(x_coordinates[4])-1])+Z_min,
+                ((X_max-X_min)/(y_length))*(y_coordinates[4][0][0][0])+X_min, ((X_max-X_min)/(y_length))*(y_coordinates[4][0][0][1])+X_min ] ]  
+
+    # name of csv file  
+    filename = "coordinates.csv"
+        
+    # writing to csv file  
+    with open(filename, 'w') as csvfile:  
+        # creating a csv writer object  
+        csvwriter = csv.writer(csvfile, dialect='excel', delimiter = ',')  
+            
+        # writing the fields  
+        csvwriter.writerow(fields)  
+            
+        # writing the data rows  
+        csvwriter.writerows(rows)
+
 
     for i in range(len(x_coordinates)):
         cell_idx = i+1 #i starts from zero, but cell numbers start from 1
@@ -171,7 +221,7 @@ if __name__ == '__main__':
             mean_y_coordinates[cell_idx] = mean_d_double_list(y_coordinates[cell_idx])
         else:
             mean_y_coordinates[cell_idx] = mean_double_list(y_coordinates[cell_idx])
- 
+    
     plt.waitforbuttonpress(1)
     input("Press any key to close all figures.")
     plt.close("all")
