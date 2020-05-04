@@ -16,9 +16,9 @@ with open('coordinates.csv') as csvfile:
     z_e_coord = []
     for row in readCSV:
         z_start = row[5]
-        z_end = row[6]
+        z_end   = row[6]
         x_start = row[7]
-        x_end = row[8]
+        x_end   = row[8]
         z_s_coord.append(z_start)
         z_e_coord.append(z_end)
         x_s_coord.append(x_start)
@@ -37,7 +37,6 @@ delta = 0.5
 
 # Pattern:
 # Xs, Xs, Xe, Xe, Xs, Xs, Xe, Xe
-
 def generate_x_s(num_points):
     x_s_coord = []
     for n in range(num_points):
@@ -51,7 +50,6 @@ def generate_x_e(num_points):
         x = (x_e) * (0.5 * (1 - math.cos((n*math.pi)/2) + math.sin((n*math.pi)/2)))
         x_e_coord.append(x)
     return x_e_coord
-
 
 
 # Pattern:
@@ -80,7 +78,6 @@ while z_s_p < z_e_p:
 
 a = generate_x_s(target_points)
 b = generate_x_e(target_points)
-
 c = generate_z_s(z_points)
 
 print(np.around(a,3))
