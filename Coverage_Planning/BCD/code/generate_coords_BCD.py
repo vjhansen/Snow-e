@@ -39,12 +39,19 @@ print(size_z)
 delta = 0.5
 
 
+# Pattern:
+# Xs, Xs, Xe, Xe, Xs, Xs, Xe, Xe
+
 def generate_x(num_points):
     x_coord = []
     for n in range(num_points):
         x = (-size_x/2.0) * ((1 + 3*n + n**2 + 2*(n**3)) - 4*(math.floor(0.25 * (2 + 3*n + (n**2) + 2*(n**3)))))
         x_coord.append(x)
     return x_coord
+
+
+# Pattern:
+# Zs, Zs, Zs+delta, Zs+delta, Zs+2*delta, Zs+2*delta, ..., Zs + n*delta = Ze
 
 def generate_z(num_points):
     z_coord = []
