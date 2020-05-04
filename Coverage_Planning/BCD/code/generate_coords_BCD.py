@@ -6,6 +6,7 @@
 
 import math
 import csv
+import numpy as np
 
 with open('coordinates.csv') as csvfile:
     readCSV = csv.reader(csvfile, delimiter=',')
@@ -23,46 +24,65 @@ with open('coordinates.csv') as csvfile:
         x_s_coord.append(x_start)
         x_e_coord.append(x_end)
 
-#print(z_s_coord[0],z_s_coord[1],z_s_coord[2],z_s_coord[3],z_s_coord[4])
-#print(z_e_coord[0],z_e_coord[1],z_e_coord[2],z_e_coord[3],z_e_coord[4])
 
-#print(x_s_coord[0],x_s_coord[1],x_s_coord[2],x_s_coord[3],x_s_coord[4])
-#print(x_e_coord[0],x_e_coord[1],x_e_coord[2],x_e_coord[3],x_e_coord[4])
+# height
+x_s = float(x_s_coord[3])
+x_e = float(x_e_coord[3])
 
+# width
+z_s = float(z_s_coord[2])
+z_e = float(z_e_coord[2])
 
-size_x = abs(float(x_e_coord[2])-float(x_s_coord[2])) # height
-size_z = abs(float(z_s_coord[2])-float(z_e_coord[2])) # width
-print(size_x)
-print(size_z)
-#size_x = 10  
-#size_z = 20  
 delta = 0.5
-
 
 # Pattern:
 # Xs, Xs, Xe, Xe, Xs, Xs, Xe, Xe
 
-def generate_x(num_points):
-    x_coord = []
+def generate_x_s(num_points):
+    x_s_coord = []
     for n in range(num_points):
-        x = (-size_x/2.0) * ((1 + 3*n + n**2 + 2*(n**3)) - 4*(math.floor(0.25 * (2 + 3*n + (n**2) + 2*(n**3)))))
-        x_coord.append(x)
-    return x_coord
+        x = (x_s) * (0.5 * (1 + math.cos((n*math.pi)/2) - math.sin((n*math.pi)/2)))
+        x_s_coord.append(x)
+    return x_s_coord
+
+def generate_x_e(num_points):
+    x_e_coord = []
+    for n in range(num_points):
+        x = (x_e) * (0.5 * (1 - math.cos((n*math.pi)/2) + math.sin((n*math.pi)/2)))
+        x_e_coord.append(x)
+    return x_e_coord
+
 
 
 # Pattern:
 # Zs, Zs, Zs+delta, Zs+delta, Zs+2*delta, Zs+2*delta, ..., Zs + n*delta = Ze
 
-def generate_z(num_points):
-    z_coord = []
+def generate_z_s(num_points):
+    z_s_coord = []
     for n in range (num_points):
-        z = (-size_z/2.0) + delta*math.ceil(n/2)
-        z_coord.append(z)
-    return z_coord
+        z = (z_s) + delta*math.ceil(n/2)
+        z_s_coord.append(z)
+    return z_s_coord
 
-target_points = 4*(int(size_z)) # same as 2*(size_z//delta=0.5)
-a = generate_x(target_points)
-b = generate_z(target_points)
 
-print(a)
-print(b)
+target_points = 4*(int((float(z_e_coord[1])-float(z_s_coord[1])))) # same as (size_z//delta=0.5)
+
+
+######OK#########
+z_points = 0
+z_s_p = float(z_s_coord[2])
+z_e_p = float(z_e_coord[2])
+while z_s_p < z_e_p:
+    z_s_p  += delta
+    z_points += 2
+###############
+
+
+a = generate_x_s(target_points)
+b = generate_x_e(target_points)
+
+c = generate_z_s(z_points)
+
+print(np.around(a,3))
+print(np.around(b,3))
+print(np.around(c,3))
