@@ -2,10 +2,11 @@
 
 # Snow-e
 # Engineer: V. J. Hansen
-# 06.05.2020
+# 07.05.2020
+# V 0.5
 
-import math
-import csv
+
+import math, csv
 import numpy as np
 
 with open('coordinates.csv') as csvfile:
@@ -25,27 +26,38 @@ with open('coordinates.csv') as csvfile:
         x_e_coord.append(x_end)
 
 
-# height
-x_s = float(x_s_coord[3])
-x_e = float(x_e_coord[3])
+def init_x_s(cell):
+    x_s = float(x_s_coord[cell])
+    return x_s
 
-# width
-z_s = float(z_s_coord[2])
-z_e = float(z_e_coord[2])
+def init_x_e(cell):
+    x_e = float(x_e_coord[cell])
+    return x_e
 
-delta = 0.5
+def init_z_s(cell):
+    z_s = float(z_s_coord[cell])
+    return z_s
+
+def init_z_e(cell):
+    z_e = float(z_e_coord[cell])
+    return z_e
+
 
 # Pattern:
 # Xs, Xs, Xe, Xe, Xs, Xs, Xe, Xe
-def generate_x_s(num_points):
+def generate_x_s(cell):
     x_s_coord = []
+    x_s = init_x_s(cell)
+    num_points = 4*(int((float(z_e_coord[cell])-float(z_s_coord[cell]))))
     for n in range(num_points):
         x = (x_s) * (0.5 * (1 + math.cos((n*math.pi)/2) - math.sin((n*math.pi)/2)))
         x_s_coord.append(x)
     return x_s_coord
 
-def generate_x_e(num_points):
+def generate_x_e(cell):
     x_e_coord = []
+    x_e = init_x_e(cell)
+    num_points = 4*(int((float(z_e_coord[cell])-float(z_s_coord[cell]))))
     for n in range(num_points):
         x = (x_e) * (0.5 * (1 - math.cos((n*math.pi)/2) + math.sin((n*math.pi)/2)))
         x_e_coord.append(x)
@@ -54,32 +66,29 @@ def generate_x_e(num_points):
 
 # Pattern:
 # Zs, Zs, Zs+delta, Zs+delta, Zs+2*delta, Zs+2*delta, ..., Zs + n*delta = Ze
-
-def generate_z_s(num_points):
+# delta is the incremental change in eastern direction after each iteration,
+def generate_z_s(cell, delta):
     z_s_coord = []
-    for n in range (num_points):
+    z_s = z_s_p = init_z_s(cell)
+    z_e = init_z_e(cell)
+    num_points = 0
+    while z_s_p < z_e:
+        z_s_p += delta
+        num_points += 2
+    for n in range (num_points-1): # (num_points-1) to ensure that the snow blower doesn't get too close to obstacles
         z = (z_s) + delta*math.ceil(n/2)
         z_s_coord.append(z)
     return z_s_coord
 
 
-target_points = 4*(int((float(z_e_coord[1])-float(z_s_coord[1])))) # same as (size_z//delta=0.5)
+## need a for loop to write the generated pattern of x and z coordinates for each cell (num_cells) into a .csv file
 
+num_cells = len(x_s_coord)-1
 
-######OK#########
-z_points = 0
-z_s_p = float(z_s_coord[2])
-z_e_p = float(z_e_coord[2])
-while z_s_p < z_e_p:
-    z_s_p  += delta
-    z_points += 2
-###############
+a = generate_x_s(1)
+b = generate_x_e(1)
+c = generate_z_s(2, 0.5) 
 
-
-a = generate_x_s(target_points)
-b = generate_x_e(target_points)
-c = generate_z_s(z_points)
-
-print(np.around(a,3))
-print(np.around(b,3))
+#print(np.around(a,3))
+#print(np.around(b,3))
 print(np.around(c,3))
