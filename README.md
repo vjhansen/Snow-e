@@ -3,7 +3,7 @@
 
 ### To do:
 * Create GUI for `image_to_binary_map, main_BCD, BCD, generate_coords_BCD`, i.e. tie them together. https://likegeeks.com/pyqt5-tutorial/
-* Fix/automate `generate_coords_BCD`.
+* Fix/automate `generate_coords_BCD`. 85% done
 * Enable robot to follow BCD coords
 * Implement A*
 
