@@ -1,17 +1,15 @@
 # Boustrophedon Cellular Decomposition
 # V. J. Hansen
-# Version 0.1 - 01.05.2020
+# Version 0.1.1 - 06.05.2020
 
 # based on:
 # https://github.com/samialperen/boustrophedon_cellular_decomposition
 
 ##################################################
 import numpy as np
-import cv2
 from matplotlib import pyplot as plt
 from typing import Tuple, List
-import random
-import itertools
+import random, itertools, cv2
 
 Slice = List[Tuple[int, int]]
 
@@ -131,10 +129,8 @@ def bcd(erode_img: np.ndarray) -> Tuple[np.ndarray, int]:
             # cells separated by the objects are not neighbor to each other
             non_neighboor_cells.append(current_cells)
             # non_neighboor_cells will contain many duplicate values, but we 
-            # will get rid of duplicates at the end
-            # in this logic, all other cells must be neighboor to each other
-            # if their cell number are adjacent to each other
-            # like cell1 is neighboor to cell2
+            # will get rid of duplicates at the end in this logic, all other cells must be neighboor to each other
+            # if their cell number are adjacent to each other like cell1 is neighboor to cell2
             for i in range(len(current_cells)):
                 cell_index = current_cells[i]
                 # connective_parts and current_cells contain more than one
