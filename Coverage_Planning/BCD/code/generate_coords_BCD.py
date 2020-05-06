@@ -2,7 +2,7 @@
 
 # Snow-e
 # Engineer: V. J. Hansen
-# 04.05.2020
+# 06.05.2020
 
 import math
 import csv
