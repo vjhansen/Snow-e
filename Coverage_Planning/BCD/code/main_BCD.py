@@ -1,17 +1,17 @@
-# Apply Boustrophedon Cellular Decomposition to a map
-# V. J. Hansen
-# Version 0.3 - 03.05.2020
-
 # based on:
 # https://github.com/samialperen/boustrophedon_cellular_decomposition
-##################################################
+#-----------------------------------------------
+# Apply Boustrophedon Cellular Decomposition to a map
+# Engineer(s): V. J. Hansen
+# Version 0.3.1 - 07.05.2020
+
+#-----------------------------------------------
 from matplotlib import pyplot as plt
 import bcd  # Boustrophedon Cellular decomposition 
-import cv2
+import cv2, csv
 import numpy as np
-import csv
 
-##################################################
+#-----------------------------------------------
 """
         Input: cells_to_visit --> It contains the order of cells to visit
         Input: cell_boundaries --> It contains y coordinates of each cell
@@ -48,7 +48,7 @@ def calculate_x_coordinates(x_size, y_size, cells_to_visit, cell_boundaries, non
         cell_idx = cell_idx + 1
     return cells_x_coordinates
 
-##################################################
+#-----------------------------------------------
 if __name__ == '__main__':
     # Read the original data
     # image: Export as -> Check Transparent Background and Selection Only -> Export
@@ -71,7 +71,7 @@ if __name__ == '__main__':
     bcd.display_separate_map(bcd_out_im, bcd_out_cells)
     plt.show(block=False)
 
-    ############ Add cost using distance between center of mass of cells
+    # Add cost using distance between center of mass of cells
     def mean(input_list):
         output_mean = sum(input_list)/len(input_list)
         return output_mean
@@ -91,7 +91,7 @@ if __name__ == '__main__':
             total += mean(input_double_list[i][0])    
         output_mean = total/length
         return output_mean
-    
+#-----------------------------------------------
     x_length = original_map.shape[1]
     y_length = original_map.shape[0]
     x_coordinates = calculate_x_coordinates(x_length, y_length, cell_numbers, cell_boundaries, non_neighboor_cell_numbers)
@@ -116,7 +116,7 @@ if __name__ == '__main__':
     
     # the values for Z will have to be divided into segments of equal size.
     # name of csv file
-    filename = "coordinates.csv"
+    filename = "BCD_coordinates.csv"
 
     # writing to csv file  
     with open(filename, 'w') as csvfile:  
