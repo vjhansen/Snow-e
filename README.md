@@ -7,11 +7,22 @@
 * Enable robot to follow BCD coords
 * Implement A*
 
+---
 
-## Run Autonomous Snow Blower Simulation
+## Run the Simulation
 
+### Part 0 - Requirements
 * Requires [Webots](https://www.cyberbotics.com/) Open-Source Robot Simulator
 * `pip3 install -r requirements.txt`
+
+### Part 1 - Python Scripts
+* run `python3 image_to_binary_map.py --image sim_lot.png`
+* run `python3 main_BCD.py`
+* run `python3 generate_coords_BCD.py`
+
+### Part 2 - Webots 
+* open...
+
 
 ---
 
