@@ -8,9 +8,10 @@
 * Implement A*
 
 
-## Autonomous Snow Blower Simulation
+## Run Autonomous Snow Blower Simulation
 
-* Requires [Webots](https://www.cyberbotics.com/) Open Source Robot Simulator
+* Requires [Webots](https://www.cyberbotics.com/) Open-Source Robot Simulator
+* `pip3 install -r requirements.txt`
 
 ---
 
