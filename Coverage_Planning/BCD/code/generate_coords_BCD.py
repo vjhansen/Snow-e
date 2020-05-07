@@ -25,7 +25,6 @@ with open('BCD_coordinates.csv') as csvread_file:
         x_s_coord.append(x_start)
         x_e_coord.append(x_end)
 
-
 def init_x_s(cell):
     x_s = float(x_s_coord[cell])
     return x_s
@@ -86,7 +85,6 @@ def generate_z_s(cell, delta):
 
 num_cells = len(x_s_coord)-1
 
- 
 fields = ['Cell', 'Z', 'X_start[m]', 'X_end[m]']  
 filename = "waypoints.csv"
 

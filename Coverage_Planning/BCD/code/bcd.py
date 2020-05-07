@@ -1,11 +1,12 @@
 # Boustrophedon Cellular Decomposition
-# V. J. Hansen
-# Version 0.1.1 - 06.05.2020
-
+#--------------------------
 # based on:
 # https://github.com/samialperen/boustrophedon_cellular_decomposition
+#--------------------------
+# Engineers(s) V. J. Hansen
+# Version 0.1.3 - 07.05.2020
+#--------------------------
 
-##################################################
 import numpy as np
 from matplotlib import pyplot as plt
 from typing import Tuple, List
@@ -13,7 +14,7 @@ import random, itertools, cv2
 
 Slice = List[Tuple[int, int]]
 
-##################################################
+#-------------------------------------
 def calc_connectivity(slice: np.ndarray) -> Tuple[int, Slice]:
     """ Calculates the connectivity of a slice and returns the connected area of ​​the slice.
     Args:       slice: rows. A slice of map.
@@ -36,7 +37,7 @@ def calc_connectivity(slice: np.ndarray) -> Tuple[int, Slice]:
         last_data = data
     return connectivity, connective_parts
 
-##################################################
+#-------------------------------------
 def get_adjacency_matrix(parts_left: Slice, parts_right: Slice) -> np.ndarray:
     """ Get adjacency matrix of 2 neighborhood slices.
     Args:       slice_left: left slice, slice_right: right slice
@@ -48,7 +49,7 @@ def get_adjacency_matrix(parts_left: Slice, parts_right: Slice) -> np.ndarray:
                 adjacency_matrix[l, r] = 1
     return adjacency_matrix
 
-##################################################
+#-------------------------------------
 def remove_duplicates(in_list):
     """ This function removes duplicates in the input list, where
         input list is composed of unhashable elements
@@ -61,14 +62,14 @@ def remove_duplicates(in_list):
     out_list = list(in_list for in_list, _ in itertools.groupby(in_list))
     return out_list
 
-##################################################
+#-------------------------------------
 def bcd(erode_img: np.ndarray) -> Tuple[np.ndarray, int]:
     """ Boustrophedon Cellular Decomposition
 
-    Args:   erode_img: [H, W], eroded map. The pixel value 0 represents obstacles and 1 for free space.
+    Args:   erode_img: [H, W], eroded map. pixel value 0 represents obstacles, 1 = free space.
 
     Returns:
-        [H, W], separated map. The pixel value 0 represents obstacles for its' cell number.
+        [H, W], separated map. pixel value 0 represents obstacles for its cell number.
         current_cell and seperate_img is for display purposes --> which is used to show
         decomposed cells into a separate figure
         all_cell_numbers --> contains all cell index numbers
@@ -90,8 +91,7 @@ def bcd(erode_img: np.ndarray) -> Tuple[np.ndarray, int]:
             current_cells = []
             for i in range(connectivity): #slice intersects with the object for the first time
                 current_cells.append(current_cell)
-                current_cell += 1 # we are creating different cells on the same column
-                                  # which are seperated by the objects
+                current_cell += 1 # we are creating different cells on the same column which are seperated by the objects
         elif connectivity == 0:
             current_cells = []
             continue
@@ -138,12 +138,12 @@ def bcd(erode_img: np.ndarray) -> Tuple[np.ndarray, int]:
                 # with the for loop to reach all the cells
                 cell_boundaries.setdefault(cell_index,[])
                 cell_boundaries[cell_index].append(connective_parts[i])
-    # Cell 1 is the left most cell and cell n is the right most cell where n is the total cell number
+    # Cell 1 is the left most cell and cell n is the right most cell, where n is the total cell number
     all_cell_numbers = cell_boundaries.keys()
     non_neighboor_cells = remove_duplicates(non_neighboor_cells)
     return separate_img, current_cell, list(all_cell_numbers), cell_boundaries, non_neighboor_cells
 
-##################################################
+#-------------------------------------
 def display_separate_map(separate_map, cells):
     display_img = np.empty([*separate_map.shape, 3], dtype=np.uint8)
     random_colors = np.random.randint(0, 255, [cells, 3])

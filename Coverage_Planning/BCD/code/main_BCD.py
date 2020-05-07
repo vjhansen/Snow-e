@@ -13,12 +13,12 @@ import numpy as np
 
 #-----------------------------------------------
 """
-        Input: cells_to_visit --> It contains the order of cells to visit
-        Input: cell_boundaries --> It contains y coordinates of each cell
-            x coordinates will be calculated in this function based on cell number 
+        Input: cells_to_visit --> the order of cells to visit
+        Input: cell_boundaries --> y-coordinates of each cell
+            x-coordinates will be calculated in this function based on cell number 
             since first cell starts from the left and moves towards right
-        Input: Nonneighbors --> This shows cels which are separated by the objects, so these cells should have the same x coordinates.
-        Output: cells_x_coordinates --> x coordinates of each cell
+        Input: Nonneighbors --> This shows cells which are separated by the objects, so these cells should have the same x-coordinates.
+        Output: cells_x_coordinates --> x-coordinates of each cell
 """
 def calculate_x_coordinates(x_size, y_size, cells_to_visit, cell_boundaries, nonneighbors):
     total_cell_number = len(cells_to_visit)
@@ -26,7 +26,7 @@ def calculate_x_coordinates(x_size, y_size, cells_to_visit, cell_boundaries, non
     size_x = x_size
     size_y = y_size
     
-    # Calculate x coordinates of each cell
+    # Calculate x-coordinates of each cell
     cells_x_coordinates = {}
     width_accum_prev = 0
     cell_idx = 1
@@ -50,15 +50,9 @@ def calculate_x_coordinates(x_size, y_size, cells_to_visit, cell_boundaries, non
 
 #-----------------------------------------------
 if __name__ == '__main__':
-    # Read the original data
     # image: Export as -> Check Transparent Background and Selection Only -> Export
     original_map = bcd.cv2.imread("new_map.png")
-    
-    # Show the original data
-    #fig1 = plt.figure()
-    #plt.imshow(original_map)
-    #plt.title("Original Map Image")
-    
+        
     # We need binary image - 1's represents free space while 0's represents objects/walls
     if len(original_map.shape) > 2:
         print("Map image is converted to binary")
@@ -130,14 +124,22 @@ if __name__ == '__main__':
             # data rows of csv file   # first, middle and last y_coordinates are special (4D)
             cell_idx = i+1
             if ( (cell_idx == 1) | (cell_idx == len(x_coordinates)) | (cell_idx == ((len(x_coordinates)+1)/2)) ):
-                rows = [    [ cell_numbers[i], x_coordinates[cell_idx][0], x_coordinates[cell_idx][len(x_coordinates[cell_idx])-1], y_coordinates[cell_idx][0][0][0], y_coordinates[cell_idx][0][0][1],
-                                        ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][0])+Z_min, ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][len(x_coordinates[cell_idx])-1])+Z_min,
-                                        ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][0][0])+X_min, ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][0][1])+X_min ] ]  
+                rows = [[   cell_numbers[i], x_coordinates[cell_idx][0], 
+                            x_coordinates[cell_idx][len(x_coordinates[cell_idx])-1], 
+                            y_coordinates[cell_idx][0][0][0], y_coordinates[cell_idx][0][0][1],
+                            ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][0])+Z_min, 
+                            ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][len(x_coordinates[cell_idx])-1])+Z_min,   
+                            ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][0][0])+X_min, 
+                            ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][0][1])+X_min ] ]  
 
             elif ( (cell_idx != 1) | (cell_idx != len(x_coordinates)) ):
-                rows = [ [cell_numbers[i], x_coordinates[cell_idx][0], x_coordinates[cell_idx][len(x_coordinates[cell_idx])-1], y_coordinates[cell_idx][0][0], y_coordinates[cell_idx][0][1],
-                            ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][0])+Z_min, ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][len(x_coordinates[cell_idx])-1])+Z_min,
-                            ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][0])+X_min, ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][1])+X_min ] ]
+                rows = [ [  cell_numbers[i], x_coordinates[cell_idx][0], 
+                            x_coordinates[cell_idx][len(x_coordinates[cell_idx])-1], 
+                            y_coordinates[cell_idx][0][0], y_coordinates[cell_idx][0][1],
+                            ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][0])+Z_min, 
+                            ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][len(x_coordinates[cell_idx])-1])+Z_min,
+                            ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][0])+X_min, 
+                            ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][1])+X_min ] ]
 
             # writing the data rows  
             csvwriter.writerows(rows)
