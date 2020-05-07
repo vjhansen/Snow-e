@@ -99,7 +99,7 @@ if __name__ == '__main__':
     mean_x_coordinates = {}
     mean_y_coordinates = {}
     
-    # field names  
+    # field names  ### clean up here
     fields = ['Cell', 'x start[px]', 'x end[px]', 'y start[px]', 'y end[px]', 'Z_start[m]', 'Z_end[m]', 'X_start[m]', 'X_end[m]']  
 
     # X is the length of the parking lot, which is 10 meters
