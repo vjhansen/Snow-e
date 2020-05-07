@@ -4,7 +4,6 @@
 >#### Engineers: V. J. Hansen, D. Kazokas
 
 ### To do:
-* Create GUI? for `image_to_binary_map, main_BCD, BCD, generate_coords_BCD`, i.e. tie them together. https://likegeeks.com/pyqt5-tutorial/
 * Enable robot to follow BCD coords
 * Implement A*
 
