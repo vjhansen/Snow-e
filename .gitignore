@@ -17,3 +17,5 @@ cmake_build/
 [Bb]uild/
 *.whl
 .cpython-37.pyc
+.o
+.exe
