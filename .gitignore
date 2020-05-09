@@ -1,9 +1,6 @@
 .DS_Store
 .ipynb_checkpoints
 node_modules
-/.bazelrc.user
-/bazel-*
-/bazel_pip
 /tools/python_bin_path.sh
 /pip_test
 /_python_build
