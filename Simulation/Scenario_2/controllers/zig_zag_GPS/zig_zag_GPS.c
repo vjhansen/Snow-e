@@ -1,25 +1,16 @@
 // USN Kongsberg
 // Scenario 2 - Static obstacles
 
-/* Snow-e Autonomous Snow Blower
-   Dynamic Coverage Path Planning using GPS */
+/* 
+Snow-e Autonomous Snow Blower
 
-/*  
-  - Version: 0.2.2
-  - Date: 28.04.2020
-  - Engineers: V. J. Hansen
+Coverage Path Planning using GPS and waypoints created by Boustrophedon Cellular Decomposition
 */
 
 /*
-To do:
-  - Add LiDAR to enable 360 obstacle detection
-  - Add snow plow/shredder and chute
-*/
-
-/*  Sensors used:
-  - Sonar: detect obstacles
-  - Compass: navigation
-  - GPS: Generate Zig-Zag path 
+  - Version: 0.3
+  - Date: 09.05.2020
+  - Engineer(s): V. J. Hansen, 
 */
 
 /*--------------------------------------------------------*/ 
@@ -32,6 +23,7 @@ To do:
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 /*--------------------------------------------------------*/ 
 #define THRESHOLD     900.0
 #define TIME_STEP     8
@@ -65,74 +57,11 @@ int state = INIT;
 int new_north = 90;
 double distance = 0.0;
 static double saved_z, saved_x = 0.0;
-static bool autopilot = true;
-static bool old_autopilot = true;
 static bool obs_flag = false;
-static int old_key = -1;
 static int target_index = 1; // = 0 is where we start
 int target_points = 2*(SIZE_Z/DELTA);
 /*--------------------------------------------------------*/ 
-static void drive_manual() {
-  double speed[2] = {0.0, 0.0};
-  int key = wb_keyboard_get_key();
-  if (key >= 0) {
-    switch (key) {
-      case WB_KEYBOARD_UP:
-        speed[LEFT]  = DEFAULT_SPEED;
-        speed[RIGHT] = DEFAULT_SPEED;
-        autopilot = false;
-        break;
-      case WB_KEYBOARD_DOWN:
-        speed[LEFT]  = -DEFAULT_SPEED;
-        speed[RIGHT] = -DEFAULT_SPEED;
-        autopilot = false;
-        break;
-      case WB_KEYBOARD_RIGHT:
-        speed[LEFT]  = DEFAULT_SPEED;
-        speed[RIGHT] = -DEFAULT_SPEED;
-        autopilot = false;
-        break;
-      case WB_KEYBOARD_LEFT:
-        speed[LEFT]  = -DEFAULT_SPEED;
-        speed[RIGHT] = DEFAULT_SPEED;
-        autopilot = false;
-        break;
-      case 'P':
-        if (key != old_key)
-          autopilot = !autopilot;
-        break;
-    }
-  }
-  if (autopilot != old_autopilot) {
-    old_autopilot = autopilot;
-    if (autopilot)
-      printf("autopilot\n");
-    else
-      printf("manual control, use WASD.\n");
-  }
 
-  /*......SET SPEED......*/
-  wb_motor_set_velocity(l_motor, speed[LEFT]);
-  wb_motor_set_velocity(r_motor, speed[RIGHT]);
-  old_key = key;
-}
-/*--------------------------------------------------------*/ 
-double *generate_x(int num_points) {
-    static double x[100];
-    for (int n = 0; n < num_points; n++) {
-        x[n] = (-SIZE_X/2.0) * (1 + 3*n + pow(n,2) + 2*(pow(n,3)) - 4*(floor(0.25 * (2+ 3*n + pow(n,2) + 2*(pow(n,3))))));
-    }
-    return x;
-}
-/*--------------------------------------------------------*/ 
-double *generate_z(int num_points) {
-    static double z[100];
-    for (int n = 0; n < num_points; n++) {
-        z[n] = (-SIZE_Z/2.0) + DELTA*ceil(n/2);
-    }
-    return z;
-}
-/*--------------------------------------------------------*/ 
 // Euclidean Norm, i.e. distance between 
 static double norm(const Vector *vec) {
   return sqrt(vec->Z_v*vec->Z_v + vec->X_v*vec->X_v);
@@ -385,8 +314,6 @@ static void initialize(void) {
 int main(int argc, char **argv) {
   wb_robot_init();
   initialize();
-  X_target = generate_x(target_points);
-  Z_target = generate_z(target_points);
   
   // fill target-vector with X and Z way points
   for (int i = 0; i < target_points; i++) {
@@ -394,12 +321,8 @@ int main(int argc, char **argv) {
     targets[i].Z_v = Z_target[i];
   }
 
-  printf("Press 'P' to toggle autopilot/manual mode\n");
   while (wb_robot_step(TIME_STEP) != -1) { 
-    drive_manual();
-    if (autopilot) {
       drive_autopilot();
-    }
   };
   wb_robot_cleanup();
   return 0;
