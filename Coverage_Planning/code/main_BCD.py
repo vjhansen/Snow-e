@@ -110,6 +110,8 @@ if __name__ == '__main__':
     
     # the values for Z will have to be divided into segments of equal size.
     # name of csv file
+
+    ## should write to .txt-file instead
     filename = "BCD_coordinates.csv"
 
     # writing to csv file  

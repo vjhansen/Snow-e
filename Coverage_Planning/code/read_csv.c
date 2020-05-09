@@ -5,24 +5,31 @@
 #include <stdio.h>
 #include <string.h>
 
+static int z[200];
+static int xs[200];
+static int xe[200];
+
 void process_field(int field_count, char *value) {
     if (field_count == 0) {
         printf("Cell:\t");
-        //printf("%s\n", value);
     }
     if (field_count == 1) {
         printf("Z:\t");
-        // z[]=value
-        //printf("%s\n", value);
+        for (int i = 0; i < strlen(value); ++i) {
+            z[i] = value[i];
+        }
     }
     if (field_count == 2) {
-        // xs[]=value
         printf("Xs:\t");
-        printf("%s\n", value);
+        for (int i = 0; i < strlen(value); ++i) {
+            xs[i] = value[i];
+        }
     }
     if (field_count == 3) {
-        // xe[] = value
         printf("Xe:\t");
+        for (int i = 0; i < strlen(value); ++i) {
+            xe[i] = value[i];
+        }
     }
 }
 
