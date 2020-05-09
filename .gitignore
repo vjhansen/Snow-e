@@ -19,3 +19,4 @@ cmake_build/
 .cpython-37.pyc
 .o
 .exe
+.out
