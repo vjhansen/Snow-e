@@ -2,14 +2,14 @@
 
 # Snow-e
 # Engineer: V. J. Hansen
-# 07.05.2020
+# 10.05.2020
 # V 0.7
 
 #-----------------------------------------------
 import math, csv
 import numpy as np
 
-with open('BCD_coordinates.csv') as csvread_file:
+with open('files/BCD_coordinates.csv') as csvread_file:
     readCSV = csv.reader(csvread_file, delimiter=',')
     x_s_coord = []
     x_e_coord = []
@@ -86,7 +86,7 @@ def generate_z_s(cell, delta):
 num_cells = len(x_s_coord)-1
 
 fields = ['Cell', 'Z', 'X_start[m]', 'X_end[m]']  
-filename = "waypoints.csv"
+filename = "files/waypoints.csv"
 
 with open(filename, 'w') as csvwrite_file:
     csvwriter = csv.writer(csvwrite_file)
