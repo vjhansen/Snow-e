@@ -1,6 +1,8 @@
 // https://codingboost.com/parsing-csv-files-in-c
 // V. J. Hansen, 10.05.20
 
+// add to makefile: this has to be compiled/linked with zig_zag_gps.c
+
 #include <stdio.h>
 #include <string.h>
 
@@ -14,9 +16,7 @@ static int len_xs[CELLS];
 static int len_xe[CELLS];
 
 void process_field(int field_count, char *value, int row_count) {
-    if (field_count == 0) {
-        printf("\nCell:\t");
-    }
+    // - Z coordinates
     if (field_count == 1) {
         printf("\nZ:\t");
         for (int i = 0; i < strlen(value); ++i) {
@@ -24,15 +24,15 @@ void process_field(int field_count, char *value, int row_count) {
             len_z[row_count] = i;
         }
     }
+    // - X start coordinates
     if (field_count == 2) {
-        printf("\nXs:\t");
         for (int i = 0; i < strlen(value); ++i) {
             xs[row_count][i] = value[i];
             len_xs[row_count] = i;
         }
     }
+    // - X end coordinates
     if (field_count == 3) {
-        printf("\nXe:\t");
         for (int i = 0; i < strlen(value); ++i) {
             xe[row_count][i] = value[i];
             len_xe[row_count] = i;
@@ -74,9 +74,9 @@ int main(void) {
         } while (buf[++i]);
         printf("\n");        
     }
+    // test
     for (int i = 0; i < len_z[1]; ++i) {
         printf("%c",z[1][i]);  
-
     }
     printf("\n");  
     fclose(fp);

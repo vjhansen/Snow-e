@@ -1,6 +1,6 @@
 #VRML_SIM R2020a utf8
 WorldInfo {
-  title "Snow-e Simulation - Scenario 2"
+  title "Snow-e Simulation - Testing BCD"
   basicTimeStep 8
   FPS 15
   contactProperties [
@@ -17,14 +17,14 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation -0.5419812969616253 -0.6529161855158336 -0.5291093728476637 1.9626364754489587
-  position -2.0186539739903835 10.460785094241544 -8.467239467731995
-  follow "Snow-e"
+  orientation -0.4407084859450798 -0.7703087074199996 -0.4608693151956688 1.8718382834053737
+  position -19.288691785692528 35.48047655000847 -5.2133103207113285
 }
 TexturedBackground {
-  texture "noon_building_overcast"
+  texture "noon_cloudy_countryside"
+  skybox FALSE
   skyColor [
-    1 0.999969 0.999985
+    0.6 0.6 0.6
   ]
 }
 TexturedBackgroundLight {
@@ -41,12 +41,9 @@ RectangleArena {
   wallAppearance Asphalt {
   }
 }
-OilBarrel {
-  translation 1.6 0.44 -7.91
-}
 DEF TRACKED_ROBOT Robot {
-  translation -2.21252 0.119467 -9.1804
-  rotation 0.0004915178542972122 -0.993305240197965 -0.1155182159032155 0.008567092143939522
+  translation -3.72184 0.117121 -9.16298
+  rotation 0.0004910847143393104 -0.9924299104530607 -0.12281136622452007 0.008058341242625175
   children [
     GPS {
     }
