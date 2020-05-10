@@ -22,6 +22,7 @@ __Sensors used__
 #include <webots/compass.h>
 #include <webots/keyboard.h>
 #include <webots/gps.h>
+#include "../../Coverage_Planning/read_csv.h"
 
 /* C libraries */
 #include <stdio.h>

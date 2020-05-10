@@ -63,6 +63,9 @@
 ### well as the rm command details used for cleaning:
 ### VERBOSE = 1
 ###
+
+C_SOURCES = read_csv.c zig_zag_GPS.c
+
 ###-----------------------------------------------------------------------------
 
 ### Do not modify: this includes Webots global Makefile.include

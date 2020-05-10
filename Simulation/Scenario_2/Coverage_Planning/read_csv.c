@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include "read_csv.h"
 
 #define CELLS 5
 
