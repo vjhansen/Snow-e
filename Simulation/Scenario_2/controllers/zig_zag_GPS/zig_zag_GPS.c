@@ -6,8 +6,8 @@ __Project Description__
   Scenario 2
 
 __Version History__
-  - Version:      0.2.0
-  - Update:       10.05.2020
+  - Version:      0.3.0
+  - Update:       11.05.2020
   - Engineer(s):  V. J. Hansen, D. Kazokas
 
 __Sensors used__
@@ -22,12 +22,13 @@ __Sensors used__
 #include <webots/compass.h>
 #include <webots/keyboard.h>
 #include <webots/gps.h>
-#include "../../Coverage_Planning/read_csv.h"
+//#include "../../Coverage_Planning/read_csv.h"
 
 /* C libraries */
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 
 /* Macro Definitions */
 #define THRESHOLD     900.0
@@ -39,6 +40,8 @@ __Sensors used__
 #define size_z        19
 #define startX        -4.5
 #define startZ        -9.5
+#define CELLS         5
+
 
 /* Enum Data Types */
 enum SONAR_Sensors { Sonar_L, Sonar_R, Sonar_M };
@@ -60,6 +63,13 @@ typedef struct _Vector {
 } Vector;
 
 
+
+static int z[CELLS][200];
+static int xs[CELLS][200];
+static int xe[CELLS][200];
+static int len_z[CELLS];
+static int len_xs[CELLS];
+static int len_xe[CELLS];
 static Vector targets[100];
 double *Z_target;
 double *X_target;
@@ -70,6 +80,75 @@ static int target_index = 1; // = 0 is where we start
 double gps_val[2] = {0.0, 0.0};
 double start_gps_pos[3] = {0.0, 0.0, 0.0};
 int target_points = 2*(size_z/delta); // dont need this
+
+// these are our new waypoints
+void process_field(int field_count, char *value, int row_count) {
+    // - Z coordinates
+    if (field_count == 1) {
+        printf("\nZ:\t");
+        for (int i = 0; i < strlen(value); ++i) {
+            z[row_count][i] = value[i];
+            len_z[row_count] = i;
+        }
+    }
+    // - X start coordinates
+    if (field_count == 2) {
+        for (int i = 0; i < strlen(value); ++i) {
+            xs[row_count][i] = value[i];
+            len_xs[row_count] = i;
+        }
+    }
+    // - X end coordinates
+    if (field_count == 3) {
+        for (int i = 0; i < strlen(value); ++i) {
+            xe[row_count][i] = value[i];
+            len_xe[row_count] = i;
+        }
+    }
+}
+
+// based on: https://codingboost.com/parsing-csv-files-in-c
+void process_file() {
+    char buf[1024];
+    char token[1024];
+    int row_count = 0, field_count = 0, in_double_quotes = 0;
+    int token_pos = 0, i = 0, cell_cnt = 0;
+    FILE *fp = fopen("../../Coverage_Planning/files/waypoints.csv", "r");
+    if (!fp) {
+        printf("Can't open file\n");
+    }
+    while (fgets(buf, 1024, fp)) {
+        row_count++;
+        
+        if (row_count == 1) {
+            continue;
+        }
+        cell_cnt++;
+        field_count = i = 0;
+        do {
+            token[token_pos++] = buf[i];
+            if (!in_double_quotes && (buf[i] == ',' || buf[i] == '\n' || buf[i] == ']')) {
+                token[token_pos - 1] = 0;
+                token_pos = 0;          
+                process_field(field_count++, token, cell_cnt);
+            }
+            if (buf[i] == '"' && buf[i + 1] != '"') {
+                token_pos--;
+                in_double_quotes = !in_double_quotes;
+            }
+            if (buf[i] == '"' && buf[i + 1] == '"')
+                i++;
+        } while (buf[++i]);
+        printf("\n");        
+    }
+    // test
+    for (int i = 0; i < len_z[1]; ++i) {
+        printf("%c",z[1][i]);  
+    }
+    printf("\n");  
+    fclose(fp);
+}
+
 
 
 
@@ -262,8 +341,10 @@ static int drive_autopilot(void) {
 
 /*__________ Main Function __________*/
 int main(int argc, char **argv) {
+  
   wb_robot_init();
   initialize();
+  process_file();
   X_target = generate_x(target_points);
   Z_target = generate_z(target_points);
   
@@ -280,4 +361,3 @@ int main(int argc, char **argv) {
   wb_robot_cleanup();
   return 0;
 }
-/*_________________________________________*/

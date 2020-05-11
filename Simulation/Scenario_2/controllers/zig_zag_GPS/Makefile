@@ -64,7 +64,7 @@
 ### VERBOSE = 1
 ###
 
-C_SOURCES = read_csv.c zig_zag_GPS.c
+###C_SOURCES = read_csv.c zig_zag_GPS.c
 
 ###-----------------------------------------------------------------------------
 

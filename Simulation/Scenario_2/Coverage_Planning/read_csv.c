@@ -5,16 +5,9 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "read_csv.h"
+//#include "read_csv.h"
 
-#define CELLS 5
 
-static int z[CELLS][200];
-static int xs[CELLS][200];
-static int xe[CELLS][200];
-static int len_z[CELLS];
-static int len_xs[CELLS];
-static int len_xe[CELLS];
 
 void process_field(int field_count, char *value, int row_count) {
     // - Z coordinates
@@ -41,15 +34,15 @@ void process_field(int field_count, char *value, int row_count) {
     }
 }
 
-int main(void) {
-    char buf[1024];
+
+void process_file() {
+  char buf[1024];
     char token[1024];
     int row_count = 0, field_count = 0, in_double_quotes = 0;
     int token_pos = 0, i = 0, cell_cnt = 0;
     FILE *fp = fopen("files/waypoints.csv", "r");
     if (!fp) {
         printf("Can't open file\n");
-        return 0;
     }
     while (fgets(buf, 1024, fp)) {
         row_count++;
@@ -81,5 +74,10 @@ int main(void) {
     }
     printf("\n");  
     fclose(fp);
+}
+
+
+int main(void) {
+    process_file();
     return 0;
 }
