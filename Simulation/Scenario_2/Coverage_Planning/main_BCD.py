@@ -18,7 +18,6 @@ import numpy as np
             x-coordinates will be calculated in this function based on cell number 
             since first cell starts from the left and moves towards right
         Input: Nonneighbors --> This shows cells which are separated by the objects, so these cells should have the same x-coordinates.
-        Output: cells_x_coordinates --> x-coordinates of each cell
 """
 def calculate_x_coordinates(x_size, y_size, cells_to_visit, cell_boundaries, nonneighbors):
     total_cell_number = len(cells_to_visit)
@@ -46,7 +45,7 @@ def calculate_x_coordinates(x_size, y_size, cells_to_visit, cell_boundaries, non
         cells_x_coordinates[cell_idx] = list(range(width_accum_prev, width_current_cell+width_accum_prev))
         width_accum_prev += width_current_cell
         cell_idx = cell_idx + 1
-    return cells_x_coordinates
+    return cells_x_coordinates # Output: cells_x_coordinates --> x-coordinates of each cell
 
 #-----------------------------------------------
 if __name__ == '__main__':
@@ -109,19 +108,13 @@ if __name__ == '__main__':
     #gps = ((gps_max-gps_min)/(px_max-px_min))*(px-px_min)+gps_min
     
     # the values for Z will have to be divided into segments of equal size.
-    # name of csv file
 
-    ## should write to .txt-file instead
     filename = "BCD_coordinates.csv"
 
     # writing to csv file  
     with open(filename, 'w') as csvfile:  
-        # creating a csv writer object
         csvwriter = csv.writer(csvfile)  
-            
-        # writing the fields
         csvwriter.writerow(fields)  
-
         for i in range(len(x_coordinates)):
             # data rows of csv file   # first, middle and last y_coordinates are special (4D)
             cell_idx = i+1
@@ -142,9 +135,7 @@ if __name__ == '__main__':
                             ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][len(x_coordinates[cell_idx])-1])+Z_min,
                             ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][0])+X_min, 
                             ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][1])+X_min ] ]
-
-            # writing the data rows  
-            csvwriter.writerows(rows)
+            csvwriter.writerows(rows) # writing the data rows  
 
     for i in range(len(x_coordinates)):
         cell_idx = i+1 #i starts from zero, but cell numbers start from 1

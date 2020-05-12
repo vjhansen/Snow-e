@@ -1,4 +1,4 @@
-/* 
+/*
 __Project Description__
   USN Campus Kongsberg
   Snow-e Autonomous Snow Blower
@@ -12,7 +12,7 @@ __Version History__
 
 __Sensors used__
   - Compass:      Navigation
-  - GPS:          Generate Zig-Zag path 
+  - GPS:          Generate Zig-Zag path
 */
 
 
@@ -20,7 +20,6 @@ __Sensors used__
 #include <webots/motor.h>
 #include <webots/robot.h>
 #include <webots/compass.h>
-#include <webots/keyboard.h>
 #include <webots/gps.h>
 //#include "../../Coverage_Planning/read_csv.h"
 
@@ -36,7 +35,7 @@ __Sensors used__
 #define NUM_SONAR     3
 #define DEFAULT_SPEED 0.1
 #define delta         0.5
-#define size_x        9 
+#define size_x        9
 #define size_z        19
 #define startX        -4.5
 #define startZ        -9.5
@@ -47,7 +46,7 @@ __Sensors used__
 enum SONAR_Sensors { Sonar_L, Sonar_R, Sonar_M };
 enum SIDES { LEFT, RIGHT, MIDDLE };
 enum XZComponents { X, Y, Z };
-enum FSM { INIT, FORWARD, PAUSE, GO_LEFT, GO_RIGHT, 
+enum FSM { INIT, FORWARD, PAUSE, GO_LEFT, GO_RIGHT,
            UTURN_R, UTURN_L, OBSTACLE, DONE };
 
 /* Webots Sensors */
@@ -119,7 +118,7 @@ void process_file() {
     }
     while (fgets(buf, 1024, fp)) {
         row_count++;
-        
+
         if (row_count == 1) {
             continue;
         }
@@ -129,7 +128,7 @@ void process_file() {
             token[token_pos++] = buf[i];
             if (!in_double_quotes && (buf[i] == ',' || buf[i] == '\n' || buf[i] == ']')) {
                 token[token_pos - 1] = 0;
-                token_pos = 0;          
+                token_pos = 0;
                 process_field(field_count++, token, cell_cnt);
             }
             if (buf[i] == '"' && buf[i + 1] != '"') {
@@ -139,13 +138,13 @@ void process_file() {
             if (buf[i] == '"' && buf[i + 1] == '"')
                 i++;
         } while (buf[++i]);
-        printf("\n");        
+        printf("\n");
     }
     // test
     for (int i = 0; i < len_z[1]; ++i) {
-        printf("%c",z[1][i]);  
+        printf("%c",z[1][i]);
     }
-    printf("\n");  
+    printf("\n");
     fclose(fp);
 }
 
@@ -188,8 +187,8 @@ static void minus(Vector *diff, const Vector *trgt, const Vector *gpsPos) {
 /*__________ Initialize Function __________*/
 static void initialize(void) {
   //..... Boot Message .....
-  printf("\nInitializing Snow-e Robot...\n");  
-  
+  printf("\nInitializing Snow-e Robot...\n");
+
   //..... Enable Motors .....
   l_motor = wb_robot_get_device("left motor");
   r_motor = wb_robot_get_device("right motor");
@@ -197,45 +196,45 @@ static void initialize(void) {
   wb_motor_set_position(r_motor, INFINITY);
   wb_motor_set_velocity(l_motor, 0.0);
   wb_motor_set_velocity(r_motor, 0.0);
-  
+
   //..... Enable Compass .....
   compass = wb_robot_get_device("compass");
   wb_compass_enable(compass, TIME_STEP);
-  
+
   //..... Enable GPS .....
   gps = wb_robot_get_device("gps");
   wb_gps_enable(gps, TIME_STEP);
-  
+
 }
 /*_________________________________________*/
 
 
 /*__________ Autopilot Function __________*/
 static int drive_autopilot(void) {
-  double speed[2]       = {0.0, 0.0};  
+  double speed[2]       = {0.0, 0.0};
   double current_time   = wb_robot_get_time();
   const double *north2D = wb_compass_get_values(compass);
-  double theta          = atan2(north2D[X], north2D[Z]) * (180/M_PI); // angle (in degrees) between x and z-axis 
+  double theta          = atan2(north2D[X], north2D[Z]) * (180/M_PI); // angle (in degrees) between x and z-axis
   const double *gps_pos = wb_gps_get_values(gps);
-  
+
   Vector curr_gps_pos = {gps_pos[X], gps_pos[Z]};
-  Vector dir; 
-  minus(&dir, &targets[target_index], &curr_gps_pos); 
+  Vector dir;
+  minus(&dir, &targets[target_index], &curr_gps_pos);
   distance = norm(&dir);
-  
+
 
   // used for calibration
   if (fmod(current_time, 2) == 0.0) {
     printf("(dist = (%.4g)\n", distance);
   }
-  
+
   if (distance <= 1.1) {
     target_index++;
   }
-  
-  /*----------------------------*/ 
+
+  /*----------------------------*/
   switch (state) {
-    //..... GET the x-direction (North/South) the robot is pointing to initially 
+    //..... GET the x-direction (North/South) the robot is pointing to initially
     case INIT:
       front_dir = (int)theta;
       state = FORWARD;
@@ -275,7 +274,7 @@ static int drive_autopilot(void) {
         state = GO_LEFT;
       }
       break;
-    
+
     //..... Go Left .....
     case GO_LEFT:
       speed[LEFT]  = -DEFAULT_SPEED;
@@ -301,7 +300,7 @@ static int drive_autopilot(void) {
          }
       }
       break;
-    
+
     //..... Uturn Right .....
     case UTURN_R:
       speed[LEFT]  = DEFAULT_SPEED;
@@ -311,8 +310,8 @@ static int drive_autopilot(void) {
         state = FORWARD;
       }
       break;
-    
-    //..... Uturn Left .....  
+
+    //..... Uturn Left .....
     case UTURN_L:
       speed[LEFT]  = -DEFAULT_SPEED;
       speed[RIGHT] = DEFAULT_SPEED;
@@ -321,16 +320,16 @@ static int drive_autopilot(void) {
         state = FORWARD;
       }
       break;
-    
-    //..... Done ..... 
+
+    //..... Done .....
     case DONE:
       speed[LEFT]  = 0.0;
       speed[RIGHT] = 0.0;
-    /*------------------------------------------*/  
+    /*------------------------------------------*/
     default:
       break;
   }
-  
+
   //..... Set Speed .....
   wb_motor_set_velocity(l_motor, speed[LEFT]);
   wb_motor_set_velocity(r_motor, speed[RIGHT]);
@@ -338,24 +337,23 @@ static int drive_autopilot(void) {
 }
 /*_________________________________________*/
 
-
 /*__________ Main Function __________*/
 int main(int argc, char **argv) {
-  
+
   wb_robot_init();
   initialize();
   process_file();
   X_target = generate_x(target_points);
   Z_target = generate_z(target_points);
-  
+
   // fill target-vector with X and Z way points
   for (int i=0; i<target_points; i++) {
     targets[i].X_v = X_target[i];
     targets[i].Z_v = Z_target[i];
   }
-  
+
   printf("\nStarting Snow-e in Autopilot Mode...\n\n");
-  while (wb_robot_step(TIME_STEP) != -1) { 
+  while (wb_robot_step(TIME_STEP) != -1) {
     drive_autopilot();
   };
   wb_robot_cleanup();
