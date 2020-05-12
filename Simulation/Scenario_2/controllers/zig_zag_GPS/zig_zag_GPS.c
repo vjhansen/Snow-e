@@ -63,12 +63,10 @@ typedef struct _Vector {
 
 
 
-static int z[CELLS][200];
-static int xs[CELLS][200];
-static int xe[CELLS][200];
-static int len_z[CELLS];
-static int len_xs[CELLS];
-static int len_xe[CELLS];
+static int Z_BCD[CELLS][200];
+static int X_BCD[CELLS][200];
+static int len_Z[CELLS];
+static int len_X[CELLS];
 static Vector targets[100];
 double *Z_target;
 double *X_target;
@@ -84,24 +82,16 @@ int target_points = 2*(size_z/delta); // dont need this
 void process_field(int field_count, char *value, int row_count) {
     // - Z coordinates
     if (field_count == 1) {
-        printf("\nZ:\t");
         for (int i = 0; i < strlen(value); ++i) {
-            z[row_count][i] = value[i];
-            len_z[row_count] = i;
+            Z_BCD[row_count][i] = value[i];
+            len_Z[row_count] = i;
         }
     }
-    // - X start coordinates
+    // - X coordinates
     if (field_count == 2) {
         for (int i = 0; i < strlen(value); ++i) {
-            xs[row_count][i] = value[i];
-            len_xs[row_count] = i;
-        }
-    }
-    // - X end coordinates
-    if (field_count == 3) {
-        for (int i = 0; i < strlen(value); ++i) {
-            xe[row_count][i] = value[i];
-            len_xe[row_count] = i;
+            X_BCD[row_count][i] = value[i];
+            len_X[row_count] = i;
         }
     }
 }
@@ -141,14 +131,12 @@ void process_file() {
         printf("\n");
     }
     // test
-    for (int i = 0; i < len_z[1]; ++i) {
-        printf("%c",z[1][i]);
+    for (int i = 0; i < len_X[1]; ++i) {
+        printf("%c", X_BCD[1][i]);
     }
     printf("\n");
     fclose(fp);
 }
-
-
 
 
 // dont need this
@@ -351,7 +339,6 @@ int main(int argc, char **argv) {
     targets[i].X_v = X_target[i];
     targets[i].Z_v = Z_target[i];
   }
-
   printf("\nStarting Snow-e in Autopilot Mode...\n\n");
   while (wb_robot_step(TIME_STEP) != -1) {
     drive_autopilot();

@@ -2,8 +2,8 @@
 
 # Snow-e
 # Engineer: V. J. Hansen
-# 10.05.2020
-# V 0.7
+# 12.05.2020
+# V 0.9
 
 #-----------------------------------------------
 import math, csv
@@ -16,10 +16,10 @@ with open('files/BCD_coordinates.csv') as csvread_file:
     z_s_coord = []
     z_e_coord = []
     for row in readCSV:
-        z_start = row[5]
-        z_end   = row[6]
-        x_start = row[7]
-        x_end   = row[8]
+        z_start = row[1]
+        z_end   = row[2]
+        x_start = row[3]
+        x_end   = row[4]
         z_s_coord.append(z_start)
         z_e_coord.append(z_end)
         x_s_coord.append(x_start)
@@ -64,6 +64,19 @@ def generate_x_e(cell):
         x_e_coord.append(x)
     return x_e_coord
 
+#-----------------
+def final_x(cell):
+    final_x_coord = []
+    x_s = generate_x_s(cell)
+    x_e = generate_x_e(cell)
+    for n in range(len(x_s)):
+        if x_s[n] != 0:
+            x = x_s[n]
+        elif x_e[n] != 0:
+            x = x_e[n]
+        final_x_coord.append(x)
+    return final_x_coord
+
 
 # Pattern:
 # Zs, Zs, Zs+delta, Zs+delta, Zs+2*delta, Zs+2*delta, ..., Zs + n*delta = Ze
@@ -82,16 +95,13 @@ def generate_z_s(cell, delta):
         z_s_coord.append(z)
     return z_s_coord
 #-----------------------------------------------
-
 num_cells = len(x_s_coord)-1
-
-fields = ['Cell', 'Z', 'X_start[m]', 'X_end[m]']  
+fields = ['Cell', 'Z', 'X']
 filename = "files/waypoints.csv"
-
 with open(filename, 'w') as csvwrite_file:
     csvwriter = csv.writer(csvwrite_file)
     csvwriter.writerow(fields)
     for x in range(num_cells):
         cell_idx = x+1
-        rows = [[cell_idx, generate_z_s(cell_idx, 0.5), generate_x_s(cell_idx), generate_x_e(cell_idx)]]
+        rows = [[cell_idx, generate_z_s(cell_idx, 0.5), final_x(cell_idx)]]
         csvwriter.writerows(rows)

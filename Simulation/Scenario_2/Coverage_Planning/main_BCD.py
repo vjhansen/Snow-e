@@ -7,7 +7,7 @@
 
 #-----------------------------------------------
 from matplotlib import pyplot as plt
-import bcd  # Boustrophedon Cellular decomposition 
+import bcd  # Boustrophedon Cellular decomposition
 import cv2, csv
 import numpy as np
 
@@ -15,7 +15,7 @@ import numpy as np
 """
         Input: cells_to_visit --> the order of cells to visit
         Input: cell_boundaries --> y-coordinates of each cell
-            x-coordinates will be calculated in this function based on cell number 
+            x-coordinates will be calculated in this function based on cell number
             since first cell starts from the left and moves towards right
         Input: Nonneighbors --> This shows cells which are separated by the objects, so these cells should have the same x-coordinates.
 """
@@ -24,7 +24,7 @@ def calculate_x_coordinates(x_size, y_size, cells_to_visit, cell_boundaries, non
     # Find the total length of the axises
     size_x = x_size
     size_y = y_size
-    
+
     # Calculate x-coordinates of each cell
     cells_x_coordinates = {}
     width_accum_prev = 0
@@ -32,14 +32,14 @@ def calculate_x_coordinates(x_size, y_size, cells_to_visit, cell_boundaries, non
     while cell_idx <= total_cell_number:
         for subneighbor in nonneighbors:
             if subneighbor[0] == cell_idx: #current_cell, i.e. cell_idx is divided by the object(s)
-                separated_cell_number = len(subneighbor) #contains how many cells are in the same vertical line 
+                separated_cell_number = len(subneighbor) #contains how many cells are in the same vertical line
                 width_current_cell = len(cell_boundaries[cell_idx])
                 for j in range(separated_cell_number):
-                    # All cells separated by the object(s) in this vertical line have same x coordinates 
+                    # All cells separated by the object(s) in this vertical line have same x coordinates
                     cells_x_coordinates[cell_idx+j] = list(range(width_accum_prev, width_current_cell+width_accum_prev))
                 width_accum_prev += width_current_cell
-                cell_idx = cell_idx + separated_cell_number 
-                break  
+                cell_idx = cell_idx + separated_cell_number
+                break
         #current cell is not separated by any object(s)
         width_current_cell = len(cell_boundaries[cell_idx])
         cells_x_coordinates[cell_idx] = list(range(width_accum_prev, width_current_cell+width_accum_prev))
@@ -50,8 +50,8 @@ def calculate_x_coordinates(x_size, y_size, cells_to_visit, cell_boundaries, non
 #-----------------------------------------------
 if __name__ == '__main__':
     # image: Export as -> Check Transparent Background and Selection Only -> Export
-    original_map = bcd.cv2.imread("new_map.png")
-        
+    original_map = bcd.cv2.imread("files/new_map.png")
+
     # We need binary image - 1's represents free space while 0's represents objects/walls
     if len(original_map.shape) > 2:
         print("Map image is converted to binary")
@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
     def mean_double_list(input_double_list):
         length = len(input_double_list)
-        total = 0 
+        total = 0
         for i in range(length):
             total += mean(input_double_list[i])
         output_mean = total/length
@@ -79,9 +79,9 @@ if __name__ == '__main__':
 
     def mean_d_double_list(input_double_list):
         length = len(input_double_list)
-        total = 0 
+        total = 0
         for i in range(length):
-            total += mean(input_double_list[i][0])    
+            total += mean(input_double_list[i][0])
         output_mean = total/length
         return output_mean
 #-----------------------------------------------
@@ -91,13 +91,13 @@ if __name__ == '__main__':
     y_coordinates = cell_boundaries
     mean_x_coordinates = {}
     mean_y_coordinates = {}
-    
+
     # field names  ### clean up here
-    fields = ['Cell', 'x start[px]', 'x end[px]', 'y start[px]', 'y end[px]', 'Z_start[m]', 'Z_end[m]', 'X_start[m]', 'X_end[m]']  
+    fields = ['Cell', 'Z_start[m]', 'Z_end[m]', 'X_start[m]', 'X_end[m]']
 
     # X is the length of the parking lot, which is 10 meters
     X_max = 5   # [m], these will be related to y_coordinates of image
-    X_min = -5  # [m], these will be related to y_coordinates of image   
+    X_min = -5  # [m], these will be related to y_coordinates of image
 
     # Z is the width of the parking lot, which is 20 meters
     Z_max = 10   # [m], these will be related to x_coordinates of image
@@ -106,36 +106,32 @@ if __name__ == '__main__':
     # https://www.divize.com/techinfo/4-20ma-calculator.html
     #px = ((px_max-px_min)/(gps_max-gps_min))*(gps-gps_min)+px_min
     #gps = ((gps_max-gps_min)/(px_max-px_min))*(px-px_min)+gps_min
-    
+
     # the values for Z will have to be divided into segments of equal size.
 
-    filename = "BCD_coordinates.csv"
+    filename = "files/BCD_coordinates.csv"
 
-    # writing to csv file  
-    with open(filename, 'w') as csvfile:  
-        csvwriter = csv.writer(csvfile)  
-        csvwriter.writerow(fields)  
+    # writing to csv file
+    with open(filename, 'w') as csvfile:
+        csvwriter = csv.writer(csvfile)
+        csvwriter.writerow(fields)
         for i in range(len(x_coordinates)):
             # data rows of csv file   # first, middle and last y_coordinates are special (4D)
             cell_idx = i+1
             if ( (cell_idx == 1) | (cell_idx == len(x_coordinates)) | (cell_idx == ((len(x_coordinates)+1)/2)) ):
-                rows = [[   cell_numbers[i], x_coordinates[cell_idx][0], 
-                            x_coordinates[cell_idx][len(x_coordinates[cell_idx])-1], 
-                            y_coordinates[cell_idx][0][0][0], y_coordinates[cell_idx][0][0][1],
-                            ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][0])+Z_min, 
-                            ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][len(x_coordinates[cell_idx])-1])+Z_min,   
-                            ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][0][0])+X_min, 
-                            ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][0][1])+X_min ] ]  
+                rows = [[   cell_numbers[i],
+                            ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][0])+Z_min,
+                            ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][len(x_coordinates[cell_idx])-1])+Z_min,
+                            ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][0][0])+X_min,
+                            ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][0][1])+X_min ] ]
 
             elif ( (cell_idx != 1) | (cell_idx != len(x_coordinates)) ):
-                rows = [ [  cell_numbers[i], x_coordinates[cell_idx][0], 
-                            x_coordinates[cell_idx][len(x_coordinates[cell_idx])-1], 
-                            y_coordinates[cell_idx][0][0], y_coordinates[cell_idx][0][1],
-                            ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][0])+Z_min, 
+                rows = [ [  cell_numbers[i],
+                            ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][0])+Z_min,
                             ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][len(x_coordinates[cell_idx])-1])+Z_min,
-                            ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][0])+X_min, 
+                            ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][0])+X_min,
                             ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][1])+X_min ] ]
-            csvwriter.writerows(rows) # writing the data rows  
+            csvwriter.writerows(rows) # writing the data rows
 
     for i in range(len(x_coordinates)):
         cell_idx = i+1 #i starts from zero, but cell numbers start from 1
@@ -144,7 +140,7 @@ if __name__ == '__main__':
             mean_y_coordinates[cell_idx] = mean_d_double_list(y_coordinates[cell_idx])
         else:
             mean_y_coordinates[cell_idx] = mean_double_list(y_coordinates[cell_idx])
-    
+
     plt.waitforbuttonpress(1)
     input("Press any key to close all figures.")
     plt.close("all")
