@@ -3,28 +3,27 @@
 #-----------------------------------------------
 # Apply Boustrophedon Cellular Decomposition to a map
 # Engineer(s): V. J. Hansen
-# Version 0.3.1 - 07.05.2020
+# Version 0.4.0
+# Data: 12.05.2020
 
 #-----------------------------------------------
 from matplotlib import pyplot as plt
 import bcd  # Boustrophedon Cellular decomposition
 import cv2, csv
 import numpy as np
-
 #-----------------------------------------------
 """
-        Input: cells_to_visit --> the order of cells to visit
-        Input: cell_boundaries --> y-coordinates of each cell
-            x-coordinates will be calculated in this function based on cell number
-            since first cell starts from the left and moves towards right
-        Input: Nonneighbors --> This shows cells which are separated by the objects, so these cells should have the same x-coordinates.
+    Input: cells_to_visit --> the order of cells to visit
+    Input: cell_boundaries --> y-coordinates of each cell
+        x-coordinates will be calculated in this function based on cell number
+        since first cell starts from the left and moves towards right
+    Input: Nonneighbors --> This shows cells which are separated by the objects, so these cells should have the same x-coordinates.
 """
 def calculate_x_coordinates(x_size, y_size, cells_to_visit, cell_boundaries, nonneighbors):
     total_cell_number = len(cells_to_visit)
     # Find the total length of the axises
     size_x = x_size
     size_y = y_size
-
     # Calculate x-coordinates of each cell
     cells_x_coordinates = {}
     width_accum_prev = 0
@@ -92,8 +91,8 @@ if __name__ == '__main__':
     mean_x_coordinates = {}
     mean_y_coordinates = {}
 
-    # field names  ### clean up here
-    fields = ['Cell', 'Z_start[m]', 'Z_end[m]', 'X_start[m]', 'X_end[m]']
+    # field names
+    fields = ['Cell', 'Z_start', 'Z_end', 'X_start', 'X_end']
 
     # X is the length of the parking lot, which is 10 meters
     X_max = 5   # [m], these will be related to y_coordinates of image
@@ -103,14 +102,11 @@ if __name__ == '__main__':
     Z_max = 10   # [m], these will be related to x_coordinates of image
     Z_min = -10  # [m], these will be related to x_coordinates of image
 
-    # https://www.divize.com/techinfo/4-20ma-calculator.html
-    #px = ((px_max-px_min)/(gps_max-gps_min))*(gps-gps_min)+px_min
+
     #gps = ((gps_max-gps_min)/(px_max-px_min))*(px-px_min)+gps_min
 
     # the values for Z will have to be divided into segments of equal size.
-
     filename = "files/BCD_coordinates.csv"
-
     # writing to csv file
     with open(filename, 'w') as csvfile:
         csvwriter = csv.writer(csvfile)
@@ -124,7 +120,6 @@ if __name__ == '__main__':
                             ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][len(x_coordinates[cell_idx])-1])+Z_min,
                             ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][0][0])+X_min,
                             ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][0][1])+X_min ] ]
-
             elif ( (cell_idx != 1) | (cell_idx != len(x_coordinates)) ):
                 rows = [ [  cell_numbers[i],
                             ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][0])+Z_min,
@@ -132,7 +127,6 @@ if __name__ == '__main__':
                             ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][0])+X_min,
                             ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][1])+X_min ] ]
             csvwriter.writerows(rows) # writing the data rows
-
     for i in range(len(x_coordinates)):
         cell_idx = i+1 #i starts from zero, but cell numbers start from 1
         mean_x_coordinates[cell_idx] = mean(x_coordinates[cell_idx])
@@ -140,7 +134,6 @@ if __name__ == '__main__':
             mean_y_coordinates[cell_idx] = mean_d_double_list(y_coordinates[cell_idx])
         else:
             mean_y_coordinates[cell_idx] = mean_double_list(y_coordinates[cell_idx])
-
     plt.waitforbuttonpress(1)
     input("Press any key to close all figures.")
     plt.close("all")

@@ -6,8 +6,8 @@ __Project Description__
   Scenario 2
 
 __Version History__
-  - Version:      0.3.0
-  - Update:       11.05.2020
+  - Version:      0.3.1
+  - Update:       12.05.2020
   - Engineer(s):  V. J. Hansen, D. Kazokas
 
 __Sensors used__
@@ -41,7 +41,6 @@ __Sensors used__
 #define startZ        -9.5
 #define CELLS         5
 
-
 /* Enum Data Types */
 enum SONAR_Sensors { Sonar_L, Sonar_R, Sonar_M };
 enum SIDES { LEFT, RIGHT, MIDDLE };
@@ -54,13 +53,11 @@ static WbDeviceTag l_motor, r_motor;
 static WbDeviceTag compass;
 static WbDeviceTag gps;
 
-
 /* Alternative Naming */
 typedef struct _Vector {
   double X_v;
   double Z_v;
 } Vector;
-
 
 
 static int Z_BCD[CELLS][200];
@@ -83,20 +80,21 @@ void process_field(int field_count, char *value, int row_count) {
     // - Z coordinates
     if (field_count == 1) {
         for (int i = 0; i < strlen(value); ++i) {
-            Z_BCD[row_count][i] = value[i];
+            Z_BCD[row_count][i] = (double)value[i];
             len_Z[row_count] = i;
         }
     }
     // - X coordinates
     if (field_count == 2) {
         for (int i = 0; i < strlen(value); ++i) {
-            X_BCD[row_count][i] = value[i];
+            X_BCD[row_count][i] =(double)value[i];
             len_X[row_count] = i;
         }
     }
 }
 
 // based on: https://codingboost.com/parsing-csv-files-in-c
+// https://stackoverflow.com/questions/2620146/how-do-i-return-multiple-values-from-a-function-in-c
 void process_file() {
     char buf[1024];
     char token[1024];
@@ -108,7 +106,6 @@ void process_file() {
     }
     while (fgets(buf, 1024, fp)) {
         row_count++;
-
         if (row_count == 1) {
             continue;
         }
@@ -116,7 +113,8 @@ void process_file() {
         field_count = i = 0;
         do {
             token[token_pos++] = buf[i];
-            if (!in_double_quotes && (buf[i] == ',' || buf[i] == '\n' || buf[i] == ']')) {
+            // some issues here
+            if (!in_double_quotes && (buf[i] == ',' || buf[i] == '\n' || buf[i] == ']' || buf[i] == '[')) {
                 token[token_pos - 1] = 0;
                 token_pos = 0;
                 process_field(field_count++, token, cell_cnt);
@@ -128,37 +126,13 @@ void process_file() {
             if (buf[i] == '"' && buf[i + 1] == '"')
                 i++;
         } while (buf[++i]);
-        printf("\n");
     }
     // test
     for (int i = 0; i < len_X[1]; ++i) {
-        printf("%c", X_BCD[1][i]);
+        printf("%c ", X_BCD[1][i]);
     }
-    printf("\n");
     fclose(fp);
 }
-
-
-// dont need this
-/* Generate X Coordinates */
-double *generate_x(int num_points) {
-    static double x[100];
-    for (int n = 0; n < num_points; n++) {
-        x[n] = (-size_x/2.0) * (1 + 3*n + pow(n,2) + 2*(pow(n,3)) - 4*(floor(0.25 * (2+ 3*n + pow(n,2) + 2*(pow(n,3))))));
-    }
-    return x;
-}
-
-// dont need this
-/* Generate Z Coordinates */
-double *generate_z(int num_points) {
-    static double z[100];
-    for (int n = 0; n < num_points; n++) {
-        z[n] = (-size_z/2.0) + delta*ceil(n/2);
-    }
-    return z;
-}
-
 
 /* Euclidean Norm, i.e. distance between */
 static double norm(const Vector *vec) {
@@ -331,14 +305,12 @@ int main(int argc, char **argv) {
   wb_robot_init();
   initialize();
   process_file();
-  X_target = generate_x(target_points);
-  Z_target = generate_z(target_points);
 
   // fill target-vector with X and Z way points
-  for (int i=0; i<target_points; i++) {
+/*  for (int i=0; i<target_points; i++) {
     targets[i].X_v = X_target[i];
     targets[i].Z_v = Z_target[i];
-  }
+  }*/
   printf("\nStarting Snow-e in Autopilot Mode...\n\n");
   while (wb_robot_step(TIME_STEP) != -1) {
     drive_autopilot();
