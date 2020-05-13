@@ -1,12 +1,12 @@
 # Create binary map from image
-
-# V. J. Hansen
-# 06.05.2020
+## python3 image_to_binary_map.py --image sim_lot.png
 
 # https://stackoverflow.com/questions/50234485/drawing-rectangle-in-opencv-python/50235566
 # https://stackoverflow.com/questions/50368683/set-white-color-outside-boundingbox-python-opencv
 
-## python3 image_to_binary_map.py --image sim_lot.png
+# Engineer(s): V. J. Hansen
+# Version: 1.0
+# Date: 13.05.2020
 
 import cv2, argparse, os
 import numpy as np

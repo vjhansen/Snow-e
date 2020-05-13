@@ -41,7 +41,6 @@ def init_z_e(cell):
     z_e = float(z_e_coord[cell])
     return z_e
 
-
 # Pattern:
 # Xs, Xs, Xe, Xe, Xs, Xs, Xe, Xe
 def generate_x_s(cell):
@@ -75,9 +74,8 @@ def final_x(cell):
         elif x_e[n] != 0:
             x = x_e[n]
         final_x_coord.append(x)
-        res = ", ".join(repr(e) for e in final_x_coord)
+    res = ", ".join(repr(e) for e in final_x_coord)
     return res
-
 
 # Pattern:
 # Zs, Zs, Zs+delta, Zs+delta, Zs+2*delta, Zs+2*delta, ..., Zs + n*delta = Ze
@@ -94,7 +92,7 @@ def generate_z_s(cell, delta):
         z = (z_s) + delta*math.ceil(n/2)
         z = round(z, 1)
         z_s_coord.append(z)
-        res = ", ".join(repr(e) for e in z_s_coord)
+    res = ", ".join(repr(e) for e in z_s_coord)
     return res
 #-----------------------------------------------
 num_cells = len(x_s_coord)-1
@@ -104,13 +102,11 @@ z_filename = "files/z_waypoints.txt"
 with open(x_filename, 'w') as xf:
     for x in range(num_cells):
         cell_idx = x+1
-        row = final_x(cell_idx)
-        xf.write(row)
+        xf.write(final_x(cell_idx))
         xf.write("\n")
 
 with open(z_filename, 'w') as zf:
     for x in range(num_cells):
         cell_idx = x+1
-        row = generate_z_s(cell_idx, 0.5)
-        zf.write(row)
+        zf.write(generate_z_s(cell_idx, 0.5))
         zf.write("\n")
