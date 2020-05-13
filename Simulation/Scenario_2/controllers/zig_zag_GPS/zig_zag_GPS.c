@@ -6,7 +6,7 @@ __Project Description__
   * Scenario 2
 
 __Version History__
-  - Version:      0.3.3
+  - Version:      0.3.5
   - Update:       13.05.2020
   - Engineer(s):  V. J. Hansen, D. Kazokas
 
@@ -39,7 +39,7 @@ __Sensors used__
 #define size_z        19
 #define startX        -4.5
 #define startZ        -9.5
-#define MAXCHAR 1000
+#define MAXCHAR 500
 
 /* Enum Data Types */
 enum SONAR_Sensors { Sonar_L, Sonar_R, Sonar_M };
@@ -61,11 +61,9 @@ typedef struct _Vector {
 
 char *xfile = "../../Coverage_Planning/files/x_waypoints.txt";
 char *zfile = "../../Coverage_Planning/files/z_waypoints.txt";
-
-static int num_points_txt = 0;
 static Vector targets[100];
-double *Z_target;
-double *X_target;
+static double X_target[MAXCHAR] = {0};
+static double Z_target[MAXCHAR] = {0};
 int state = INIT;
 int front_dir = 90;
 double distance = 0.0;
@@ -74,10 +72,8 @@ double gps_val[2] = {0.0, 0.0};
 double start_gps_pos[3] = {0.0, 0.0, 0.0};
 int target_points = 2*(size_z/delta);
 
-
-// read z-coordinates (create header-file for this function)
-double *z_file(char *filename) {
-  static double zres[MAXCHAR];
+// - read .txt-file
+void read_file(char *filename, double *arr_get) {
   FILE *fp;
   char str[MAXCHAR];
   fp = fopen(filename, "r");
@@ -89,38 +85,13 @@ double *z_file(char *filename) {
     char *token = strtok(str, ",");
     while (token != NULL) {
       i++;
-      zres[i] = atof(token);
+      arr_get[i] = atof(token);
       token = strtok(NULL, ",");
-      num_points_txt = i;
     }
   }
   fclose(fp);
-  return zres;
 }
 
-// read x-coordinates (create header-file for this function)
-double *x_file(char *filename) {
-  static double xres[MAXCHAR];
-  FILE *fp;
-  char str[MAXCHAR];
-  fp = fopen(filename, "r");
-  if (fp == NULL){
-      printf("Could not open file %s",filename);
-  }
-  int i = 0;
-  while (fgets(str, MAXCHAR, fp) != NULL) {
-    char *token = strtok(str, ",");
-
-    while (token != NULL) {
-      i++;
-      xres[i] = atof(token);
-      token = strtok(NULL, ",");
-      num_points_txt = i;
-    }
-  }
-  fclose(fp);
-  return xres;
-}
 
 /* Euclidean Norm, i.e. distance between */
 static double norm(const Vector *vec) {
@@ -175,6 +146,7 @@ static int drive_autopilot(void) {
   // used for calibration
   if (fmod(current_time, 2) == 0.0) {
     printf("(dist = (%.4g)\n", distance);
+    printf("(%.4g, %.4g)\n", X_target[target_index], Z_target[target_index]);
   }
 
   if (distance <= 0.8) {
@@ -290,9 +262,8 @@ static int drive_autopilot(void) {
 int main(int argc, char **argv) {
   wb_robot_init();
   initialize();
-  X_target = x_file(xfile);
-  Z_target = z_file(zfile);
-
+  read_file(xfile, X_target);
+  read_file(zfile, Z_target);
   // fill target-vector with X and Z way points
   for (int i=0; i<target_points; i++) {
     targets[i].X_v = X_target[i];

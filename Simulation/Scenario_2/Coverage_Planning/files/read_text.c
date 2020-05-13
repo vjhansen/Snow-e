@@ -7,14 +7,13 @@ static int num_points = 0;
 char *xfile = "x_waypoints.txt";
 char *zfile = "z_waypoints.txt";
 
-double *X_target;
-double *Z_target;
+static double x_arr[MAXCHAR] = {0};
+static double z_arr[MAXCHAR] = {0};
 
-double *z_file(char *filename) {
-  static double zres[MAXCHAR];
+void read_file(char *filename, double *arr_get) {
+  //double *xres = malloc(MAXCHAR);
   FILE *fp;
   char str[MAXCHAR];
-  printf("%c\n", filename[0]);
   fp = fopen(filename, "r");
   if (fp == NULL){
       printf("Could not open file %s",filename);
@@ -22,51 +21,21 @@ double *z_file(char *filename) {
   int i = 0;
   while (fgets(str, MAXCHAR, fp) != NULL) {
     char *token = strtok(str, ",");
-
     while (token != NULL) {
       i++;
-      zres[i] = atof(token);
+      arr_get[i] = atof(token);
       token = strtok(NULL, ",");
       num_points = i;
     }
   }
   fclose(fp);
-  return zres;
 }
-
-
-double *x_file(char *filename) {
-  static double xres[MAXCHAR];
-  FILE *fp;
-  char str[MAXCHAR];
-  printf("%c\n", filename[0]);
-  fp = fopen(filename, "r");
-  if (fp == NULL){
-      printf("Could not open file %s",filename);
-  }
-  int i = 0;
-  while (fgets(str, MAXCHAR, fp) != NULL) {
-    char *token = strtok(str, ",");
-
-    while (token != NULL) {
-      i++;
-      xres[i] = atof(token);
-      token = strtok(NULL, ",");
-      num_points = i;
-    }
-  }
-  fclose(fp);
-  return xres;
-}
-
 
 int main() {
-
-  X_target = x_file(xfile);
-  Z_target = z_file(zfile);
-
-    for (int i = 1; i <  num_points; i++) {
-      printf("%f, %f \n", X_target[i], Z_target[i+1]);
-    }
-    return 0;
+  read_file(xfile, x_arr);
+  read_file(zfile, z_arr);
+  for (int j=2, i=1; i<num_points; i++, j++) {
+    printf("%.2f, %.2f\n", x_arr[i], z_arr[j]);
+  }
+  return 0;
 }

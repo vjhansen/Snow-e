@@ -323,5 +323,5 @@ DEF TRACKED_ROBOT Robot {
   controller "zig_zag_GPS"
 }
 TeslaModel3 {
-  translation 0 0.4 -7.57
+  translation 0 0.4 -1.7
 }
