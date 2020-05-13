@@ -8,5 +8,5 @@ centralWidgetVisible: 1
 selectionDisabled: 0
 viewpointLocked: 0
 orthographicViewHeight: 1
-textFiles: 0 "controllers/zig_zag_GPS/zig_zag_GPS.c"
+textFiles: 0 "controllers/python_control/python_control.py"
 globalOptionalRendering: CoordinateSystem::DistanceSensorRays
