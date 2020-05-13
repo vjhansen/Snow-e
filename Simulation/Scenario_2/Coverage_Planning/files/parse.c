@@ -35,7 +35,7 @@ void process_file() {
     char token[1024];
     int row_count = 0, field_count = 0, in_double_quotes = 0;
     int token_pos = 0, i = 0, cell_cnt = 0;
-    FILE *fp = fopen("../../Coverage_Planning/files/waypoints.csv", "r");
+    FILE *fp = fopen("/x_waypoints.txt", "r");
     if (!fp) {
         printf("Can't open file\n");
     }

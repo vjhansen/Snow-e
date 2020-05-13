@@ -1,9 +1,9 @@
 ## generate waypoints for coverage path planning from Boustrophedon Cellular Decomposition
 
 # Snow-e
-# Engineer: V. J. Hansen
-# 12.05.2020
-# V 0.9
+# Engineer(s): V. J. Hansen
+# 13.05.2020
+# V 1.0
 
 #-----------------------------------------------
 import math, csv
@@ -75,7 +75,8 @@ def final_x(cell):
         elif x_e[n] != 0:
             x = x_e[n]
         final_x_coord.append(x)
-    return final_x_coord
+        res = ", ".join(repr(e) for e in final_x_coord)
+    return res
 
 
 # Pattern:
@@ -93,15 +94,23 @@ def generate_z_s(cell, delta):
         z = (z_s) + delta*math.ceil(n/2)
         z = round(z, 1)
         z_s_coord.append(z)
-    return z_s_coord
+        res = ", ".join(repr(e) for e in z_s_coord)
+    return res
 #-----------------------------------------------
 num_cells = len(x_s_coord)-1
-fields = ['Cell', 'Z', 'X']
-filename = "files/waypoints.csv"
-with open(filename, 'w') as csvwrite_file:
-    csvwriter = csv.writer(csvwrite_file)
-    csvwriter.writerow(fields)
+x_filename = "files/x_waypoints.txt"
+z_filename = "files/z_waypoints.txt"
+
+with open(x_filename, 'w') as xf:
     for x in range(num_cells):
         cell_idx = x+1
-        rows = [[cell_idx, generate_z_s(cell_idx, 0.5), final_x(cell_idx)]]
-        csvwriter.writerows(rows)
+        row = final_x(cell_idx)
+        xf.write(row)
+        xf.write("\n")
+
+with open(z_filename, 'w') as zf:
+    for x in range(num_cells):
+        cell_idx = x+1
+        row = generate_z_s(cell_idx, 0.5)
+        zf.write(row)
+        zf.write("\n")

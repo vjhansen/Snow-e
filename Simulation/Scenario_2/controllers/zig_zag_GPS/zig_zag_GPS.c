@@ -6,8 +6,8 @@ __Project Description__
   Scenario 2
 
 __Version History__
-  - Version:      0.3.1
-  - Update:       12.05.2020
+  - Version:      0.3.3
+  - Update:       13.05.2020
   - Engineer(s):  V. J. Hansen, D. Kazokas
 
 __Sensors used__
@@ -39,7 +39,7 @@ __Sensors used__
 #define size_z        19
 #define startX        -4.5
 #define startZ        -9.5
-#define CELLS         5
+#define MAXCHAR 1000
 
 /* Enum Data Types */
 enum SONAR_Sensors { Sonar_L, Sonar_R, Sonar_M };
@@ -59,11 +59,10 @@ typedef struct _Vector {
   double Z_v;
 } Vector;
 
+char *xfile = "../../Coverage_Planning/files/x_waypoints.txt";
+char *zfile = "../../Coverage_Planning/files/z_waypoints.txt";
 
-static int Z_BCD[CELLS][200];
-static int X_BCD[CELLS][200];
-static int len_Z[CELLS];
-static int len_X[CELLS];
+static int num_points_txt = 0;
 static Vector targets[100];
 double *Z_target;
 double *X_target;
@@ -73,65 +72,54 @@ double distance = 0.0;
 static int target_index = 1; // = 0 is where we start
 double gps_val[2] = {0.0, 0.0};
 double start_gps_pos[3] = {0.0, 0.0, 0.0};
-int target_points = 2*(size_z/delta); // dont need this
+int target_points = 2*(size_z/delta);
 
-// these are our new waypoints
-void process_field(int field_count, char *value, int row_count) {
-    // - Z coordinates
-    if (field_count == 1) {
-        for (int i = 0; i < strlen(value); ++i) {
-            Z_BCD[row_count][i] = (double)value[i];
-            len_Z[row_count] = i;
-        }
+
+// read z-coordinates (create header-file for this function)
+double *z_file(char *filename) {
+  static double zres[MAXCHAR];
+  FILE *fp;
+  char str[MAXCHAR];
+  fp = fopen(filename, "r");
+  if (fp == NULL){
+      printf("Could not open file %s",filename);
+  }
+  int i = 0;
+  while (fgets(str, MAXCHAR, fp) != NULL) {
+    char *token = strtok(str, ",");
+    while (token != NULL) {
+      i++;
+      zres[i] = atof(token);
+      token = strtok(NULL, ",");
+      num_points_txt = i;
     }
-    // - X coordinates
-    if (field_count == 2) {
-        for (int i = 0; i < strlen(value); ++i) {
-            X_BCD[row_count][i] =(double)value[i];
-            len_X[row_count] = i;
-        }
-    }
+  }
+  fclose(fp);
+  return zres;
 }
 
-// based on: https://codingboost.com/parsing-csv-files-in-c
-// https://stackoverflow.com/questions/2620146/how-do-i-return-multiple-values-from-a-function-in-c
-void process_file() {
-    char buf[1024];
-    char token[1024];
-    int row_count = 0, field_count = 0, in_double_quotes = 0;
-    int token_pos = 0, i = 0, cell_cnt = 0;
-    FILE *fp = fopen("../../Coverage_Planning/files/waypoints.csv", "r");
-    if (!fp) {
-        printf("Can't open file\n");
+// read x-coordinates (create header-file for this function)
+double *x_file(char *filename) {
+  static double xres[MAXCHAR];
+  FILE *fp;
+  char str[MAXCHAR];
+  fp = fopen(filename, "r");
+  if (fp == NULL){
+      printf("Could not open file %s",filename);
+  }
+  int i = 0;
+  while (fgets(str, MAXCHAR, fp) != NULL) {
+    char *token = strtok(str, ",");
+
+    while (token != NULL) {
+      i++;
+      xres[i] = atof(token);
+      token = strtok(NULL, ",");
+      num_points_txt = i;
     }
-    while (fgets(buf, 1024, fp)) {
-        row_count++;
-        if (row_count == 1) {
-            continue;
-        }
-        cell_cnt++;
-        field_count = i = 0;
-        do {
-            token[token_pos++] = buf[i];
-            // some issues here
-            if (!in_double_quotes && (buf[i] == ',' || buf[i] == '\n' || buf[i] == ']' || buf[i] == '[')) {
-                token[token_pos - 1] = 0;
-                token_pos = 0;
-                process_field(field_count++, token, cell_cnt);
-            }
-            if (buf[i] == '"' && buf[i + 1] != '"') {
-                token_pos--;
-                in_double_quotes = !in_double_quotes;
-            }
-            if (buf[i] == '"' && buf[i + 1] == '"')
-                i++;
-        } while (buf[++i]);
-    }
-    // test
-    for (int i = 0; i < len_X[1]; ++i) {
-        printf("%c ", X_BCD[1][i]);
-    }
-    fclose(fp);
+  }
+  fclose(fp);
+  return xres;
 }
 
 /* Euclidean Norm, i.e. distance between */
@@ -144,7 +132,6 @@ static void minus(Vector *diff, const Vector *trgt, const Vector *gpsPos) {
   diff->X_v = trgt->X_v - gpsPos->X_v;
   diff->Z_v = trgt->Z_v - gpsPos->Z_v;
 }
-
 
 /*__________ Initialize Function __________*/
 static void initialize(void) {
@@ -301,16 +288,16 @@ static int drive_autopilot(void) {
 
 /*__________ Main Function __________*/
 int main(int argc, char **argv) {
-
   wb_robot_init();
   initialize();
-  process_file();
+  X_target = x_file(xfile);
+  Z_target = z_file(zfile);
 
   // fill target-vector with X and Z way points
-/*  for (int i=0; i<target_points; i++) {
+  for (int i=0; i<target_points; i++) {
     targets[i].X_v = X_target[i];
     targets[i].Z_v = Z_target[i];
-  }*/
+  }
   printf("\nStarting Snow-e in Autopilot Mode...\n\n");
   while (wb_robot_step(TIME_STEP) != -1) {
     drive_autopilot();

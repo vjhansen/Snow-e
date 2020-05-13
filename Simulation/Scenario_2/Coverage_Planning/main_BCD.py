@@ -3,8 +3,8 @@
 #-----------------------------------------------
 # Apply Boustrophedon Cellular Decomposition to a map
 # Engineer(s): V. J. Hansen
-# Version 0.4.0
-# Data: 12.05.2020
+# Version 0.8.0
+# Data: 13.05.2020
 
 #-----------------------------------------------
 from matplotlib import pyplot as plt
@@ -95,13 +95,12 @@ if __name__ == '__main__':
     fields = ['Cell', 'Z_start', 'Z_end', 'X_start', 'X_end']
 
     # X is the length of the parking lot, which is 10 meters
-    X_max = 5   # [m], these will be related to y_coordinates of image
-    X_min = -5  # [m], these will be related to y_coordinates of image
+    X_max = 4.5   # [m], these will be related to y_coordinates of image
+    X_min = -4.5 # [m], these will be related to y_coordinates of image
 
     # Z is the width of the parking lot, which is 20 meters
-    Z_max = 10   # [m], these will be related to x_coordinates of image
-    Z_min = -10  # [m], these will be related to x_coordinates of image
-
+    Z_max = 9.5   # [m], these will be related to x_coordinates of image
+    Z_min = -9.5  # [m], these will be related to x_coordinates of image
 
     #gps = ((gps_max-gps_min)/(px_max-px_min))*(px-px_min)+gps_min
 
