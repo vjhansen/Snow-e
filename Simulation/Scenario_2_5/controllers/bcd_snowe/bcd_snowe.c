@@ -146,9 +146,7 @@ static int drive_autopilot(void) {
   
   Vector north = {north2D[X], north2D[Z]};
   Vector front = {north.X_v, -north.Z_u};
-
   Vector curr_gps_pos = {gps_pos[X], gps_pos[Z]};
-  
   Vector dir;
   minus(&dir, &targets[target_index], &curr_gps_pos);
   distance = norm(&dir);
@@ -162,9 +160,9 @@ static int drive_autopilot(void) {
   // used for calibration
   if (fmod(current_time, 4) == 0.0) {
     printf("(t: %.4g, %.4g)\n", X_target[target_index], Z_target[target_index]);
+    printf("(t: %.4g, %.4g)\n", gps_pos[X], gps_pos[Z]);
   }
-
-  if (distance <= 0.1) {
+  if (distance <= 0.8) {
     target_index++;
   }
   else {
