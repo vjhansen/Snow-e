@@ -110,3 +110,4 @@ with open(z_filename, 'w') as zf:
         cell_idx = x+1
         zf.write(generate_z_s(cell_idx, 0.5))
         zf.write("\n")
+print("waypoints created")

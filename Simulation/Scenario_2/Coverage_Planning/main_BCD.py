@@ -9,7 +9,7 @@
 #-----------------------------------------------
 from matplotlib import pyplot as plt
 import bcd  # Boustrophedon Cellular decomposition
-import cv2, csv
+import cv2, csv, os
 import numpy as np
 #-----------------------------------------------
 """
@@ -136,3 +136,4 @@ if __name__ == '__main__':
     plt.waitforbuttonpress(1)
     input("Press any key to close all figures.")
     plt.close("all")
+    os.system("python3 generate_coords_BCD.py")
