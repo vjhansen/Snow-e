@@ -108,6 +108,6 @@ with open(x_filename, 'w') as xf:
 with open(z_filename, 'w') as zf:
     for x in range(num_cells):
         cell_idx = x+1
-        zf.write(generate_z_s(cell_idx, 0.5))
+        zf.write(generate_z_s(cell_idx, 0.7))
         zf.write("\n")
 print("waypoints created")

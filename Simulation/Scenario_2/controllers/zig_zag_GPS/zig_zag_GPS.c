@@ -7,7 +7,7 @@ __Project Description__
 
 __Version History__
   - Version:      0.3.5
-  - Update:       13.05.2020
+  - Update:       14.05.2020
   - Engineer(s):  V. J. Hansen, D. Kazokas
 
 __Sensors used__
@@ -31,7 +31,7 @@ __Sensors used__
 
 /* Macro Definitions */
 #define THRESHOLD     900.0
-#define TIME_STEP     8
+#define TIME_STEP     16
 #define NUM_SONAR     3
 #define DEFAULT_SPEED 0.1
 #define delta         0.7
@@ -56,7 +56,7 @@ static WbDeviceTag gps;
 /* Alternative Naming */
 typedef struct _Vector {
   double X_v;
-  double Z_v;
+  double Z_u;
 } Vector;
 
 char *xfile = "../../Coverage_Planning/files/x_waypoints.txt";
@@ -95,13 +95,13 @@ void read_file(char *filename, double *arr_get) {
 
 /* Euclidean Norm, i.e. distance between */
 static double norm(const Vector *vec) {
-  return sqrt(vec->Z_v*vec->Z_v + vec->X_v*vec->X_v);
+  return sqrt(vec->Z_u*vec->Z_u + vec->X_v*vec->X_v);
 }
 
 // new vector = vector 1 - vector 2
 static void minus(Vector *diff, const Vector *trgt, const Vector *gpsPos) {
   diff->X_v = trgt->X_v - gpsPos->X_v;
-  diff->Z_v = trgt->Z_v - gpsPos->Z_v;
+  diff->Z_u = trgt->Z_u - gpsPos->Z_u;
 }
 
 /*__________ Initialize Function __________*/
@@ -146,7 +146,8 @@ static int drive_autopilot(void) {
   // used for calibration
   if (fmod(current_time, 2) == 0.0) {
     printf("(dist = (%.4g)\n", distance);
-    printf("(%.4g, %.4g)\n", X_target[target_index], Z_target[target_index]);
+    printf("(t: %.4g, %.4g)\n", X_target[target_index], Z_target[target_index]);
+    printf("(pos: %.4g, %.4g)\n", gps_pos[X], gps_pos[Z]);
   }
 
   if (distance <= 0.8) {
@@ -265,9 +266,9 @@ int main(int argc, char **argv) {
   read_file(xfile, X_target);
   read_file(zfile, Z_target);
   // fill target-vector with X and Z way points
-  for (int i=0; i<target_points; i++) {
+  for (int i=0, j=1; i<target_points; i++, j++) { 
     targets[i].X_v = X_target[i];
-    targets[i].Z_v = Z_target[i];
+    targets[i].Z_u = Z_target[j];
   }
   printf("\nStarting Snow-e in Autopilot Mode...\n\n");
   while (wb_robot_step(TIME_STEP) != -1) {

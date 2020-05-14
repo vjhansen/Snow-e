@@ -80,6 +80,6 @@ while True:
                         value = [0,0,0] # black
         )
         cv2.imwrite("new_map.png", border)
-        print('Successfully saved') 
+        print('Successfully saved')
         break
 cv2.destroyAllWindows()
