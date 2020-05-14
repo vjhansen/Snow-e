@@ -8,7 +8,7 @@ __Project Description__
 __Version History__
   - Version:      0.3.5
   - Update:       14.05.2020
-  - Engineer(s):  V. J. Hansen
+  - Engineer(s):  V. J. Hansen, 
 
 __Sensors used__
   - Compass:      Navigation
@@ -155,16 +155,12 @@ static int drive_autopilot(void) {
   normalize(&dir);
   
   // compute the target angle
-  //double beta = angle(&front, &dir);
   double beta_f = atan2(front.X_v, front.Z_u) * (180/M_PI);
   double beta_t = atan2(dir.X_v, dir.Z_u) * (180/M_PI);
   double beta_diff = beta_f - beta_t;
   
   // used for calibration
   if (fmod(current_time, 4) == 0.0) {
-    printf("(beta front = (%.4g)\n", beta_f);
-    printf("(beta target = (%.4g)\n", beta_t);
-    printf("(beta diff = (%.4g)\n", beta_f-beta_t);
     printf("(t: %.4g, %.4g)\n", X_target[target_index], Z_target[target_index]);
   }
 
