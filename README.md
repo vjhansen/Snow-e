@@ -4,7 +4,6 @@
 >#### Engineers: V. J. Hansen, D. Kazokas
 
 ### To do:
-* Enable robot to follow BCD coords
 * Implement A*
 
 ---
