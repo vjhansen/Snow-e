@@ -18,7 +18,6 @@
 ### Part 1 - Python Scripts
 * run `python3 image_to_binary_map.py --image sim_lot.png`
 * run `python3 main_BCD.py`
-* run `python3 generate_coords_BCD.py`
 
 ### Part 2 - Webots 
 * open...
