@@ -8,7 +8,7 @@ __Project Description__
 __Version History__
   - Version:      0.3.5
   - Update:       14.05.2020
-  - Engineer(s):  V. J. Hansen, D. Kazokas
+  - Engineer(s):  V. J. Hansen
 
 __Sensors used__
   - Compass:      Navigation
@@ -21,7 +21,6 @@ __Sensors used__
 #include <webots/robot.h>
 #include <webots/compass.h>
 #include <webots/gps.h>
-//#include "../../Coverage_Planning/read_csv.h"
 
 /* C libraries */
 #include <stdio.h>
@@ -40,13 +39,13 @@ __Sensors used__
 #define startX        -4.5
 #define startZ        -9.5
 #define MAXCHAR 500
+#define TURN_COEFFICIENT 0.01
+
 
 /* Enum Data Types */
 enum SONAR_Sensors { Sonar_L, Sonar_R, Sonar_M };
 enum SIDES { LEFT, RIGHT, MIDDLE };
 enum XZComponents { X, Y, Z };
-enum FSM { INIT, FORWARD, PAUSE, GO_LEFT, GO_RIGHT,
-           UTURN_R, UTURN_L, OBSTACLE, DONE };
 
 /* Webots Sensors */
 static WbDeviceTag l_motor, r_motor;
@@ -64,13 +63,12 @@ char *zfile = "../../Coverage_Planning/files/z_waypoints.txt";
 static Vector targets[100];
 static double X_target[MAXCHAR] = {0};
 static double Z_target[MAXCHAR] = {0};
-int state = INIT;
-int front_dir = 90;
 double distance = 0.0;
 static int target_index = 1; // = 0 is where we start
 double gps_val[2] = {0.0, 0.0};
 double start_gps_pos[3] = {0.0, 0.0, 0.0};
 int target_points = 2*(size_z/delta);
+
 
 // - read .txt-file
 void read_file(char *filename, double *arr_get) {
@@ -132,7 +130,6 @@ static void initialize(void) {
   //..... Enable GPS .....
   gps = wb_robot_get_device("gps");
   wb_gps_enable(gps, TIME_STEP);
-
 }
 /*_________________________________________*/
 
@@ -144,130 +141,43 @@ static int drive_autopilot(void) {
   const double *north2D = wb_compass_get_values(compass);
   double theta          = atan2(north2D[X], north2D[Z]) * (180/M_PI); // angle (in degrees) between x and z-axis
   const double *gps_pos = wb_gps_get_values(gps);
+  
+  Vector north = {north2D[X], north2D[Z]};
+  Vector front = {north.X_v, -north.Z_u};
 
   Vector curr_gps_pos = {gps_pos[X], gps_pos[Z]};
+  
   Vector dir;
   minus(&dir, &targets[target_index], &curr_gps_pos);
   distance = norm(&dir);
   normalize(&dir);
   
-  double phi = atan2(dir.X_v, dir.Z_u)* (180/M_PI);
-
-
+  // compute the target angle
+  //double beta = angle(&front, &dir);
+  double beta_f = atan2(front.X_v, front.Z_u) * (180/M_PI);
+  double beta_t = atan2(dir.X_v, dir.Z_u) * (180/M_PI);
+  double beta_diff = beta_f - beta_t;
+  
   // used for calibration
-  if (fmod(current_time, 2) == 0.0) {
-    //printf("(dist = (%.4g)\n", distance);
-    //printf("(t: %.4g, %.4g)\n", X_target[target_index], Z_target[target_index]);
-   // printf("(dir x: %.4g, comp: %.4g)\n", dir.X_v, north2D[X]);
-    //printf("(dir z: %.4g, comp: %.4g)\n", dir.Z_u, north2D[Z]);
-   printf("(phi: %.4g)\n", phi);
+  if (fmod(current_time, 4) == 0.0) {
+    printf("(beta front = (%.4g)\n", beta_f);
+    printf("(beta target = (%.4g)\n", beta_t);
+    printf("(beta diff = (%.4g)\n", beta_f-beta_t);
+    printf("(t: %.4g, %.4g)\n", X_target[target_index], Z_target[target_index]);
   }
 
-  if (distance <= 0.8) {
+  if (distance <= 0.1) {
     target_index++;
   }
-
-  /*----------------------------*/
-  switch (state) {
-    //..... GET the x-direction (North/South) the robot is pointing to initially
-    case INIT:
-      front_dir = (int)theta;
-      state = FORWARD;
-      break;
-
-    //..... Forward .....
-    case FORWARD:
-      speed[LEFT]  = DEFAULT_SPEED;
-      speed[RIGHT] = DEFAULT_SPEED;
-      // Going North
-      if (front_dir >= 89 && front_dir <= 91) {
-        if (gps_pos[X] >= X_target[target_index]) {
-          state = PAUSE;
-        }
-      }
-      // Going South
-      else if (front_dir >= -91 && front_dir <= -89) {
-        if (gps_pos[X] <= X_target[target_index]) {
-          state = PAUSE;
-        }
-      }
-      else if (target_index == target_points-1) {
-        state = DONE;
-      }
-      break;
-
-    //..... Pause .....
-    case PAUSE:
-      speed[LEFT]  = 0.0;
-      speed[RIGHT] = 0.0;
-      // going north
-      if (front_dir >= 89 && front_dir <= 91) {
-        state = GO_RIGHT;
-      }
-      // going south
-      else if (front_dir >= -91 && front_dir <= -89) {
-        state = GO_LEFT;
-      }
-      break;
-
-    //..... Go Left .....
-    case GO_LEFT:
-      speed[LEFT]  = -DEFAULT_SPEED;
-      speed[RIGHT] = DEFAULT_SPEED;
-      if (fabs(theta) >= 179.0 && fabs(theta) <= 181.0) {
-         speed[LEFT]  = DEFAULT_SPEED;
-         speed[RIGHT] = DEFAULT_SPEED;
-         if (gps_pos[Z] >= Z_target[target_index] && gps_pos[X] <= X_target[target_index]) {
-           state = UTURN_L;
-         }
-      }
-      break;
-
-    //..... Go Right .....
-    case GO_RIGHT:
-      speed[LEFT]  = DEFAULT_SPEED;
-      speed[RIGHT] = -DEFAULT_SPEED;
-      if (fabs(theta) >= 179.0 && fabs(theta) <= 181.0) {
-         speed[LEFT]  = DEFAULT_SPEED;
-         speed[RIGHT] = DEFAULT_SPEED;
-         if (gps_pos[Z] >= Z_target[target_index]) {
-           state = UTURN_R;
-         }
-      }
-      break;
-
-    //..... Uturn Right .....
-    case UTURN_R:
-      speed[LEFT]  = DEFAULT_SPEED;
-      speed[RIGHT] = -DEFAULT_SPEED;
-      if (theta >= -91.0 && theta <= -89.0) {
-        front_dir = -90;
-        state = FORWARD;
-      }
-      break;
-
-    //..... Uturn Left .....
-    case UTURN_L:
-      speed[LEFT]  = -DEFAULT_SPEED;
-      speed[RIGHT] = DEFAULT_SPEED;
-      if (theta >= 89.0 && theta <= 91.0) {
-        front_dir = 90;
-        state = FORWARD;
-      }
-      break;
-
-    //..... Done .....
-    case DONE:
-      speed[LEFT]  = 0.0;
-      speed[RIGHT] = 0.0;
-    /*------------------------------------------*/
-    default:
-      break;
+  else {
+    speed[LEFT]  = DEFAULT_SPEED + TURN_COEFFICIENT * beta_diff;
+    speed[RIGHT] = DEFAULT_SPEED - TURN_COEFFICIENT * beta_diff;
   }
-
+  
   //..... Set Speed .....
   wb_motor_set_velocity(l_motor, speed[LEFT]);
   wb_motor_set_velocity(r_motor, speed[RIGHT]);
+  
   return TIME_STEP;
 }
 /*_________________________________________*/
@@ -278,6 +188,7 @@ int main(int argc, char **argv) {
   initialize();
   read_file(xfile, X_target);
   read_file(zfile, Z_target);
+  
   // fill target-vector with X and Z way points
   for (int i=0, j=1; i<target_points; i++, j++) { 
     targets[i].X_v = X_target[i];

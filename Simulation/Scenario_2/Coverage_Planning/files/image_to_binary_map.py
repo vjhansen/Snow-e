@@ -5,8 +5,8 @@
 # https://stackoverflow.com/questions/50368683/set-white-color-outside-boundingbox-python-opencv
 
 # Engineer(s): V. J. Hansen
-# Version: 1.0
-# Date: 13.05.2020
+# Version: 1.1
+# Date: 14.05.2020
 
 import cv2, argparse, os
 import numpy as np
@@ -44,7 +44,8 @@ args = vars(ap.parse_args())
 image = cv2.imread(args["image"])
 white_bg = 255*np.ones_like(image)
 clone = image.copy()
-cv2.namedWindow("image")
+cv2.namedWindow("image", cv2.WINDOW_NORMAL)
+
 cv2.setMouseCallback("image", shape_selection)
 
 cwd = os.getcwd()
@@ -64,6 +65,7 @@ while True:
         image = clone.copy()
     # press 'v' to view binary map
     if key == ord("v"):
+        cv2.namedWindow("binary map", cv2.WINDOW_NORMAL)
         cv2.imshow('binary map', white_bg)
     # press 'q' to quit
     elif key == ord("q"):
