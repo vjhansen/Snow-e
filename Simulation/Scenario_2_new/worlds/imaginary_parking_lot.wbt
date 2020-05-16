@@ -2,7 +2,7 @@
 WorldInfo {
   title "Snow-e Simulation - Scenario 2"
   basicTimeStep 8
-  FPS 15
+  FPS 16
   contactProperties [
     ContactProperties {
       material1 "track material"
@@ -19,6 +19,7 @@ Viewpoint {
   orientation -0.5691993714570153 -0.5850051309274135 -0.577737892405837 2.095882335451204
   position -1.083299028106786 29.006381685881 -0.15038393381194748
   follow "Snow-e"
+  followType "None"
 }
 TexturedBackground {
   texture "empty_office"
@@ -31,7 +32,7 @@ TexturedBackgroundLight {
   castShadows FALSE
 }
 RectangleArena {
-  floorSize 10 20
+  floorSize 11 21
   floorAppearance Asphalt {
     colorOverride 1 0.999969 0.999985
   }
@@ -43,8 +44,8 @@ RectangleArena {
   }
 }
 DEF Snow-e Robot {
-  translation -4.128581698416589 0.12314036237871175 -9.013338119288619
-  rotation 0.00045622596471906347 -0.892262676003666 -0.45151645470419616 0.0020325011140586643
+  translation -4.52204 0.129346 -9.5635
+  rotation 0.00045782104442594704 -0.9977487027031321 -0.06706203586313374 0.013684252125909197
   children [
     DEF Sensors Group {
       children [

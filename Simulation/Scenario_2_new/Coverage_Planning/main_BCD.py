@@ -3,8 +3,8 @@
 #-----------------------------------------------
 # Apply Boustrophedon Cellular Decomposition to a map
 # Engineer(s): V. J. Hansen
-# Version 0.9.1
-# Data: 14.05.2020
+# Version 0.9.2
+# Data: 16.05.2020
 
 #-----------------------------------------------
 from matplotlib import pyplot as plt
@@ -184,19 +184,16 @@ def calculate_x_coordinates(x_size, y_size, cells_to_visit, cell_boundaries, non
 #-----------------------------------------------
 if __name__ == '__main__':
     original_map = cv2.imread("files/new_map.png")
-
     # We need a binary image - 1 represents free space, 0 represents objects/walls
     if len(original_map.shape) > 2:
         print("Map image is converted to binary")
         single_channel_map = original_map[:, :, 0]
         _, binary_map = cv2.threshold(single_channel_map, 127, 1, cv2.THRESH_BINARY)
-
     # Call Boustrophedon Cellular Decomposition function
     bcd_out_im, bcd_out_cells, cell_numbers, cell_boundaries, non_neighboor_cell_numbers = bcd(binary_map)
     # Show the decomposed cells on top of original map
     display_separate_map(bcd_out_im, bcd_out_cells)
     plt.show(block=False)
-
     # Add cost using distance between center of mass of cells
     def mean(input_list):
         output_mean = sum(input_list)/len(input_list)
@@ -225,20 +222,19 @@ if __name__ == '__main__':
     mean_x_coordinates = {}
     mean_y_coordinates = {}
 
-    # field names
-    fields = ['Cell', 'Z_start', 'Z_end', 'X_start', 'X_end']
-
     # X is the length of the parking lot, which is 10 meters
     X_max = 4.5   # [m], these will be related to y_coordinates of image
-    X_min = -4.5 # [m], these will be related to y_coordinates of image
+    X_min = -4.5  # [m], these will be related to y_coordinates of image
 
     # Z is the width of the parking lot, which is 20 meters
     Z_max = 9.5   # [m], these will be related to x_coordinates of image
     Z_min = -9.5  # [m], these will be related to x_coordinates of image
 
     #gps = ((gps_max-gps_min)/(px_max-px_min))*(px-px_min)+gps_min
+    px_min = 1
 
-    # the values for Z will have to be divided into segments of equal size.
+    # field names
+    fields = ['Cell', 'Z_start', 'Z_end', 'X_start', 'X_end']
     filename = "files/BCD_coordinates.csv"
     # writing to csv file
     with open(filename, 'w') as csvfile:
@@ -248,17 +244,20 @@ if __name__ == '__main__':
             # data rows of csv file   # first, middle and last y_coordinates are 4D
             cell_idx = i+1
             if ( (cell_idx == 1) | (cell_idx == len(x_coordinates)) | (cell_idx == ((len(x_coordinates)+1)/2)) ):
-                rows = [[   cell_numbers[i],
-                            ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][0])+Z_min,
-                            ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][len(x_coordinates[cell_idx])-1])+Z_min,
-                            ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][0][0])+X_min,
-                            ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][0][1])+X_min ] ]
+                rows = [[   cell_numbers[i],  ## (x_ / y_length -1) because of image borders
+                            #gps = ((gps_max-gps_min)/(px_max-px_min))*(px-px_min)+gps_min
+                            ((Z_max-Z_min)/(x_length-px_min)) * (x_coordinates[cell_idx][0]-px_min)+Z_min, #Zs
+                            ((Z_max-Z_min)/(x_length-px_min)) * (x_coordinates[cell_idx][len(x_coordinates[cell_idx])-px_min]-1)+Z_min,
+                            ((X_max-X_min)/(y_length-px_min)) * (y_coordinates[cell_idx][0][0][0]-px_min)+X_min, #xs
+                            ((X_max-X_min)/(y_length-px_min)) * (y_coordinates[cell_idx][0][0][1]-px_min)+X_min ] ] #xe
             elif ( (cell_idx != 1) | (cell_idx != len(x_coordinates)) ):
-                rows = [ [  cell_numbers[i],
-                            ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][0])+Z_min,
-                            ((Z_max-Z_min)/(x_length))*(x_coordinates[cell_idx][len(x_coordinates[cell_idx])-1])+Z_min,
-                            ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][0])+X_min,
-                            ((X_max-X_min)/(y_length))*(y_coordinates[cell_idx][0][1])+X_min ] ]
+                rows = [ [  cell_numbers[i], ## (x_ / y_length -1) because of image borders
+                            #gps = ((gps_max-gps_min)/(px_max-px_min))*(px-px_min)+gps_min
+                            ((Z_max-Z_min)/(x_length-px_min)) * (x_coordinates[cell_idx][0]-px_min)+Z_min,
+                            ((Z_max-Z_min)/(x_length-px_min)) * (x_coordinates[cell_idx][len(x_coordinates[cell_idx])-1]-px_min)+Z_min,
+
+                            ((X_max-X_min)/(y_length-px_min)) * (y_coordinates[cell_idx][0][0]-px_min)+X_min, #xs
+                            ((X_max-X_min-1)/(y_length-px_min)) * (y_coordinates[cell_idx][0][1]-px_min)+X_min ] ] #xe
             csvwriter.writerows(rows) # writing the data rows
     for i in range(len(x_coordinates)):
         cell_idx = i+1 #i starts from zero, but cell numbers start from 1
@@ -270,4 +269,4 @@ if __name__ == '__main__':
     plt.waitforbuttonpress(1)
     input("Press any key to close all figures.")
     plt.close("all")
-    os.system("python3 generate_coords_BCD.py")
+    os.system("python3 generate_coords_BCD.py") # run another python-script

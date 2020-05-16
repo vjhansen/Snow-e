@@ -168,7 +168,7 @@ static int drive_autopilot(void) {
     printf("(t: %.4g, %.4g)\n", gps_pos[X], gps_pos[Z]);
   }
   // how close the snow blower should approach the waypoints
-  if (distance <= 0.2) {
+  if (distance <= 0.5) {
     target_index++;
   }
   else {
