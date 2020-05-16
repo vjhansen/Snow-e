@@ -6,13 +6,16 @@ __Project Description__
   * Scenario 2
 
 __Version History__
-  - Version:      0.3.5
-  - Update:       14.05.2020
-  - Engineer(s):  V. J. Hansen, 
+  - Version:      0.4
+  - Update:       16.05.2020
+  - Engineer(s):  V. J. Hansen, D. Kazokas
 
 __Sensors used__
   - Compass:      Navigation
   - GPS:          Generate Zig-Zag path
+  - SONAR @  deivy
+  - LIDAR @ deivy
+  - 
 */
 
 
@@ -141,7 +144,7 @@ static int drive_autopilot(void) {
   double speed[2]       = {0.0, 0.0};
   double current_time   = wb_robot_get_time();
   const double *north2D = wb_compass_get_values(compass);
-  double theta          = atan2(north2D[X], north2D[Z]) * (180/M_PI); // angle (in degrees) between x and z-axis
+  //double theta          = atan2(north2D[X], north2D[Z]) * (180/M_PI); // angle (in degrees) between x and z-axis
   const double *gps_pos = wb_gps_get_values(gps);
   
   Vector north = {north2D[X], north2D[Z]};
@@ -152,22 +155,25 @@ static int drive_autopilot(void) {
   distance = norm(&dir);
   normalize(&dir);
   
-  // compute the target angle
-  double beta_f = atan2(front.X_v, front.Z_u) * (180/M_PI);
-  double beta_t = atan2(dir.X_v, dir.Z_u) * (180/M_PI);
-  double beta_diff = beta_f - beta_t;
+  
+  double beta_f = atan2(front.X_v, front.Z_u) * (180/M_PI); // compute current angle
+  double beta_t = atan2(dir.X_v, dir.Z_u) * (180/M_PI); // compute target angle
+  double e_beta = beta_t - beta_f; // error between target and actual position
+  
+  // legg til derivat- og integral-ledd.
   
   // used for calibration
-  if (fmod(current_time, 4) == 0.0) {
+  if (fmod(current_time, 10) == 0.0) {
     printf("(t: %.4g, %.4g)\n", X_target[target_index], Z_target[target_index]);
     printf("(t: %.4g, %.4g)\n", gps_pos[X], gps_pos[Z]);
   }
-  if (distance <= 0.8) {
+  // how close the snow blower should approach the waypoints
+  if (distance <= 0.2) {
     target_index++;
   }
   else {
-    speed[LEFT]  = DEFAULT_SPEED + TURN_COEFFICIENT * beta_diff;
-    speed[RIGHT] = DEFAULT_SPEED - TURN_COEFFICIENT * beta_diff;
+    speed[LEFT]  = DEFAULT_SPEED - TURN_COEFFICIENT * e_beta;
+    speed[RIGHT] = DEFAULT_SPEED + TURN_COEFFICIENT * e_beta;
   }
   
   //..... Set Speed .....
