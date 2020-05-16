@@ -1,8 +1,10 @@
-## generate waypoints for coverage path planning from Boustrophedon Cellular Decomposition
-
+'''
+Generate waypoints for coverage path planning
+    from Boustrophedon Cellular Decomposition (BCD)
+'''
 # Snow-e
 # Engineer(s): V. J. Hansen
-# 14.05.2020
+# 16.05.2020
 # V 1.1
 
 #-----------------------------------------------
@@ -113,4 +115,4 @@ with open(x_filename, 'w') as xf:
         rows = final_x(cell_idx)
         xf.write(rows)
         xf.write("\n")
-print("waypoints created")
+print("Waypoints Created!")
