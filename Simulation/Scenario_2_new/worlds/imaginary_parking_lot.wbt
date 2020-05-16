@@ -1,7 +1,7 @@
 #VRML_SIM R2020a utf8
 WorldInfo {
   title "Snow-e Simulation - Scenario 2"
-  basicTimeStep 16
+  basicTimeStep 8
   FPS 16
   contactProperties [
     ContactProperties {
@@ -16,8 +16,8 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation -0.21404786223987815 0.9766441020040206 0.018703226761663538 0.17846149488398882
-  position -1.6554330254768754 0.7003537902314093 -3.669303589510223
+  orientation -0.5034958937608817 -0.720731405771247 -0.47648517888905323 1.8398403518267519
+  position -6.8590048033215085 11.145053020078501 -6.577867564359241
   follow "Snow-e"
   followType "None"
 }
@@ -44,8 +44,8 @@ RectangleArena {
   }
 }
 DEF Snow-e Robot {
-  translation -4.383594010826651 0.1230397313089246 -9.449749454450203
-  rotation 0.0005294977010013307 -0.9999664839445258 0.00817010525068203 -0.10135917794977128
+  translation -4.232889352862606 0.1231403623786863 -7.967390774776266
+  rotation 0.0004588352403984064 -0.9999589773658019 0.00904616248814388 -0.10136036015773768
   children [
     DEF Sensors Group {
       children [
@@ -208,8 +208,10 @@ DEF Snow-e Robot {
           ]
           name "Sonar_M"
           lookupTable [
-            0.2 1000 0
-            0.4 850 0.01
+            0.01 1100 0
+            0.1 1000 0
+            0.4 1000 0
+            0.5 850 0.1
           ]
           type "sonar"
           numberOfRays 2
@@ -709,8 +711,6 @@ DEF Snow-e Robot {
   }
   controller "bcd_snowe"
   cpuConsumption 20
-  linearVelocity 0.09395506110343396 0.00018381663612498909 -0.003203486299546166
-  angularVelocity -0.0019786006515382067 -0.32476197594681794 0.015287780812472245
 }
 DEF Ground Robot {
   children [

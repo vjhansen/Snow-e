@@ -16,7 +16,7 @@
 
 /*
  * Description:  This supervisor track the absolute position
- *               of the robot and remove the dirty from the
+ *               of the robot and remove snow from the
  *               area given by the robot
  */
 
@@ -26,29 +26,23 @@
 #include <webots/supervisor.h>
 
 #define TIME_STEP 64
-
 #define X 0
-#define Y 1
 #define Z 2
-
-// size of the ground
 #define GROUND_X 9.9
 #define GROUND_Z 19.9
 
 // main function
 int main() {
-  // init Webtos stuff
   wb_robot_init();
 
   // First we get a handler to devices
   WbDeviceTag display = wb_robot_get_device("ground_display");
 
   // get the properties of the Display
-  int width = wb_display_get_width(display);
+  int width  = wb_display_get_width(display);
   int height = wb_display_get_height(display);
 
   // prepare stuff to get the
-  // Robot(IROBOT_CREATE).translation field
   WbNodeRef mybot = wb_supervisor_node_get_from_def("TRACKED_ROBOT");
   WbFieldRef translationField = wb_supervisor_node_get_field(mybot, "translation");
 

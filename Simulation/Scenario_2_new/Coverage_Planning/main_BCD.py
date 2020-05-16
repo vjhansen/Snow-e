@@ -13,9 +13,7 @@ import csv, os, random, itertools
 import cv2
 import numpy as np
 #-----------------------------------------------
-
 Slice = List[Tuple[int, int]]
-
 #-------------------------------------
 def calc_connectivity(slice: np.ndarray) -> Tuple[int, Slice]:
     """ Calculates the connectivity of a slice and returns the connected area of ​​the slice.
@@ -228,11 +226,9 @@ if __name__ == '__main__':
     # Z is the width of the parking lot, which is 20 meters
     Z_max = 9.5   # [m], these will be related to x_coords of image
     Z_min = -9.5  # [m], these will be related to x_coords of image
-
     #gps = ((gps_max-gps_min)/(px_max-px_min))*(px-px_min)+gps_min
     px_min = 1
 
-    # field names
     fields = ['Cell', 'Z_start', 'Z_end', 'X_start', 'X_end']
     filename = "files/BCD_coordinates.csv"
     # writing to csv file
@@ -254,6 +250,7 @@ if __name__ == '__main__':
                 px_xs = y_coords[cell_idx][0][1]
                 rows = [ [  cell_nums[i], ## (x_length -1) because of image borders
                             #gps = ((gps_max-gps_min)/(px_max-px_min))*(px-px_min)+gps_min
+                            # the y-axis is inverse: goes from y_length to 0
                             ((Z_max-Z_min)/(x_length-px_min)) * (x_coords[cell_idx][0]-px_min)+Z_min,
                             ((Z_max-Z_min)/(x_length-px_min)) * (x_coords[cell_idx][len(x_coords[cell_idx])-1]-px_min)+Z_min,
                             ((X_max-X_min)/(px_min-y_length)) * (px_xs+px_min)+X_max,

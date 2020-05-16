@@ -160,8 +160,7 @@ static int drive_autopilot(void) {
 /*for (int i = 0; i < NUM_SONAR; i++) {
     sonar_val[i] = wb_distance_sensor_get_value(sonar[i]);
   }*/
-  sonar_val[MIDDLE] = wb_distance_sensor_get_value(sonar[MIDDLE]);
-
+  
   Vector north = {north2D[X], north2D[Z]};
   Vector front = {north.X_v, -north.Z_u};
   Vector curr_gps_pos = {gps_pos[X], gps_pos[Z]};
@@ -182,13 +181,10 @@ static int drive_autopilot(void) {
     printf("(t: %.4g, %.4g)\n", gps_pos[X], gps_pos[Z]);
   }
   // how close the snow blower should approach the waypoints
-  if (distance <= 0.4) {
+  if (distance <= 0.1) {
     target_index++;
   }
-  else if (sonar_val[MIDDLE] >= THRESHOLD) {
-    speed[LEFT]  = -DEFAULT_SPEED;
-    speed[RIGHT] = DEFAULT_SPEED;
-  }
+
   else if ((sonar_val[MIDDLE] < THRESHOLD)) {
     speed[LEFT]  = DEFAULT_SPEED - TURN_COEFFICIENT * e_beta;
     speed[RIGHT] = DEFAULT_SPEED + TURN_COEFFICIENT * e_beta;
