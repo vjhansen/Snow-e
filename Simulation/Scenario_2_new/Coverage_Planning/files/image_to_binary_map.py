@@ -66,12 +66,11 @@ while True:
         cv2.imshow('binary map', white_bg)
     # press 'q' to quit
     elif key == ord("q"):
-        #resized_img = cv2.resize(white_bg, (251, 221)) # resize image
+        resized_img = cv2.resize(white_bg, (251, 221)) # resize image
         # add black border to resized image (the border is needed for the BCD to set the boundary of our area)
         bordersize = 1
         border = cv2.copyMakeBorder(
-                        #resized_img,
-                        white_bg,
+                        resized_img,
                         top = bordersize,
                         bottom = bordersize,
                         left = bordersize,

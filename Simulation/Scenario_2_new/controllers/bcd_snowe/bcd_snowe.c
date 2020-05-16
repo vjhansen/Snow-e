@@ -6,16 +6,16 @@ __Project Description__
   * Scenario 2
 
 __Version History__
-  - Version:      0.4
+  - Version:      0.5
   - Update:       16.05.2020
   - Engineer(s):  V. J. Hansen, D. Kazokas
 
 __Sensors used__
   - Compass:      Navigation
   - GPS:          Generate Zig-Zag path
-  - SONAR @  deivy
-  - LIDAR @ deivy
-  - 
+  - SONAR:
+  - LIDAR:
+  -
 */
 
 
@@ -23,7 +23,9 @@ __Sensors used__
 #include <webots/motor.h>
 #include <webots/robot.h>
 #include <webots/compass.h>
+#include <webots/distance_sensor.h>
 #include <webots/gps.h>
+#include <webots/lidar.h>
 
 /* C libraries */
 #include <stdio.h>
@@ -32,16 +34,16 @@ __Sensors used__
 #include <string.h>
 
 /* Macro Definitions */
-#define THRESHOLD     900.0
-#define TIME_STEP     8
-#define NUM_SONAR     3
-#define DEFAULT_SPEED 0.1
-#define delta         0.7
-#define size_x        9
-#define size_z        19
-#define startX        -4.5
-#define startZ        -9.5
-#define MAXCHAR 1000
+#define THRESHOLD        900.0
+#define TIME_STEP        8
+#define NUM_SONAR        3
+#define DEFAULT_SPEED    0.1
+#define delta            0.7
+#define size_x           9
+#define size_z           19
+#define startX           -4.5
+#define startZ           -9.5
+#define MAXCHAR          1000
 #define TURN_COEFFICIENT 0.01
 
 
@@ -52,6 +54,7 @@ enum XZComponents { X, Y, Z };
 
 /* Webots Sensors */
 static WbDeviceTag l_motor, r_motor;
+static WbDeviceTag sonar[NUM_SONAR];
 static WbDeviceTag compass;
 static WbDeviceTag gps;
 
@@ -63,16 +66,17 @@ typedef struct _Vector {
 
 char *xfile = "../../Coverage_Planning/files/x_waypoints.txt";
 char *zfile = "../../Coverage_Planning/files/z_waypoints.txt";
+
 static Vector targets[100];
 static int num_points = 0;
 static double X_target[MAXCHAR] = {0};
 static double Z_target[MAXCHAR] = {0};
+double sonar_val[NUM_SONAR] = {0.0, 0.0, 0.0};
 double distance = 0.0;
 static int target_index = 1; // = 0 is where we start
 double gps_val[2] = {0.0, 0.0};
 double start_gps_pos[3] = {0.0, 0.0, 0.0};
 int target_points = 2*(size_z/delta);
-
 
 // - read .txt-file
 void read_file(char *filename, double *arr_get) {
@@ -94,7 +98,6 @@ void read_file(char *filename, double *arr_get) {
   }
   fclose(fp);
 }
-
 
 /* Euclidean Norm */
 static double norm(const Vector *vec) {
@@ -128,6 +131,13 @@ static void initialize(void) {
   wb_motor_set_velocity(l_motor, 0.0);
   wb_motor_set_velocity(r_motor, 0.0);
 
+  //..... Enable Sonar .....
+  char sonar_names[NUM_SONAR][8] = {"Sonar_L", "Sonar_R", "Sonar_M"};
+  for (int i = 0; i < NUM_SONAR; i++) {
+    sonar[i] = wb_robot_get_device(sonar_names[i]);
+    wb_distance_sensor_enable(sonar[i], TIME_STEP);
+  }
+
   //..... Enable Compass .....
   compass = wb_robot_get_device("compass");
   wb_compass_enable(compass, TIME_STEP);
@@ -146,7 +156,12 @@ static int drive_autopilot(void) {
   const double *north2D = wb_compass_get_values(compass);
   //double theta          = atan2(north2D[X], north2D[Z]) * (180/M_PI); // angle (in degrees) between x and z-axis
   const double *gps_pos = wb_gps_get_values(gps);
-  
+
+/*for (int i = 0; i < NUM_SONAR; i++) {
+    sonar_val[i] = wb_distance_sensor_get_value(sonar[i]);
+  }*/
+  sonar_val[MIDDLE] = wb_distance_sensor_get_value(sonar[MIDDLE]);
+
   Vector north = {north2D[X], north2D[Z]};
   Vector front = {north.X_v, -north.Z_u};
   Vector curr_gps_pos = {gps_pos[X], gps_pos[Z]};
@@ -154,32 +169,35 @@ static int drive_autopilot(void) {
   minus(&dir, &targets[target_index], &curr_gps_pos);
   distance = norm(&dir);
   normalize(&dir);
-  
-  
+
   double beta_f = atan2(front.X_v, front.Z_u) * (180/M_PI); // compute current angle
   double beta_t = atan2(dir.X_v, dir.Z_u) * (180/M_PI); // compute target angle
   double e_beta = beta_t - beta_f; // error between target and actual position
-  
+
   // legg til derivat- og integral-ledd.
-  
+
   // used for calibration
   if (fmod(current_time, 10) == 0.0) {
     printf("(t: %.4g, %.4g)\n", X_target[target_index], Z_target[target_index]);
     printf("(t: %.4g, %.4g)\n", gps_pos[X], gps_pos[Z]);
   }
   // how close the snow blower should approach the waypoints
-  if (distance <= 0.5) {
+  if (distance <= 0.4) {
     target_index++;
   }
-  else {
+  else if (sonar_val[MIDDLE] >= THRESHOLD) {
+    speed[LEFT]  = -DEFAULT_SPEED;
+    speed[RIGHT] = DEFAULT_SPEED;
+  }
+  else if ((sonar_val[MIDDLE] < THRESHOLD)) {
     speed[LEFT]  = DEFAULT_SPEED - TURN_COEFFICIENT * e_beta;
     speed[RIGHT] = DEFAULT_SPEED + TURN_COEFFICIENT * e_beta;
   }
-  
+
   //..... Set Speed .....
   wb_motor_set_velocity(l_motor, speed[LEFT]);
   wb_motor_set_velocity(r_motor, speed[RIGHT]);
-  
+
   return TIME_STEP;
 }
 /*_________________________________________*/
@@ -190,9 +208,9 @@ int main(int argc, char **argv) {
   initialize();
   read_file(xfile, X_target);
   read_file(zfile, Z_target);
-  
+
   // fill target-vector with X and Z way points
-  for (int i=0, j=1; i<num_points; i++, j++) { 
+  for (int i=0, j=1; i<num_points; i++, j++) {
     targets[i].X_v = X_target[i];
     targets[i].Z_u = Z_target[j];
   }

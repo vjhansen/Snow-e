@@ -20,7 +20,6 @@ Slice = List[Tuple[int, int]]
 def calc_connectivity(slice: np.ndarray) -> Tuple[int, Slice]:
     """ Calculates the connectivity of a slice and returns the connected area of ​​the slice.
     Args:       slice: rows. A slice of map.
-
     Returns:    The connectivity number and connectivity parts.
                 connectivity --> total number of connected parts """
     connectivity = 0
@@ -111,6 +110,7 @@ def bcd(erode_img: np.ndarray) -> Tuple[np.ndarray, int]:
                     new_cells[i] = current_cell
                     current_cell = current_cell + 1
             current_cells = new_cells
+
         # Draw the partition information on the map.
         for cell, slice in zip(current_cells, connective_parts):
             separate_img[slice[0]:slice[1], col] = cell
@@ -243,21 +243,24 @@ if __name__ == '__main__':
         for i in range(len(x_coordinates)):
             # data rows of csv file   # first, middle and last y_coordinates are 4D
             cell_idx = i+1
+
             if ( (cell_idx == 1) | (cell_idx == len(x_coordinates)) | (cell_idx == ((len(x_coordinates)+1)/2)) ):
                 rows = [[   cell_numbers[i],  ## (x_ / y_length -1) because of image borders
                             #gps = ((gps_max-gps_min)/(px_max-px_min))*(px-px_min)+gps_min
                             ((Z_max-Z_min)/(x_length-px_min)) * (x_coordinates[cell_idx][0]-px_min)+Z_min, #Zs
                             ((Z_max-Z_min)/(x_length-px_min)) * (x_coordinates[cell_idx][len(x_coordinates[cell_idx])-px_min]-1)+Z_min,
-                            ((X_max-X_min)/(y_length-px_min)) * (y_coordinates[cell_idx][0][0][0]-px_min)+X_min, #xs
-                            ((X_max-X_min)/(y_length-px_min)) * (y_coordinates[cell_idx][0][0][1]-px_min)+X_min ] ] #xe
+                            ((X_max-X_min)/(px_min-y_length)) * (y_coordinates[cell_idx][0][0][1]-px_min)+X_max, #xs
+                            ((X_max-X_min)/(px_min-y_length)) * (y_coordinates[cell_idx][0][0][0]-px_min)+X_max ] ] #xe
             elif ( (cell_idx != 1) | (cell_idx != len(x_coordinates)) ):
-                rows = [ [  cell_numbers[i], ## (x_ / y_length -1) because of image borders
+                px_xe = y_coordinates[cell_idx][0][0]
+                px_xs = y_coordinates[cell_idx][0][1]
+                print("xe",px_xe, "xs",px_xs)
+                rows = [ [  cell_numbers[i], ## (x_length -1) because of image borders
                             #gps = ((gps_max-gps_min)/(px_max-px_min))*(px-px_min)+gps_min
                             ((Z_max-Z_min)/(x_length-px_min)) * (x_coordinates[cell_idx][0]-px_min)+Z_min,
                             ((Z_max-Z_min)/(x_length-px_min)) * (x_coordinates[cell_idx][len(x_coordinates[cell_idx])-1]-px_min)+Z_min,
-
-                            ((X_max-X_min)/(y_length-px_min)) * (y_coordinates[cell_idx][0][0]-px_min)+X_min, #xs
-                            ((X_max-X_min-1)/(y_length-px_min)) * (y_coordinates[cell_idx][0][1]-px_min)+X_min ] ] #xe
+                            ((X_max-X_min)/(px_min-y_length)) * (px_xs+px_min)+X_max, #xs
+                            ((X_max-X_min)/(px_min-y_length)) * (px_xe+px_min)+X_max ] ] #xe
             csvwriter.writerows(rows) # writing the data rows
     for i in range(len(x_coordinates)):
         cell_idx = i+1 #i starts from zero, but cell numbers start from 1
