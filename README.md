@@ -23,5 +23,3 @@
 ### Coverage Path Planning
 
 #### Boustrophedon Cellular Decomposition
-
-#### A*
