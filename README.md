@@ -2,10 +2,6 @@
 ## Autonomous Snow Blower - *Snow-e*
 >#### Student Project: ES-SES4000 19-20
 >#### Engineers: V. J. Hansen, D. Kazokas
-
-### To do:
-* Implement A*
-
 ---
 
 ## Run the Simulation
