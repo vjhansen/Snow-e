@@ -19,6 +19,12 @@
  *               of the robot and remove snow from the
  *               area given by the robot
  */
+ 
+ 
+/*
+ - Update:      17.05.2020
+ - Engineer(s): V. J. Hansen
+*/
 
 #include <stdlib.h>
 #include <webots/display.h>
@@ -43,7 +49,7 @@ int main() {
   int height = wb_display_get_height(display);
 
   // prepare stuff to get the
-  WbNodeRef mybot = wb_supervisor_node_get_from_def("TRACKED_ROBOT");
+  WbNodeRef mybot = wb_supervisor_node_get_from_def("Snow-e");
   WbFieldRef translationField = wb_supervisor_node_get_field(mybot, "translation");
 
   // set the background (otherwise an empty ground is displayed at this step)
@@ -58,10 +64,9 @@ int main() {
     const double *translation = wb_supervisor_field_get_sf_vec3f(translationField);
 
     // display the robot position
-    wb_display_fill_oval(display, width * (translation[X] + GROUND_X / 2) / GROUND_X,
-                         height * (translation[Z] + GROUND_Z / 2) / GROUND_Z, 7, 7);
+    wb_display_fill_oval(display, width*(translation[X]+GROUND_X/2)/GROUND_X,
+                         height*(translation[Z]+GROUND_Z/2)/GROUND_Z, 7, 7);
   }
-
   wb_robot_cleanup();
 
   return 0;

@@ -619,21 +619,6 @@ DEF Snow-e Robot {
             }
           ]
         }
-        DEF Arrow Transform {
-          translation 0.325 0.0825 0
-          rotation -1 0 0 -1.5707953071795862
-          children [
-            Shape {
-              appearance PBRAppearance {
-                baseColor 0.384314 0 0
-                roughness 1
-                metalness 0
-              }
-              geometry TrafficLightArrowLampGeometry {
-              }
-            }
-          ]
-        }
         DEF Shredder_Link Transform {
           translation 0.25 -0.03 0
           children [
