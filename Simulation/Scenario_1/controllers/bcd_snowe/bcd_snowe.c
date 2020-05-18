@@ -161,7 +161,7 @@ static int drive_autopilot(void) {
 /*for (int i = 0; i < NUM_SONAR; i++) {
     sonar_val[i] = wb_distance_sensor_get_value(sonar[i]);
   }*/
-  
+
   Vector north = {north2D[X], north2D[Z]};
   Vector front = {north.X_v, -north.Z_u};
   Vector curr_gps_pos = {gps_pos[X], gps_pos[Z]};
@@ -184,6 +184,10 @@ static int drive_autopilot(void) {
   // how close the snow blower should approach the waypoints
   if (distance <= 0.1) {
     target_index++;
+  }
+  else if (target_index == num_points) {
+    target_index = 1; // go back to start.
+    // should stop simulation
   }
 
   else {
