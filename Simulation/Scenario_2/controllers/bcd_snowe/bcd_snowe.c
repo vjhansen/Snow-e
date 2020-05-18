@@ -190,6 +190,9 @@ static int drive_autopilot(void) {
     speed[LEFT]  = DEFAULT_SPEED - TURN_COEFFICIENT * e_beta;
     speed[RIGHT] = DEFAULT_SPEED + TURN_COEFFICIENT * e_beta;
   }
+  /*else if (target_index == num_points) {
+    end simulation
+  }*/
 
   //..... Set Speed .....
   wb_motor_set_velocity(l_motor, speed[LEFT]);
