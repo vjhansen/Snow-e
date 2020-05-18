@@ -17,7 +17,7 @@ WorldInfo {
 }
 Viewpoint {
   orientation 1 0 0 4.71238898038469
-  position -3.6904260477863464 3.681450697702222 -9.29970540657296
+  position -3.6904260477863464 6.320755896627918 -9.29970540657296
   follow "Snow-e"
 }
 TexturedBackground {
@@ -31,7 +31,7 @@ TexturedBackgroundLight {
   castShadows FALSE
 }
 RectangleArena {
-  floorSize 10 20
+  floorSize 11 21
   floorAppearance Asphalt {
     colorOverride 1 0.999969 0.999985
   }
@@ -710,7 +710,7 @@ DEF Snow-e Robot {
       0 0 0
     ]
   }
-  controller "zig_zag_GPS"
+  controller "bcd_snowe"
   cpuConsumption 20
 }
 DEF Ground Robot {
@@ -763,23 +763,4 @@ DEF Ground Robot {
   supervisor TRUE
 }
 DEF Obstacles Group {
-  children [
-    DEF Box Solid {
-      translation -3.14243 0.15 -8.41323
-      rotation 0 -1 0 1.5761753071795859
-      children [
-        DEF Box Shape {
-          appearance PBRAppearance {
-            baseColor 0 0 0
-            metalness 0
-          }
-          geometry Box {
-            size 1.5 0.7 0.5
-          }
-        }
-      ]
-      name "box object"
-      boundingObject USE Box
-    }
-  ]
 }
