@@ -28,7 +28,7 @@ def init_z_e(cell):
     return z_e
 
 # Pattern:
-# Xs, Xs, 0, 0, Xs, Xs, 0, 0
+# 0, 0, Xs, Xs, 0, 0, Xs, Xs
 def generate_x_s(cell):
     x_s_coord = []
     x_s = init_x_s(cell)
@@ -40,7 +40,7 @@ def generate_x_s(cell):
     return x_s_coord
 
 # Pattern:
-# 0, 0, Xe, Xe, 0, 0, Xe, Xe
+# Xe, Xe, 0, 0, Xe, Xe, 0, 0
 def generate_x_e(cell):
     x_e_coord = []
     x_e = init_x_e(cell)

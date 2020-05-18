@@ -112,7 +112,7 @@ def bcd(erode_img: np.ndarray) -> Tuple[np.ndarray, int]:
         elif (len(crrnt_cells) > 1):    # - Cells separated by the object
             # - Cells separated by the objects are not neighbors to each other
             non_nbr_cells.append(crrnt_cells)
-            # non_nbr_cells will contain many duplicate values
+            # - non_nbr_cells will contain many duplicate values
             # we get rid of duplicates at the end in this logic, all other cells must be neighbors to each other
             # if their cell number are adjacent to each other, like cell 1 is neighbor to cell 2
             for i in range(len(crrnt_cells)):
@@ -158,7 +158,7 @@ def calculate_x_coords(x_size, y_size, cells_to_visit, cell_bounds, non_nbrs):
                 separated_cell_number = len(sub_nbr) # - Contains how many cells are in the same vertical line
                 width_crrnt_cell = len(cell_bounds[cell_idx])
                 for j in range(separated_cell_number):
-                    #- All cells separated by the object(s) in this vertical line have same x coordinates
+                    # - All cells separated by the object(s) in this vertical line have same x coordinates
                     cells_x_coords[cell_idx+j] = list(range(width_accum_prev, width_crrnt_cell+width_accum_prev))
                 width_accum_prev += width_crrnt_cell
                 cell_idx = cell_idx + separated_cell_number
@@ -209,14 +209,14 @@ if __name__ == '__main__':
     y_coords = cell_bounds
     mean_x_coords = mean_y_coords = {}
 
-    # X is the length of the parking lot, which is 10 meters
+    # - X is the length of the parking lot, which is 10 meters
     X_max = 4.9   # [m], these will be related to y_coords of image
     X_min = -4.9  # [m], these will be related to y_coords of image
 
     # - Z is the width of the parking lot, which is 20 meters
     Z_max = 9.9   # [m], these will be related to x_coords of image
     Z_min = -9.9  # [m], these will be related to x_coords of image
-    #gps = ((gps_max-gps_min)/(px_max-px_min))*(px-px_min)+gps_min
+    # gps = ((gps_max-gps_min)/(px_max-px_min))*(px-px_min)+gps_min
     px_min = 1
 
     fields = ['Cell', 'Z_start', 'Z_end', 'X_start', 'X_end']
