@@ -26,7 +26,6 @@ def shape_selection(event, x, y, flags, param):
     elif event == cv2.EVENT_LBUTTONUP:
         # record the ending (x, y)-coordinates and indicate that the cropping operation is finished
         ref_point.append((x, y))
-
         # draw a rectangle around the region of interest (roi)
         x1, y1 = ref_point[0]
         x2, y2 = ref_point[1]
@@ -47,7 +46,7 @@ clonew_bg = white_bg.copy()
 cv2.namedWindow("image", cv2.WINDOW_NORMAL)
 cv2.setMouseCallback("image", shape_selection)
 cwd = os.getcwd()
-print("Drag a rectangle to cover the obstacles")
+print("Drag a rectangle to cover the obstacle(s)")
 print("Press 'r' to reset")
 print("Press 'v' to view binary map")
 print("Press 'q' to save image and quit")
@@ -78,9 +77,10 @@ while True:
                         left = bordersize,
                         right = bordersize,
                         borderType = cv2.BORDER_CONSTANT,
-                        value = [0,0,0] # black
+                        value = [0,0,0] # black color
         )
         cv2.imwrite("new_map.png", border)
         print('Successfully saved')
+        # could launch main_BCD.py from here
         break
 cv2.destroyAllWindows()

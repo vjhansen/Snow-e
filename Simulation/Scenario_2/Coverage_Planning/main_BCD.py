@@ -124,7 +124,6 @@ def bcd(erode_img: np.ndarray) -> Tuple[np.ndarray, int]:
     all_cell_nums = cell_bounds.keys()
     non_nbr_cells = remove_duplicates(non_nbr_cells)
     return separate_img, crrnt_cell, list(all_cell_nums), cell_bounds, non_nbr_cells
-
 #-------------------------------------
 def disp_separate_map(separate_map, cells):
     disp_img = np.empty([*separate_map.shape, 3], dtype=np.uint8)
@@ -181,6 +180,8 @@ if __name__ == '__main__':
     # - Show the decomposed cells on top of original map
     disp_separate_map(bcd_out_im, bcd_out_cells)
     plt.show(block=False)
+    print("Cells: ", cell_nums)
+    print("Non-neighbor cells: ", non_nbr_cell_nums)
 
 #-----------------------------------------------
     x_length = original_map.shape[1]
@@ -189,6 +190,7 @@ if __name__ == '__main__':
     y_coords = cell_bounds
     mean_x_coords = mean_y_coords = {}
 
+    # add X and Z as input arguments, e.g Z = 10 --> Z_max = Z/2, Z_min = -Z/2
     # - X is the length of the parking lot, which is 5 meters
     X_max = 2.5   # [m], these will be related to y_coords of image
     X_min = -2.5  # [m], these will be related to y_coords of image
@@ -211,18 +213,18 @@ if __name__ == '__main__':
             # - first, middle and last y_coords are 4D
             if ( (cell_idx == 1) | (cell_idx == len(x_coords)) | (cell_idx == ((len(x_coords)+1)/2)) ):
                 px_zs = x_coords[cell_idx][0]
-                px_ze = x_coords[cell_idx][len(x_coords[cell_idx])-1]
+                px_ze = x_coords[cell_idx][-1]
                 px_xs = y_coords[cell_idx][0][0][1]
                 px_xe = y_coords[cell_idx][0][0][0]
                 rows = [[   cell_nums[i],  # - (x_length -1) because of image borders
                             ((Z_max-Z_min)/(x_length-px_min)) * (px_zs-px_min)+Z_min,
                             ((Z_max-Z_min)/(x_length-px_min)) * (px_ze-px_min)+Z_min,
-                            # - the y-axis is inverted, i.e. goes from y_length to 0
+                            # - the y-axis is inverted, i.e. goes from y_length (bottom) to 0 (top)
                             ((X_max-X_min)/(px_min-y_length)) * (px_xs-px_min)+X_max,
                             ((X_max-X_min)/(px_min-y_length)) * (px_xe-px_min)+X_max ] ]
             elif ( (cell_idx != 1) | (cell_idx != len(x_coords)) ):
                 px_zs = x_coords[cell_idx][0]
-                px_ze = x_coords[cell_idx][len(x_coords[cell_idx])-1]
+                px_ze = x_coords[cell_idx][-1]
                 px_xs = y_coords[cell_idx][0][1]
                 px_xe = y_coords[cell_idx][0][0]
                 rows = [ [  cell_nums[i], # - (x_length-1) because of image borders

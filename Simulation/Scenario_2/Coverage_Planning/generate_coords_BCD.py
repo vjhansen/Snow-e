@@ -4,8 +4,8 @@ Generate waypoints for coverage path planning
 '''
 # Snow-e
 # Engineer(s): V. J. Hansen
-# 17.05.2020
-# V 1.1
+# 19.05.2020
+# V 1.2
 
 #-----------------------------------------------
 import math, csv
@@ -26,7 +26,6 @@ with open('files/BCD_coordinates.csv') as csvread_file:
         z_e_coord.append(z_end)
         x_s_coord.append(x_start)
         x_e_coord.append(x_end)
-
 
 def init_x_s(cell):
     x_s = float(x_s_coord[cell])
@@ -96,20 +95,22 @@ def generate_z_s(cell, delta):
         num_points += 2
     for n in range (num_points): # (num_points-1) to ensure that the snow blower doesn't get too close to obstacles
         z = (z_s) + delta*math.ceil(n/2)
+        if (z > z_e): # used to prevent Z-values going out of bounds because of delta.
+            z = z_e
         z = round(z, 1)
         z_s_coord.append(z)
     res = ", ".join(repr(e) for e in z_s_coord)
     return res
 #-----------------------------------------------
-
 num_cells = len(x_s_coord)-1
 x_filename = "files/x_waypoints.txt"
 z_filename = "files/z_waypoints.txt"
+delta = 0.5 # use as input argument
 
 with open(z_filename, 'w') as zf:
     for x in range(num_cells):
         cell_idx = x+1
-        rows = generate_z_s(cell_idx, 0.5)
+        rows = generate_z_s(cell_idx, delta)
         zf.write(rows)
         zf.write("\n")
 
