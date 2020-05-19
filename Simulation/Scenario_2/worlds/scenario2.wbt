@@ -16,8 +16,8 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation -0.5034958937608817 -0.720731405771247 -0.47648517888905323 1.8398403518267519
-  position -6.8590048033215085 11.145053020078501 -6.577867564359241
+  orientation -0.7127794250105339 -0.5650220361595978 -0.4155665890512791 1.6021525869481776
+  position -5.111016214292858 10.657956789314678 -3.424323153791268
   follow "Snow-e"
   followType "None"
 }
@@ -32,7 +32,7 @@ TexturedBackgroundLight {
   castShadows FALSE
 }
 RectangleArena {
-  floorSize 11 21
+  floorSize 6 11
   floorAppearance Asphalt {
     colorOverride 1 0.999969 0.999985
   }
@@ -44,8 +44,8 @@ RectangleArena {
   }
 }
 DEF Snow-e Robot {
-  translation -4.232889352862606 0.1231403623786863 -7.967390774776266
-  rotation 0.0004588352403984064 -0.9999589773658019 0.00904616248814388 -0.10136036015773768
+  translation -2.51803 0.123609 -4.95528
+  rotation 0.00045865508153569587 -0.9997475705947116 0.022462963417328376 -0.04084859902090798
   children [
     DEF Sensors Group {
       children [
@@ -714,7 +714,7 @@ DEF Ground Robot {
             metalness 0
           }
           geometry Plane {
-            size 9.9 19.9
+            size 5 10
           }
         }
       ]

@@ -6,15 +6,14 @@ __Project Description__
   * Scenario 2: 1 static obstacle with snow
 
 __Version History__
-  - Version:      0.5.1
-  - Update:       17.05.2020
+  - Version:      0.5.2
+  - Update:       19.05.2020
   - Engineer(s):  V. J. Hansen, D. Kazokas
 
 __Sensors used__
   - Compass:      Navigation
   - GPS:          Generate Zig-Zag path
   - SONAR:
-  - LIDAR:
   -
 */
 
@@ -25,7 +24,6 @@ __Sensors used__
 #include <webots/compass.h>
 #include <webots/distance_sensor.h>
 #include <webots/gps.h>
-#include <webots/lidar.h>
 
 /* C libraries */
 #include <stdio.h>
@@ -38,11 +36,8 @@ __Sensors used__
 #define TIME_STEP        8
 #define NUM_SONAR        3
 #define DEFAULT_SPEED    0.1
-#define delta            0.7
-#define size_x           9
-#define size_z           19
-#define startX           -4.5
-#define startZ           -9.5
+#define DELTA            0.5
+#define SIZE_Z           19
 #define MAXCHAR          1000
 #define TURN_COEFFICIENT 0.01
 
@@ -57,7 +52,7 @@ static WbDeviceTag l_motor, r_motor;
 static WbDeviceTag sonar[NUM_SONAR];
 static WbDeviceTag compass;
 static WbDeviceTag gps;
-static WbDeviceTag lidar;
+
 
 /* Alternative Naming */
 typedef struct _Vector {
@@ -77,7 +72,7 @@ double distance = 0.0;
 static int target_index = 1; // = 0 is where we start
 double gps_val[2] = {0.0, 0.0};
 double start_gps_pos[3] = {0.0, 0.0, 0.0};
-int target_points = 2*(size_z/delta);
+int target_points = 2*(SIZE_Z/DELTA);
 
 // - read .txt-file
 void read_file(char *filename, double *arr_get) {
@@ -161,7 +156,7 @@ static int drive_autopilot(void) {
 /*for (int i = 0; i < NUM_SONAR; i++) {
     sonar_val[i] = wb_distance_sensor_get_value(sonar[i]);
   }*/
-  
+
   Vector north = {north2D[X], north2D[Z]};
   Vector front = {north.X_v, -north.Z_u};
   Vector curr_gps_pos = {gps_pos[X], gps_pos[Z]};

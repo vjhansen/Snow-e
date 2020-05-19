@@ -22,7 +22,7 @@
  
  
 /*
- - Update:      17.05.2020
+ - Update:      19.05.2020
  - Engineer(s): V. J. Hansen
 */
 
@@ -31,28 +31,25 @@
 #include <webots/robot.h>
 #include <webots/supervisor.h>
 
-#define TIME_STEP 64
+#define TIME_STEP 8
 #define X 0
 #define Z 2
-#define GROUND_X 9.9
-#define GROUND_Z 19.9
+#define GROUND_X 5.0
+#define GROUND_Z 10.0
 
-// main function
+
 int main() {
   wb_robot_init();
-
-  // First we get a handler to devices
   WbDeviceTag display = wb_robot_get_device("ground_display");
 
   // get the properties of the Display
   int width  = wb_display_get_width(display);
   int height = wb_display_get_height(display);
 
-  // prepare stuff to get the
   WbNodeRef mybot = wb_supervisor_node_get_from_def("Snow-e");
   WbFieldRef translationField = wb_supervisor_node_get_field(mybot, "translation");
 
-  // set the background (otherwise an empty ground is displayed at this step)
+  // set the background
   WbImageRef background = wb_display_image_load(display, "../../worlds/textures/snow.jpg");
   wb_display_image_paste(display, background, 0, 0, false);
 
@@ -64,10 +61,9 @@ int main() {
     const double *translation = wb_supervisor_field_get_sf_vec3f(translationField);
 
     // display the robot position
-    wb_display_fill_oval(display, width*(translation[X]+GROUND_X/2)/GROUND_X,
-                         height*(translation[Z]+GROUND_Z/2)/GROUND_Z, 7, 7);
+    wb_display_fill_oval(display, (width)*(translation[X]+GROUND_X/2)/GROUND_X,
+                         height*(translation[Z]+GROUND_Z/2)/GROUND_Z, 15, 15);
   }
   wb_robot_cleanup();
-
   return 0;
 }

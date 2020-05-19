@@ -54,7 +54,7 @@ int main() {
 
     // display the robot position
     wb_display_fill_oval(display, width * (translation[X] + GROUND_X / 2) / GROUND_X,
-                         height * (translation[Z] + GROUND_Z / 2) / GROUND_Z, 7, 7);
+                         height * (translation[Z] + GROUND_Z / 2) / GROUND_Z, 15, 15);
   }
   wb_robot_cleanup();
   return 0;
