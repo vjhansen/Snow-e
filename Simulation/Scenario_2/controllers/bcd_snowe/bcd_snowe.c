@@ -41,6 +41,7 @@ __Sensors used__
 #define MAXCHAR          1000
 #define TURN_COEFFICIENT 0.01
 
+enum FSM { NORMAL, OBSTACLE, DONE };
 
 /* Enum Data Types */
 enum SONAR_Sensors { Sonar_L, Sonar_R, Sonar_M };
@@ -65,10 +66,12 @@ char *zfile = "../../Coverage_Planning/files/z_waypoints.txt";
 
 static Vector targets[100];
 static int num_points = 0;
+static double saved_pos = 0;
 static double X_target[MAXCHAR] = {0};
 static double Z_target[MAXCHAR] = {0};
 double sonar_val[NUM_SONAR] = {0.0, 0.0, 0.0};
 double distance = 0.0;
+int state = NORMAL;
 static int target_index = 1; // = 0 is where we start
 double gps_val[2] = {0.0, 0.0};
 double start_gps_pos[3] = {0.0, 0.0, 0.0};
@@ -150,12 +153,12 @@ static int drive_autopilot(void) {
   double speed[2]       = {0.0, 0.0};
   double current_time   = wb_robot_get_time();
   const double *north2D = wb_compass_get_values(compass);
-  //double theta          = atan2(north2D[X], north2D[Z]) * (180/M_PI); // angle (in degrees) between x and z-axis
+  double theta          = atan2(north2D[X], north2D[Z]) * (180/M_PI); // angle (in degrees) between x and z-axis
   const double *gps_pos = wb_gps_get_values(gps);
 
-/*for (int i = 0; i < NUM_SONAR; i++) {
+  for (int i = 0; i < NUM_SONAR; i++) {
     sonar_val[i] = wb_distance_sensor_get_value(sonar[i]);
-  }*/
+  }
 
   Vector north = {north2D[X], north2D[Z]};
   Vector front = {north.X_v, -north.Z_u};
@@ -180,19 +183,43 @@ static int drive_autopilot(void) {
   if (distance <= 0.1) {
     target_index++;
   }
-
-  else if ((sonar_val[MIDDLE] < THRESHOLD)) {
-    speed[LEFT]  = DEFAULT_SPEED - TURN_COEFFICIENT * e_beta;
-    speed[RIGHT] = DEFAULT_SPEED + TURN_COEFFICIENT * e_beta;
+  else if (target_index == num_points) {
+    target_index = 1;
   }
-  /*else if (target_index == num_points) {
-    end simulation
-  }*/
+  switch (state) {
+    //..... GET the x-direction (North/South) the robot is pointing to initially .....
+    case NORMAL:
+      speed[LEFT]  = DEFAULT_SPEED - TURN_COEFFICIENT * e_beta;
+      speed[RIGHT] = DEFAULT_SPEED + TURN_COEFFICIENT * e_beta;
+      if ((sonar_val[MIDDLE] > THRESHOLD)) {
+        saved_pos = gps_pos[Z];
+        state = OBSTACLE;
+      }
+      break;
+
+    case OBSTACLE: // we have to use more sonars or a LIDAR
+      speed[LEFT]  = DEFAULT_SPEED;
+      speed[RIGHT] = -DEFAULT_SPEED;
+      if (theta >= -0.5 && theta <= 0.5) {
+         speed[LEFT]  = DEFAULT_SPEED;
+         speed[RIGHT] = DEFAULT_SPEED;
+         if (sonar_val[RIGHT] < THRESHOLD && sonar_val[LEFT] < THRESHOLD && sonar_val[MIDDLE] < THRESHOLD) {
+           state = NORMAL;
+         }
+      }
+      break;
+    /*
+    case DONE:
+      speed[LEFT]  = 0.0;
+      speed[RIGHT] = 0.0;
+      break;*/
+    default:
+      break;
+    }
 
   //..... Set Speed .....
   wb_motor_set_velocity(l_motor, speed[LEFT]);
   wb_motor_set_velocity(r_motor, speed[RIGHT]);
-
   return TIME_STEP;
 }
 /*_________________________________________*/

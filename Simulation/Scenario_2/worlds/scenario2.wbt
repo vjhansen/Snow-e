@@ -16,8 +16,8 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation -0.7127794250105339 -0.5650220361595978 -0.4155665890512791 1.6021525869481776
-  position -5.111016214292858 10.657956789314678 -3.424323153791268
+  orientation -0.4991039749696608 0.7413862064013012 0.4485997270701035 1.7621675861416666
+  position -0.6810565054058304 1.981680914533234 -4.7826026357502185
   follow "Snow-e"
   followType "None"
 }
@@ -37,7 +37,6 @@ RectangleArena {
     colorOverride 1 0.999969 0.999985
   }
   wallThickness 0.02
-  wallHeight 0.5
   wallAppearance Asphalt {
     textureTransform TextureTransform {
     }
@@ -140,16 +139,14 @@ DEF Snow-e Robot {
           ]
           name "Sonar_L"
           lookupTable [
-            0.01 1250 0.01
-            0.1 1000 0.01
-            0.2 750 0.01
-            0.4 500 0.01
+            0.2 1000 0
+            0.3 950 0.01
             0.6 250 0.01
             0.8 0 0.01
           ]
           type "sonar"
           numberOfRays 2
-          aperture 0.523599
+          aperture 1
         }
         DistanceSensor {
           translation 0.35 0.1 0.245
@@ -174,16 +171,14 @@ DEF Snow-e Robot {
           ]
           name "Sonar_R"
           lookupTable [
-            0.01 1250 0.01
-            0.1 1000 0.01
-            0.2 750 0.01
-            0.4 500 0.01
+            0.2 1000 0
+            0.3 950 0.1
             0.6 250 0.01
             0.8 0 0.01
           ]
           type "sonar"
           numberOfRays 2
-          aperture 0.523599
+          aperture 1
         }
         DistanceSensor {
           translation 0.435 0.05 0
@@ -208,14 +203,14 @@ DEF Snow-e Robot {
           ]
           name "Sonar_M"
           lookupTable [
-            0.01 1100 0
-            0.1 1000 0
-            0.4 1000 0
-            0.5 850 0.1
+            0.05 1000 0
+            0.1 950 0.1
+            0.6 250 0.01
+            0.8 0 0.01
           ]
           type "sonar"
           numberOfRays 2
-          aperture 0.6
+          aperture 1.1
         }
       ]
     }
