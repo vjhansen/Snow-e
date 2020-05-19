@@ -109,7 +109,7 @@ z_filename = "files/z_waypoints.txt"
 with open(z_filename, 'w') as zf:
     for x in range(num_cells):
         cell_idx = x+1
-        rows = generate_z_s(cell_idx, 0.5)
+        rows = generate_z_s(cell_idx, 0.3)
         zf.write(rows)
         zf.write("\n")
 

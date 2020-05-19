@@ -7,7 +7,7 @@ __Project Description__
 
 __Version History__
   - Version:      1.0
-  - Update:       18.05.2020
+  - Update:       19.05.2020
   - Engineer(s):  V. J. Hansen, D. Kazokas
 
 __Sensors used__
@@ -38,11 +38,9 @@ __Sensors used__
 #define TIME_STEP        8
 #define NUM_SONAR        3
 #define DEFAULT_SPEED    0.1
-#define delta            0.7
-#define size_x           9
-#define size_z           19
-#define startX           -4.5
-#define startZ           -9.5
+#define delta            0.3
+#define size_x           5
+#define size_z           10
 #define MAXCHAR          1000
 #define TURN_COEFFICIENT 0.01
 

@@ -1,18 +1,17 @@
-# based on:
-# https://github.com/samialperen/boustrophedon_cellular_decomposition
+# based on: https://github.com/samialperen/boustrophedon_cellular_decomposition
 '''
     - Apply Boustrophedon Cellular Decomposition to a map
     - Engineer(s): V. J. Hansen
-    - Version 0.9.3
-    - Data: 17.05.2020
+    - Version 0.9.5
+    - Data: 19.05.2020
 '''
 
 from matplotlib import pyplot as plt
 from typing import Tuple, List
 import csv, os, random, itertools, cv2
 import numpy as np
-#-----------------------------------------------
-Slice = List[Tuple[int, int]]
+#-------------------------------------
+Slice = List[Tuple[int, int]] # vertical line segment
 #-------------------------------------
 def calc_connectivity(slice: np.ndarray) -> Tuple[int, Slice]:
     """ Calculates the connectivity of a slice and returns the connected area of ​​the slice.
@@ -53,9 +52,9 @@ def remove_duplicates(in_list):
 #------------------------------------
 def bcd(erode_img: np.ndarray) -> Tuple[np.ndarray, int]:
     """ Boustrophedon Cellular Decomposition
-    Args:   erode_img: [H, W], eroded map. pixel value 0 represents obstacles, 1 = free space.
+    Args:   erode_img: [H, W], eroded map. pixel value 0 = obstacles, 1 = free space.
     Returns:
-        [H, W], separated map. pixel value 0 represents obstacles for its cell number.
+        [H, W], separated map.
         crrnt_cell and seperate_img is for display purposes --> which is used to show
         decomposed cells into a separate figure
         all_cell_nums --> contains all cell index numbers
@@ -182,26 +181,7 @@ if __name__ == '__main__':
     # - Show the decomposed cells on top of original map
     disp_separate_map(bcd_out_im, bcd_out_cells)
     plt.show(block=False)
-    # - Add cost using distance between center of mass of cells
-    def mean(input_list):
-        output_mean = sum(input_list)/len(input_list)
-        return output_mean
 
-    def mean_double_list(input_double_list):
-        length = len(input_double_list)
-        total = 0
-        for i in range(length):
-            total += mean(input_double_list[i])
-        output_mean = total/length
-        return output_mean
-
-    def mean_d_double_list(input_double_list):
-        length = len(input_double_list)
-        total = 0
-        for i in range(length):
-            total += mean(input_double_list[i][0])
-        output_mean = total/length
-        return output_mean
 #-----------------------------------------------
     x_length = original_map.shape[1]
     y_length = original_map.shape[0]
@@ -209,13 +189,13 @@ if __name__ == '__main__':
     y_coords = cell_bounds
     mean_x_coords = mean_y_coords = {}
 
-    # - X is the length of the parking lot, which is 10 meters
-    X_max = 4.9   # [m], these will be related to y_coords of image
-    X_min = -4.9  # [m], these will be related to y_coords of image
+    # - X is the length of the parking lot, which is 5 meters
+    X_max = 2.5   # [m], these will be related to y_coords of image
+    X_min = -2.5  # [m], these will be related to y_coords of image
 
-    # - Z is the width of the parking lot, which is 20 meters
-    Z_max = 9.9   # [m], these will be related to x_coords of image
-    Z_min = -9.9  # [m], these will be related to x_coords of image
+    # - Z is the width of the parking lot, which is 10 meters
+    Z_max = 5.0   # [m], these will be related to x_coords of image
+    Z_min = -5.0  # [m], these will be related to x_coords of image
     # gps = ((gps_max-gps_min)/(px_max-px_min))*(px-px_min)+gps_min
     px_min = 1
 
@@ -251,14 +231,7 @@ if __name__ == '__main__':
                             ((X_max-X_min)/(px_min-y_length)) * (px_xs+px_min)+X_max,
                             ((X_max-X_min)/(px_min-y_length)) * (px_xe+px_min)+X_max ] ]
             csvwriter.writerows(rows)
-    for i in range(len(x_coords)):
-        cell_idx = i+1 # - cell numbers start from 1
-        mean_x_coords[cell_idx] = mean(x_coords[cell_idx])
-        if type(y_coords[cell_idx][0]) is list:
-            mean_y_coords[cell_idx] = mean_d_double_list(y_coords[cell_idx])
-        else:
-            mean_y_coords[cell_idx] = mean_double_list(y_coords[cell_idx])
     plt.waitforbuttonpress(1)
     input("Press any key to close all figures.")
     plt.close("all")
-    os.system("python3 generate_coords_BCD.py") # run another python-script
+    os.system("python3 generate_coords_BCD.py") # run generate_coords_BCD.py

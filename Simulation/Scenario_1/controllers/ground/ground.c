@@ -22,12 +22,11 @@
 #define TIME_STEP 8
 
 #define X 0
-#define Y 1
 #define Z 2
 
 // size of the ground
-#define GROUND_X 9.9
-#define GROUND_Z 19.9
+#define GROUND_X 4.9
+#define GROUND_Z 9.9
 
 int main() {
   wb_robot_init();
