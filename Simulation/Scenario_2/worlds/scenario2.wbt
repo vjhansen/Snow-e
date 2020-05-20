@@ -17,7 +17,7 @@ WorldInfo {
 }
 Viewpoint {
   orientation 0.48534164105933886 0.7217231907373598 0.49351709940559546 4.376095032404987
-  position -4.5036286169434305 10.386807412299838 -3.9043444405032606
+  position -7.795045908607896 18.84265223975721 -3.9593283131518286
   follow "Snow-e"
   followType "None"
 }
@@ -41,6 +41,8 @@ RectangleArena {
     textureTransform TextureTransform {
     }
   }
+}
+PlasticCrate {
 }
 DEF Snow-e Robot {
   translation -2.29779 0.120384 -4.34874

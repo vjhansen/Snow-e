@@ -7,6 +7,6 @@ centralWidgetVisible: 1
 selectionDisabled: 0
 viewpointLocked: 0
 orthographicViewHeight: 1
-textFiles: 1 "controllers/bcd_snowe/bcd_snowe.c" "controllers/ground/ground.c"
+textFiles: 0 "controllers/bcd_snowe/bcd_snowe.c" "controllers/ground/ground.c"
 globalOptionalRendering: CoordinateSystem::DistanceSensorRays
 renderingDevicePerspectives: ground_snow_removal:ground_display;0;0.75;0;0
