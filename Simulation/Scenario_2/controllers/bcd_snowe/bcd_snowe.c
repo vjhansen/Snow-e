@@ -78,7 +78,7 @@ int state = NORMAL;
 static int target_index = 1; // = 0 is where we start
 double gps_val[2] = {0.0, 0.0};
 double start_gps_pos[3] = {0.0, 0.0, 0.0};
-int target_points = 2*(SIZE_Z/0.3);
+int target_points = 2*(SIZE_Z/DELTA);
 
 // - read .txt-file
 void read_file(char *filename, double *arr_get) {
@@ -137,13 +137,13 @@ static void initialize(void) {
   char sonar_names[NUM_SONAR][10] = {
     "Sonar_FL", "Sonar_BL", "Sonar_BR", "Sonar_FR",
     "Sonar_FM", "Sonar_FML", "Sonar_FMR", "Sonar_BM" };
-  
-  
+
+
   for (int i = 0; i < NUM_SONAR; i++) {
     sonar[i] = wb_robot_get_device(sonar_names[i]);
     wb_distance_sensor_enable(sonar[i], TIME_STEP);
   }
-  
+
     //..... Enable LIDAR .....
  /*  lidar = wb_robot_get_device("lidar");
    wb_lidar_enable(lidar, TIME_STEP);
@@ -167,10 +167,10 @@ static int drive_autopilot(void) {
   const double *north2D = wb_compass_get_values(compass);
   double theta          = atan2(north2D[X], north2D[Z]) * (180/M_PI); // angle (in degrees) between x and z-axis
   const double *gps_pos = wb_gps_get_values(gps);
-  
+
   //https://github.com/cyberbotics/webots/blob/69202baee3c0974f69f0e72d3412d19ed69feaad/tests/api/controllers/lidar_point_cloud/lidar_point_cloud.c
   //const WbLidarPoint *gt_point = wb_lidar_get_point_cloud(lidar);
-  
+
   for (int i = 0; i < NUM_SONAR; i++) {
     sonar_val[i] = wb_distance_sensor_get_value(sonar[i]);
   }
@@ -187,35 +187,29 @@ static int drive_autopilot(void) {
   double beta_t = atan2(dir.X_v, dir.Z_u) * (180/M_PI); // compute target angle
   double e_beta = beta_t - beta_f; // error between target and actual position
 
-  // legg til derivat- og integral-ledd.
-
   // used for calibration
   if (fmod(current_time, 10) == 0.0) {
     printf("(t: %.4g)\n",  targets[target_index].Z_u);
     printf("(p: %.4g)\n",  gps_pos[Z]);
   }
-  // how close the snow blower should approach the waypoints
-  if (distance <= 0.1) {
-    target_index++;
-  }
-  else if (target_index == num_points) {
-    target_index = 1;
-  }
+
   switch (state) {
     case NORMAL:
       speed[LEFT]  = DEFAULT_SPEED - TURN_COEFFICIENT * e_beta;
       speed[RIGHT] = DEFAULT_SPEED + TURN_COEFFICIENT * e_beta;
-      if (sonar_val[SFM] > THRESHOLD || sonar_val[SFML] > THRESHOLD || sonar_val[SFMR] > THRESHOLD) {
+      if (distance <= 0.1) {
+        target_index++;
+      }
+      else if (target_index == num_points) {
+        target_index = 1;
+      }
+      else if (sonar_val[SFM]  > THRESHOLD || sonar_val[SFML] > THRESHOLD || 
+               sonar_val[SFMR] > THRESHOLD || sonar_val[SFR]  > THRESHOLD || 
+               sonar_val[SFL]  > THRESHOLD) {
         state = OBSTACLE_R;
         saved_pos = gps_pos[Z];
       }
-      
-     /* else if (sonar_val[SFL] > THRESHOLD && sonar_val[SFM] > THRESHOLD) {
-        state = OBSTACLE_R;
-        saved_pos = gps_pos[Z];
-      }*/
       break;
-
     case OBSTACLE_R:
       if (targets[target_index-1].Z_u > targets[target_index].Z_u ) {
         speed[LEFT]  = DEFAULT_SPEED;
@@ -225,8 +219,8 @@ static int drive_autopilot(void) {
           speed[RIGHT] = DEFAULT_SPEED;
           if (sonar_val[SFR]  < THRESHOLD && sonar_val[SFL]  < THRESHOLD &&
               sonar_val[SBR]  < THRESHOLD && sonar_val[SBL]  < THRESHOLD &&
-              sonar_val[SFM]  < THRESHOLD && sonar_val[SBM]  < THRESHOLD && 
-              sonar_val[SFML] < THRESHOLD && sonar_val[SFMR] < THRESHOLD && 
+              sonar_val[SFM]  < THRESHOLD && sonar_val[SBM]  < THRESHOLD &&
+              sonar_val[SFML] < THRESHOLD && sonar_val[SFMR] < THRESHOLD &&
               (fabs(gps_pos[Z]) <= fabs(saved_pos)-2*DELTA || fabs(gps_pos[Z]) >= fabs(saved_pos)+2*DELTA))  {
            state = NORMAL;
           }
@@ -240,14 +234,14 @@ static int drive_autopilot(void) {
           speed[RIGHT] = DEFAULT_SPEED;
           if (sonar_val[SFR]  < THRESHOLD && sonar_val[SFL]  < THRESHOLD &&
               sonar_val[SBR]  < THRESHOLD && sonar_val[SBL]  < THRESHOLD &&
-              sonar_val[SFM]  < THRESHOLD && sonar_val[SBM]  < THRESHOLD && 
-              sonar_val[SFML] < THRESHOLD && sonar_val[SFMR] < THRESHOLD && 
+              sonar_val[SFM]  < THRESHOLD && sonar_val[SBM]  < THRESHOLD &&
+              sonar_val[SFML] < THRESHOLD && sonar_val[SFMR] < THRESHOLD &&
               (fabs(gps_pos[Z]) <= fabs(saved_pos)-2*DELTA || fabs(gps_pos[Z]) >= fabs(saved_pos)+2*DELTA)) {
            state = NORMAL;
           }
         }
       }
-      break;    
+      break;
     case DONE:
       speed[LEFT]  = 0.0;
       speed[RIGHT] = 0.0;
