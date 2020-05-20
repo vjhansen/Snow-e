@@ -12,7 +12,8 @@
 
 ### Part 1 - Python Scripts
 * run `python3 image_to_binary_map.py --image sim_lot.png`
-* run `python3 main_BCD.py`
+* run `python3 main_BCD.py [height of parking lot] [width of parking lot] [side step (i.e. delta)]`
+* e.g. `python3 main_BCD.py 10 20 0.5`
 
 ### Part 2 - Webots 
 * open...
