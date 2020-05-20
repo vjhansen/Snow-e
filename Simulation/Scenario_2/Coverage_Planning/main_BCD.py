@@ -287,12 +287,12 @@ if __name__ == '__main__':
     print("Genetic output:", cleaned_genetic)
 
     # - X is the Height of the parking lot
-    X_max = args.X/2   # [m], these will be related to y_coords of image
-    X_min = -args.X/2  # [m], these will be related to y_coords of image
+    X_max = (args.X-0.1)/2   # [m], these will be related to y_coords of image
+    X_min = (-args.X+0.1)/2  # [m], these will be related to y_coords of image
 
     # - Z is the width of the parking lot
-    Z_max = args.Z/2   # [m], these will be related to x_coords of image
-    Z_min = -args.Z/2 # [m], these will be related to x_coords of image
+    Z_max = (args.Z-0.1)/2   # [m], these will be related to x_coords of image
+    Z_min = (-args.Z+0.1)/2 # [m], these will be related to x_coords of image
     # gps = ((gps_max-gps_min)/(px_max-px_min))*(px-px_min)+gps_min
     px_min = 1
 

@@ -16,8 +16,8 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation -0.4991039749696608 0.7413862064013012 0.4485997270701035 1.7621675861416666
-  position -0.6810565054058304 1.981680914533234 -4.7826026357502185
+  orientation 0.07437977410633237 -0.9250163253211608 -0.3725754247038141 3.5068128069102085
+  position -1.5171577818552107 1.5168575498374979 -6.5555401997325315
   follow "Snow-e"
   followType "None"
 }
@@ -43,8 +43,8 @@ RectangleArena {
   }
 }
 DEF Snow-e Robot {
-  translation -2.51803 0.123609 -4.95528
-  rotation 0.00045865508153569587 -0.9997475705947116 0.022462963417328376 -0.04084859902090798
+  translation -2.42809 0.18314 -4.70425
+  rotation 0.007366827993642825 -0.9999717276574867 -0.0015078895893259488 0.122118
   children [
     DEF Sensors Group {
       children [
@@ -137,8 +137,9 @@ DEF Snow-e Robot {
               rotationStep 0
             }
           ]
-          name "Sonar_L"
+          name "Sonar_FL"
           lookupTable [
+            0.1 1000 0
             0.2 1000 0
             0.3 950 0.01
             0.6 250 0.01
@@ -146,7 +147,73 @@ DEF Snow-e Robot {
           ]
           type "sonar"
           numberOfRays 2
-          aperture 1
+          aperture 1.5
+        }
+        DistanceSensor {
+          translation -0.2 0.1 -0.15
+          rotation 0 1 0 1.5708
+          children [
+            DEF Shape Transform {
+              children [
+                Shape {
+                  appearance PBRAppearance {
+                    baseColor 0 0 0
+                  }
+                  geometry Capsule {
+                    height 0.025
+                    radius 0.01
+                    subdivision 50
+                  }
+                }
+              ]
+              translationStep 0
+              rotationStep 0
+            }
+          ]
+          name "Sonar_BL"
+          lookupTable [
+            0.1 1000 0
+            0.2 1000 0
+            0.3 950 0.01
+            0.6 250 0.01
+            0.8 0 0.01
+          ]
+          type "sonar"
+          numberOfRays 2
+          aperture 1.5
+        }
+        DistanceSensor {
+          translation -0.2 0.1 0.15
+          rotation 0 1 0 -1.5708
+          children [
+            DEF Shape Transform {
+              children [
+                Shape {
+                  appearance PBRAppearance {
+                    baseColor 0 0 0
+                  }
+                  geometry Capsule {
+                    height 0.025
+                    radius 0.01
+                    subdivision 50
+                  }
+                }
+              ]
+              translationStep 0
+              rotationStep 0
+            }
+          ]
+          name "Sonar_BR"
+          lookupTable [
+            0.1 1000 0
+            0.2 1000 0
+            0.3 950 0.01
+            0.6 250 0.01
+            0.8 0 0.01
+          ]
+          type "sonar"
+          numberOfRays 2
+          aperture 1.5
         }
         DistanceSensor {
           translation 0.35 0.1 0.245
@@ -169,8 +236,9 @@ DEF Snow-e Robot {
               rotationStep 0
             }
           ]
-          name "Sonar_R"
+          name "Sonar_FR"
           lookupTable [
+            0.1 1000 0
             0.2 1000 0
             0.3 950 0.1
             0.6 250 0.01
@@ -178,7 +246,7 @@ DEF Snow-e Robot {
           ]
           type "sonar"
           numberOfRays 2
-          aperture 1
+          aperture 1.5
         }
         DistanceSensor {
           translation 0.435 0.05 0
@@ -201,16 +269,48 @@ DEF Snow-e Robot {
               rotationStep 0
             }
           ]
-          name "Sonar_M"
+          name "Sonar_FM"
           lookupTable [
             0.05 1000 0
-            0.1 950 0.1
+            0.1 1000 0
             0.6 250 0.01
             0.8 0 0.01
           ]
           type "sonar"
           numberOfRays 2
-          aperture 1.1
+          aperture 1.5
+        }
+        DistanceSensor {
+          translation -0.2 0.05 0
+          rotation 0 1 0 3.141592653589793
+          children [
+            DEF Shape Transform {
+              children [
+                Shape {
+                  appearance PBRAppearance {
+                    baseColor 0 0 0
+                  }
+                  geometry Capsule {
+                    height 0.025
+                    radius 0.01
+                    subdivision 50
+                  }
+                }
+              ]
+              translationStep 0
+              rotationStep 0
+            }
+          ]
+          name "Sonar_BM"
+          lookupTable [
+            0.05 1000 0
+            0.1 1000 0
+            0.6 250 0.01
+            0.8 0 0.01
+          ]
+          type "sonar"
+          numberOfRays 2
+          aperture 1.5
         }
       ]
     }

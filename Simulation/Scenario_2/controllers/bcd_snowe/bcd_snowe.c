@@ -24,6 +24,7 @@ __Sensors used__
 #include <webots/compass.h>
 #include <webots/distance_sensor.h>
 #include <webots/gps.h>
+#include <webots/lidar.h>
 
 /* C libraries */
 #include <stdio.h>
@@ -34,17 +35,17 @@ __Sensors used__
 /* Macro Definitions */
 #define THRESHOLD        900.0
 #define TIME_STEP        8
-#define NUM_SONAR        3
+#define NUM_SONAR        6
 #define DEFAULT_SPEED    0.1
 #define DELTA            0.5
-#define SIZE_Z           19
+#define SIZE_Z           9
 #define MAXCHAR          1000
 #define TURN_COEFFICIENT 0.01
 
-enum FSM { NORMAL, OBSTACLE, DONE };
+enum FSM { NORMAL, OBSTACLE_R, OBSTACLE_L, DONE };
 
 /* Enum Data Types */
-enum SONAR_Sensors { Sonar_L, Sonar_R, Sonar_M };
+enum SONAR_Sensors { SFL, SBL, SBR, SFR, SFM, SBM };
 enum SIDES { LEFT, RIGHT, MIDDLE };
 enum XZComponents { X, Y, Z };
 
@@ -53,6 +54,7 @@ static WbDeviceTag l_motor, r_motor;
 static WbDeviceTag sonar[NUM_SONAR];
 static WbDeviceTag compass;
 static WbDeviceTag gps;
+static WbDeviceTag lidar;
 
 
 /* Alternative Naming */
@@ -60,6 +62,7 @@ typedef struct _Vector {
   double X_v;
   double Z_u;
 } Vector;
+
 
 char *xfile = "../../Coverage_Planning/files/x_waypoints.txt";
 char *zfile = "../../Coverage_Planning/files/z_waypoints.txt";
@@ -131,12 +134,21 @@ static void initialize(void) {
   wb_motor_set_velocity(r_motor, 0.0);
 
   //..... Enable Sonar .....
-  char sonar_names[NUM_SONAR][8] = {"Sonar_L", "Sonar_R", "Sonar_M"};
+  char sonar_names[NUM_SONAR][9] = {
+    "Sonar_FL", "Sonar_BL", "Sonar_BR", "Sonar_FR",
+    "Sonar_FM", "Sonar_BM" };
+  
+  
   for (int i = 0; i < NUM_SONAR; i++) {
     sonar[i] = wb_robot_get_device(sonar_names[i]);
     wb_distance_sensor_enable(sonar[i], TIME_STEP);
   }
-
+  
+    //..... Enable LIDAR .....
+ /*  lidar = wb_robot_get_device("lidar");
+   wb_lidar_enable(lidar, TIME_STEP);
+   wb_lidar_enable_point_cloud(lidar);
+*/
   //..... Enable Compass .....
   compass = wb_robot_get_device("compass");
   wb_compass_enable(compass, TIME_STEP);
@@ -155,7 +167,10 @@ static int drive_autopilot(void) {
   const double *north2D = wb_compass_get_values(compass);
   double theta          = atan2(north2D[X], north2D[Z]) * (180/M_PI); // angle (in degrees) between x and z-axis
   const double *gps_pos = wb_gps_get_values(gps);
-
+  
+  //https://github.com/cyberbotics/webots/blob/69202baee3c0974f69f0e72d3412d19ed69feaad/tests/api/controllers/lidar_point_cloud/lidar_point_cloud.c
+  //const WbLidarPoint *gt_point = wb_lidar_get_point_cloud(lidar);
+  
   for (int i = 0; i < NUM_SONAR; i++) {
     sonar_val[i] = wb_distance_sensor_get_value(sonar[i]);
   }
@@ -176,8 +191,9 @@ static int drive_autopilot(void) {
 
   // used for calibration
   if (fmod(current_time, 10) == 0.0) {
-    printf("(t: %.4g, %.4g)\n", X_target[target_index], Z_target[target_index]);
-    printf("(t: %.4g, %.4g)\n", gps_pos[X], gps_pos[Z]);
+    printf("(s: %.4g)\n", fabs(gps_pos[Z]));
+    printf("(s+d: %.4g)\n", fabs(saved_pos)+DELTA);
+ 
   }
   // how close the snow blower should approach the waypoints
   if (distance <= 0.1) {
@@ -191,23 +207,44 @@ static int drive_autopilot(void) {
     case NORMAL:
       speed[LEFT]  = DEFAULT_SPEED - TURN_COEFFICIENT * e_beta;
       speed[RIGHT] = DEFAULT_SPEED + TURN_COEFFICIENT * e_beta;
-      if ((sonar_val[MIDDLE] > THRESHOLD)) {
+      if (sonar_val[SFM] > THRESHOLD) {
+        state = OBSTACLE_R;
         saved_pos = gps_pos[Z];
-        state = OBSTACLE;
       }
+     /* else if (sonar_val[SFL] > THRESHOLD && sonar_val[SFM] > THRESHOLD) {
+        state = OBSTACLE_R;
+        saved_pos = gps_pos[Z];
+      }*/
       break;
 
-    case OBSTACLE: // we have to use more sonars or a LIDAR
+    case OBSTACLE_R:
       speed[LEFT]  = DEFAULT_SPEED;
       speed[RIGHT] = -DEFAULT_SPEED;
       if (theta >= -0.5 && theta <= 0.5) {
          speed[LEFT]  = DEFAULT_SPEED;
          speed[RIGHT] = DEFAULT_SPEED;
-         if (sonar_val[RIGHT] < THRESHOLD && sonar_val[LEFT] < THRESHOLD && sonar_val[MIDDLE] < THRESHOLD) {
+         if (sonar_val[SFR] < THRESHOLD && sonar_val[SFL] < THRESHOLD &&
+             sonar_val[SBR] < THRESHOLD && sonar_val[SBL] < THRESHOLD &&
+             sonar_val[SFM] < THRESHOLD && sonar_val[SBM] < THRESHOLD && fabs(gps_pos[Z]) >= fabs(saved_pos)+2*DELTA  ) {
            state = NORMAL;
          }
       }
       break;
+      
+      
+   /* case OBSTACLE_L:
+      speed[LEFT]  = -DEFAULT_SPEED;
+      speed[RIGHT] = DEFAULT_SPEED;
+      if (fabs(theta) >= 179.0 && fabs(theta) <= 181.0) {
+         speed[LEFT]  = DEFAULT_SPEED;
+         speed[RIGHT] = DEFAULT_SPEED;
+         if (sonar_val[SFR] < THRESHOLD && sonar_val[SFL] < THRESHOLD &&
+             sonar_val[SBR] < THRESHOLD && sonar_val[SBL] < THRESHOLD &&
+             sonar_val[SFM] < THRESHOLD && sonar_val[SBM] < THRESHOLD  ) {
+           state = NORMAL;
+         }
+      }
+      break;*/
     /*
     case DONE:
       speed[LEFT]  = 0.0;
