@@ -10,7 +10,6 @@ from typing import Tuple, List
 from matplotlib import pyplot as plt
 import csv, os, random, itertools
 import cv2
-import mlrose
 import argparse
 import numpy as np
 #-------------------------------------
@@ -71,6 +70,7 @@ def bcd(erode_img: np.ndarray) -> Tuple[np.ndarray, int]:
     cell_bounds = {}
     for col in range(erode_img.shape[1]):
         crrnt_slice = erode_img[:, col]
+
         connectivity, connective_parts = calc_connectivity(crrnt_slice)
         if (last_connectivity == 0):
             crrnt_cells = []
@@ -90,16 +90,16 @@ def bcd(erode_img: np.ndarray) -> Tuple[np.ndarray, int]:
                 elif (np.sum(adj_matrix[i, :]) > 1): # left slice is connected to more than one part of right slice
                     for idx in np.argwhere(adj_matrix[i, :]):
                         new_cells[idx[0]] = crrnt_cell
-                        crrnt_cell = crrnt_cell + 1
+                        crrnt_cell = crrnt_cell+1
             for i in range(adj_matrix.shape[1]):
                 # - If a part of this time is connected to the last multiple parts, it means that OUT has occurred.
                 if (np.sum(adj_matrix[:, i]) > 1): # right slice is connected to more than one part of left slice
                     new_cells[i] = crrnt_cell
-                    crrnt_cell = crrnt_cell + 1
+                    crrnt_cell = crrnt_cell+1
                 # - If this part of the part does not communicate with any part of the last time, it means that it happened in
                 elif (np.sum(adj_matrix[:, i]) == 0):
                     new_cells[i] = crrnt_cell
-                    crrnt_cell = crrnt_cell + 1
+                    crrnt_cell = crrnt_cell+1
             crrnt_cells = new_cells
 
         # - Draw the partition information on the map.
@@ -108,7 +108,7 @@ def bcd(erode_img: np.ndarray) -> Tuple[np.ndarray, int]:
         last_connectivity = connectivity
         last_connectivity_parts = connective_parts
         if (len(crrnt_cells) == 1):     # - no object in this cell
-            cell_index = crrnt_cell -1  # - cell index starts from 1
+            cell_index = crrnt_cell-1  # - cell index starts from 1
             cell_bounds.setdefault(cell_index,[])
             cell_bounds[cell_index].append(connective_parts)
         elif (len(crrnt_cells) > 1):    # - Cells separated by the object
@@ -136,11 +136,9 @@ def disp_separate_map(separate_map, cells):
     fig_new = plt.figure()
     plt.imshow(disp_img)
 
-"""
-    Input: cells_to_visit   --> the order of cells to visit
+""" Input: cells_to_visit   --> the order of cells to visit
     Input: cell_bounds      --> y-coordinates of each cell
-        x-coordinates will be calculated in this function based on cell number,
-        since the 1st cell starts from the left and moves towards the right.
+        x-coordinates will be calculated in this function based on cell number, since the 1st cell starts from the left and moves towards the right.
     Input: Nonneighbors --> This shows cells which are separated by the objects,
                             so these cells should have the same x-coordinates.
 """
@@ -171,48 +169,6 @@ def calculate_x_coords(x_size, y_size, cells_to_visit, cell_bounds, non_nbrs):
         cell_idx = cell_idx + 1
     return cells_x_coords # - Output: x-coordinates of each cell
 
-
-def distance(x_coordinates,y_coordinates, cellA, cellB):
-    """
-    Input: x_coordinates, y_coordinates --> they hold mean coordinate values of each cell
-                                            they are dictionaries
-    Output: distance between cellA and cellB
-    """
-    cellA += 1  # - mlrose requires 0 indices
-    cellB += 1  # - x and y coordinates starts from 1
-    a = np.array([x_coordinates[cellA], y_coordinates[cellA]])
-    b = np.array([x_coordinates[cellB], y_coordinates[cellB]])
-    return np.linalg.norm(a-b)
-
-def distance_optim(x_coordinates,y_coordinates): #0=1, 1=2, 2=3, 3=4
-    dist_list3 = [(0, 1, distance(x_coordinates,y_coordinates,0,1)), (0, 2, distance(x_coordinates,y_coordinates,0,2)),\
-                 (1, 3, distance(x_coordinates,y_coordinates,1,3)), (2, 3, distance(x_coordinates,y_coordinates,2,3))]
-
-    # Define a fitness function object
-    fitness_dists = mlrose.TravellingSales(distances = dist_list3)
-    # Define a optimization problem object
-    problem_fit = mlrose.TSPOpt(length = len(y_coordinates), fitness_fn = fitness_dists, maximize=False)
-    return problem_fit
-
-def genetic_algorithm(problem,pop_size,mutation_prob,max_attemp):
-    """
-    Genetic algorithm implementation to minimize TSP
-    Inputs:
-            fitness --> fitness distances required by mlrose
-            problem --> optimization problem object required by mlrose
-            pop_size --> population_size: genetic algorithm parameter
-            mutation_prob --> mutation_probability: genetic algorithm parameter
-            max_attemp --> maximum attemps per step: genetic algorithm parameter
-    Outputs:
-            optimized_cells --> cells to visit
-    """
-    optimized_cells, _ = mlrose.genetic_alg(problem, mutation_prob = mutation_prob,\
-                                        max_attempts = max_attemp, random_state = 2)
-
-    # Add 1 to all cells since in our case, cell numbers start from one not zero!
-    optimized_cells += 1
-    return list(optimized_cells)
-
 #-----------------------------------------------
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
@@ -220,7 +176,6 @@ if __name__ == '__main__':
     ap.add_argument('Z', type=int, default=20, help="Width [m] of parking lot")
     ap.add_argument('delta', type=float, default=0.5, help="Side step [m]")
     args = ap.parse_args()
-
 
     original_map = cv2.imread("files/new_map.png")
     # - We need a binary image: 1 represents free space, 0 represents objects/walls
@@ -236,55 +191,11 @@ if __name__ == '__main__':
     print("Cells: ", cell_nums)
     print("Non-neighbor cells: ", non_nbr_cell_nums)
 
-    graph4 = { # adjacency graph
-        1: [2,3],
-        2: [1,4],
-        3: [1,4],
-        4: [2,3]
-    }
-
-    def mean(input_list):
-        output_mean = sum(input_list)/len(input_list)
-        return output_mean
-
-    def mean_double_list(input_double_list):
-        length = len(input_double_list)
-        total = 0
-        for i in range(length):
-            total += mean(input_double_list[i])
-
-        output_mean = total/length
-        return output_mean
-
-    def mean_d_double_list(input_double_list):
-        length = len(input_double_list)
-        total = 0
-        for i in range(length):
-            total += mean(input_double_list[i][0])
-
-        output_mean = total/length
-        return output_mean
-
-
 #-----------------------------------------------
     x_length = original_map.shape[1]
     y_length = original_map.shape[0]
     x_coords = calculate_x_coords(x_length, y_length, cell_nums, cell_bounds, non_nbr_cell_nums)
     y_coords = cell_bounds
-    mean_x_coords = mean_y_coords = {}
-    for i in range(len(x_coords)):
-        cell_idx = i+1 #i starts from zero, but cell numbers start from 1
-        mean_x_coords[cell_idx] = mean(x_coords[cell_idx])
-        if type(y_coords[cell_idx][0]) is list:
-            mean_y_coords[cell_idx] = mean_d_double_list(y_coords[cell_idx])
-        else:
-            mean_y_coords[cell_idx] = mean_double_list(y_coords[cell_idx])
-
-    optim_problem = distance_optim(mean_x_coords, mean_y_coords)
-
-    # - Genetic algorithm
-    cleaned_genetic = genetic_algorithm(optim_problem, 200, 0.2, 10)
-    print("Genetic output:", cleaned_genetic)
 
     # - X is the Height of the parking lot
     X_max = (args.X-0.1)/2   # [m], these will be related to y_coords of image
@@ -306,28 +217,53 @@ if __name__ == '__main__':
             # - data rows of csv file
             cell_idx = i+1
             # - first, middle and last y_coords are 4D
-            if ( (cell_idx == 1) | (cell_idx == len(x_coords)) | (cell_idx == ((len(x_coords)+1)/2)) ):
-                px_zs = x_coords[cell_idx][0]
-                px_ze = x_coords[cell_idx][-1]
-                px_xs = y_coords[cell_idx][0][0][1]
-                px_xe = y_coords[cell_idx][0][0][0]
-                rows = [[   cell_nums[i],
-                            ((Z_max-Z_min)/(x_length-px_min)) * (px_zs-px_min)+Z_min,
-                            ((Z_max-Z_min)/(x_length-px_min)) * (px_ze-px_min)+Z_min,
-                            # - the y-axis is inverted, i.e. goes from y_length (bottom) to 0 (top)
-                            ((X_max-X_min)/(px_min-y_length)) * (px_xs-px_min)+X_max,
-                            ((X_max-X_min)/(px_min-y_length)) * (px_xe-px_min)+X_max ] ]
-            elif ( (cell_idx != 1) | (cell_idx != len(x_coords)) ):
-                px_zs = x_coords[cell_idx][0]
-                px_ze = x_coords[cell_idx][-1]
-                px_xs = y_coords[cell_idx][0][1]
-                px_xe = y_coords[cell_idx][0][0]
-                rows = [ [  cell_nums[i],
-                            ((Z_max-Z_min)/(x_length-px_min)) * (px_zs-px_min)+Z_min,
-                            ((Z_max-Z_min)/(x_length-px_min)) * (px_ze-px_min)+Z_min,
-                            ((X_max-X_min)/(px_min-y_length)) * (px_xs+px_min)+X_max,
-                            ((X_max-X_min)/(px_min-y_length)) * (px_xe+px_min)+X_max ] ]
-            csvwriter.writerows(rows)
+            if (len(x_coords) > 3):
+                if ( (cell_idx == 1) | (cell_idx == len(x_coords)) | (cell_idx == ((len(x_coords)+1)/2)) ):
+                    px_zs = x_coords[cell_idx][0]
+                    px_ze = x_coords[cell_idx][-1]
+                    px_xs = y_coords[cell_idx][0][0][1]
+                    px_xe = y_coords[cell_idx][0][0][0]
+                    rows = [[   cell_nums[i],
+                                ((Z_max-Z_min)/(x_length-px_min)) * (px_zs-px_min)+Z_min,
+                                ((Z_max-Z_min)/(x_length-px_min)) * (px_ze-px_min)+Z_min,
+                                # - the y-axis is inverted, i.e. goes from y_length (bottom) to 0 (top)
+                                ((X_max-X_min)/(px_min-y_length)) * (px_xs-px_min)+X_max,
+                                ((X_max-X_min)/(px_min-y_length)) * (px_xe-px_min)+X_max ] ]
+                elif ( (cell_idx != 1) | (cell_idx != len(x_coords)) ):
+                    px_zs = x_coords[cell_idx][0]
+                    px_ze = x_coords[cell_idx][-1]
+                    px_xs = y_coords[cell_idx][0][1]
+                    px_xe = y_coords[cell_idx][0][0]
+                    rows = [ [  cell_nums[i],
+                                ((Z_max-Z_min)/(x_length-px_min)) * (px_zs-px_min)+Z_min,
+                                ((Z_max-Z_min)/(x_length-px_min)) * (px_ze-px_min)+Z_min,
+                                ((X_max-X_min)/(px_min-y_length)) * (px_xs+px_min)+X_max,
+                                ((X_max-X_min)/(px_min-y_length)) * (px_xe+px_min)+X_max ] ]
+                csvwriter.writerows(rows)
+            else:
+                if ((cell_idx != len(x_coords))):
+                    px_zs = x_coords[cell_idx][0]
+                    px_ze = x_coords[cell_idx][-1]
+                    px_xs = y_coords[cell_idx][0][1]
+                    px_xe = y_coords[cell_idx][0][0]
+                    rows = [[   cell_nums[i],
+                                ((Z_max-Z_min)/(x_length-px_min)) * (px_zs-px_min)+Z_min,
+                                ((Z_max-Z_min)/(x_length-px_min)) * (px_ze-px_min)+Z_min,
+                                # - the y-axis is inverted, i.e. goes from y_length (bottom) to 0 (top)
+                                ((X_max-X_min)/(px_min-y_length)) * (px_xs-px_min)+X_max,
+                                ((X_max-X_min)/(px_min-y_length)) * (px_xe-px_min)+X_max ] ]
+                else:
+                    px_zs = x_coords[cell_idx][0]
+                    px_ze = x_coords[cell_idx][-1]
+                    px_xs = y_coords[cell_idx][0][0][1]
+                    px_xe = y_coords[cell_idx][0][0][0]
+                    rows = [[   cell_nums[i],
+                                ((Z_max-Z_min)/(x_length-px_min)) * (px_zs-px_min)+Z_min,
+                                ((Z_max-Z_min)/(x_length-px_min)) * (px_ze-px_min)+Z_min,
+                                # - the y-axis is inverted, i.e. goes from y_length (bottom) to 0 (top)
+                                ((X_max-X_min)/(px_min-y_length)) * (px_xs-px_min)+X_max,
+                                ((X_max-X_min)/(px_min-y_length)) * (px_xe-px_min)+X_max ] ]
+                csvwriter.writerows(rows)
     plt.waitforbuttonpress(1)
     input("Press any key to close all figures.")
     plt.close("all")

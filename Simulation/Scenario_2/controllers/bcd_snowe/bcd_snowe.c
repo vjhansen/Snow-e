@@ -35,7 +35,7 @@ __Sensors used__
 /* Macro Definitions */
 #define THRESHOLD        900.0
 #define TIME_STEP        8
-#define NUM_SONAR        6
+#define NUM_SONAR        8
 #define DEFAULT_SPEED    0.1
 #define DELTA            0.5
 #define SIZE_Z           9
@@ -45,7 +45,7 @@ __Sensors used__
 enum FSM { NORMAL, OBSTACLE_R, OBSTACLE_L, DONE };
 
 /* Enum Data Types */
-enum SONAR_Sensors { SFL, SBL, SBR, SFR, SFM, SBM };
+enum SONAR_Sensors { SFL, SBL, SBR, SFR, SFM, SFML, SFMR, SBM };
 enum SIDES { LEFT, RIGHT, MIDDLE };
 enum XZComponents { X, Y, Z };
 
@@ -134,9 +134,9 @@ static void initialize(void) {
   wb_motor_set_velocity(r_motor, 0.0);
 
   //..... Enable Sonar .....
-  char sonar_names[NUM_SONAR][9] = {
+  char sonar_names[NUM_SONAR][10] = {
     "Sonar_FL", "Sonar_BL", "Sonar_BR", "Sonar_FR",
-    "Sonar_FM", "Sonar_BM" };
+    "Sonar_FM", "Sonar_FML", "Sonar_FMR", "Sonar_BM" };
   
   
   for (int i = 0; i < NUM_SONAR; i++) {
@@ -191,12 +191,11 @@ static int drive_autopilot(void) {
 
   // used for calibration
   if (fmod(current_time, 10) == 0.0) {
-    printf("(s: %.4g)\n", fabs(gps_pos[Z]));
-    printf("(s+d: %.4g)\n", fabs(saved_pos)+DELTA);
- 
+    printf("(s: %.4g)\n",  targets[target_index-1].Z_u);
+    printf("(s: %.4g)\n",  targets[target_index].Z_u);
   }
   // how close the snow blower should approach the waypoints
-  if (distance <= 0.1) {
+  if (distance <= 0.2) {
     target_index++;
   }
   else if (target_index == num_points) {
@@ -207,10 +206,11 @@ static int drive_autopilot(void) {
     case NORMAL:
       speed[LEFT]  = DEFAULT_SPEED - TURN_COEFFICIENT * e_beta;
       speed[RIGHT] = DEFAULT_SPEED + TURN_COEFFICIENT * e_beta;
-      if (sonar_val[SFM] > THRESHOLD) {
+      if (sonar_val[SFM] > THRESHOLD || sonar_val[SFML] > THRESHOLD || sonar_val[SFMR] > THRESHOLD) {
         state = OBSTACLE_R;
         saved_pos = gps_pos[Z];
       }
+      
      /* else if (sonar_val[SFL] > THRESHOLD && sonar_val[SFM] > THRESHOLD) {
         state = OBSTACLE_R;
         saved_pos = gps_pos[Z];
@@ -218,16 +218,35 @@ static int drive_autopilot(void) {
       break;
 
     case OBSTACLE_R:
-      speed[LEFT]  = DEFAULT_SPEED;
-      speed[RIGHT] = -DEFAULT_SPEED;
-      if (theta >= -0.5 && theta <= 0.5) {
-         speed[LEFT]  = DEFAULT_SPEED;
-         speed[RIGHT] = DEFAULT_SPEED;
-         if (sonar_val[SFR] < THRESHOLD && sonar_val[SFL] < THRESHOLD &&
-             sonar_val[SBR] < THRESHOLD && sonar_val[SBL] < THRESHOLD &&
-             sonar_val[SFM] < THRESHOLD && sonar_val[SBM] < THRESHOLD && fabs(gps_pos[Z]) >= fabs(saved_pos)+2*DELTA  ) {
+      if (targets[target_index-1].Z_u >= targets[target_index].Z_u) {
+        speed[LEFT]  = DEFAULT_SPEED;
+        speed[RIGHT] = -DEFAULT_SPEED;
+        if (theta >= -0.5 && theta <= 0.5) {
+          speed[LEFT]  = DEFAULT_SPEED;
+          speed[RIGHT] = DEFAULT_SPEED;
+          if (sonar_val[SFR]  < THRESHOLD && sonar_val[SFL]  < THRESHOLD &&
+              sonar_val[SBR]  < THRESHOLD && sonar_val[SBL]  < THRESHOLD &&
+              sonar_val[SFM]  < THRESHOLD && sonar_val[SBM]  < THRESHOLD && 
+              sonar_val[SFML] < THRESHOLD && sonar_val[SFMR] < THRESHOLD && 
+              fabs(gps_pos[Z]) >= fabs(saved_pos)+2*DELTA) {
            state = NORMAL;
-         }
+          }
+        }
+      }
+      else if (targets[target_index-1].Z_u <= targets[target_index].Z_u) { // check if we are close to boundary of parking lot.
+        speed[LEFT]  = -DEFAULT_SPEED;
+        speed[RIGHT] = DEFAULT_SPEED;
+        if (fabs(theta) >= 179.0 && fabs(theta) <= 181.0) {
+          speed[LEFT]  = DEFAULT_SPEED;
+          speed[RIGHT] = DEFAULT_SPEED;
+          if (sonar_val[SFR]  < THRESHOLD && sonar_val[SFL]  < THRESHOLD &&
+              sonar_val[SBR]  < THRESHOLD && sonar_val[SBL]  < THRESHOLD &&
+              sonar_val[SFM]  < THRESHOLD && sonar_val[SBM]  < THRESHOLD && 
+              sonar_val[SFML] < THRESHOLD && sonar_val[SFMR] < THRESHOLD && 
+              fabs(gps_pos[Z]) <= fabs(saved_pos)-2*DELTA) {
+           state = NORMAL;
+          }
+        }
       }
       break;
       
@@ -245,11 +264,11 @@ static int drive_autopilot(void) {
          }
       }
       break;*/
-    /*
+    
     case DONE:
       speed[LEFT]  = 0.0;
       speed[RIGHT] = 0.0;
-      break;*/
+      break;
     default:
       break;
     }
