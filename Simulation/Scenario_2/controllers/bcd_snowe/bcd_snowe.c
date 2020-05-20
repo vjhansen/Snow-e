@@ -6,8 +6,8 @@ __Project Description__
   * Scenario 2: 1 static obstacle with snow
 
 __Version History__
-  - Version:      0.5.2
-  - Update:       19.05.2020
+  - Version:      0.6.0
+  - Update:       20.05.2020
   - Engineer(s):  V. J. Hansen, D. Kazokas
 
 __Sensors used__
@@ -195,14 +195,13 @@ static int drive_autopilot(void) {
     printf("(s: %.4g)\n",  targets[target_index].Z_u);
   }
   // how close the snow blower should approach the waypoints
-  if (distance <= 0.2) {
+  if (distance <= 0.1) {
     target_index++;
   }
   else if (target_index == num_points) {
     target_index = 1;
   }
   switch (state) {
-    //..... GET the x-direction (North/South) the robot is pointing to initially .....
     case NORMAL:
       speed[LEFT]  = DEFAULT_SPEED - TURN_COEFFICIENT * e_beta;
       speed[RIGHT] = DEFAULT_SPEED + TURN_COEFFICIENT * e_beta;
@@ -218,10 +217,10 @@ static int drive_autopilot(void) {
       break;
 
     case OBSTACLE_R:
-      if (targets[target_index-1].Z_u >= targets[target_index].Z_u) {
+      if (targets[target_index-1].Z_u > targets[target_index].Z_u ) {
         speed[LEFT]  = DEFAULT_SPEED;
         speed[RIGHT] = -DEFAULT_SPEED;
-        if (theta >= -0.5 && theta <= 0.5) {
+        if (theta >= -0.5 && theta <= 0.5 && gps_pos[Z] > targets[1].Z_u) {
           speed[LEFT]  = DEFAULT_SPEED;
           speed[RIGHT] = DEFAULT_SPEED;
           if (sonar_val[SFR]  < THRESHOLD && sonar_val[SFL]  < THRESHOLD &&
