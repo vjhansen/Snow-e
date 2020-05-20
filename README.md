@@ -8,7 +8,7 @@
 
 ### Part 0 - Requirements
 * Requires [Webots](https://www.cyberbotics.com/) Open-Source Robot Simulator
-* `pip3 install -r requirements.txt`
+* `pip3 install -r requirements.txt` or `pip install -r requirements.txt`
 
 ### Part 1 - Python Scripts
 * run `python3 image_to_binary_map.py --image sim_lot.png`
