@@ -3,12 +3,15 @@
     - Apply Boustrophedon Cellular Decomposition to a map
     - Engineer(s): V. J. Hansen
     - Version 0.9.5
-    - Data: 19.05.2020
+    - Data: 20.05.2020
 '''
 
-from matplotlib import pyplot as plt
 from typing import Tuple, List
-import csv, os, random, itertools, cv2
+from matplotlib import pyplot as plt
+import csv, os, random, itertools
+import cv2
+import mlrose
+import argparse
 import numpy as np
 #-------------------------------------
 Slice = List[Tuple[int, int]] # vertical line segment
@@ -167,8 +170,58 @@ def calculate_x_coords(x_size, y_size, cells_to_visit, cell_bounds, non_nbrs):
         width_accum_prev += width_crrnt_cell
         cell_idx = cell_idx + 1
     return cells_x_coords # - Output: x-coordinates of each cell
+
+
+def distance(x_coordinates,y_coordinates, cellA, cellB):
+    """
+    Input: x_coordinates, y_coordinates --> they hold mean coordinate values of each cell
+                                            they are dictionaries
+    Output: distance between cellA and cellB
+    """
+    cellA += 1  # - mlrose requires 0 indices
+    cellB += 1  # - x and y coordinates starts from 1
+    a = np.array([x_coordinates[cellA], y_coordinates[cellA]])
+    b = np.array([x_coordinates[cellB], y_coordinates[cellB]])
+    return np.linalg.norm(a-b)
+
+def distance_optim(x_coordinates,y_coordinates): #0=1, 1=2, 2=3, 3=4
+    dist_list3 = [(0, 1, distance(x_coordinates,y_coordinates,0,1)), (0, 2, distance(x_coordinates,y_coordinates,0,2)),\
+                 (1, 3, distance(x_coordinates,y_coordinates,1,3)), (2, 3, distance(x_coordinates,y_coordinates,2,3))]
+
+    # Define a fitness function object
+    fitness_dists = mlrose.TravellingSales(distances = dist_list3)
+    # Define a optimization problem object
+    problem_fit = mlrose.TSPOpt(length = len(y_coordinates), fitness_fn = fitness_dists, maximize=False)
+    return problem_fit
+
+def genetic_algorithm(problem,pop_size,mutation_prob,max_attemp):
+    """
+    Genetic algorithm implementation to minimize TSP
+    Inputs:
+            fitness --> fitness distances required by mlrose
+            problem --> optimization problem object required by mlrose
+            pop_size --> population_size: genetic algorithm parameter
+            mutation_prob --> mutation_probability: genetic algorithm parameter
+            max_attemp --> maximum attemps per step: genetic algorithm parameter
+    Outputs:
+            optimized_cells --> cells to visit
+    """
+    optimized_cells, _ = mlrose.genetic_alg(problem, mutation_prob = mutation_prob,\
+                                        max_attempts = max_attemp, random_state = 2)
+
+    # Add 1 to all cells since in our case, cell numbers start from one not zero!
+    optimized_cells += 1
+    return list(optimized_cells)
+
 #-----------------------------------------------
 if __name__ == '__main__':
+    ap = argparse.ArgumentParser()
+    ap.add_argument('X', type=int, default=10, help="Height [m] of parking lot")
+    ap.add_argument('Z', type=int, default=20, help="Width [m] of parking lot")
+    ap.add_argument('delta', type=float, default=0.5, help="Side step [m]")
+    args = ap.parse_args()
+
+
     original_map = cv2.imread("files/new_map.png")
     # - We need a binary image: 1 represents free space, 0 represents objects/walls
     if (len(original_map.shape) > 2):
@@ -183,21 +236,63 @@ if __name__ == '__main__':
     print("Cells: ", cell_nums)
     print("Non-neighbor cells: ", non_nbr_cell_nums)
 
+    graph4 = { # adjacency graph
+        1: [2,3],
+        2: [1,4],
+        3: [1,4],
+        4: [2,3]
+    }
+
+    def mean(input_list):
+        output_mean = sum(input_list)/len(input_list)
+        return output_mean
+
+    def mean_double_list(input_double_list):
+        length = len(input_double_list)
+        total = 0
+        for i in range(length):
+            total += mean(input_double_list[i])
+
+        output_mean = total/length
+        return output_mean
+
+    def mean_d_double_list(input_double_list):
+        length = len(input_double_list)
+        total = 0
+        for i in range(length):
+            total += mean(input_double_list[i][0])
+
+        output_mean = total/length
+        return output_mean
+
+
 #-----------------------------------------------
     x_length = original_map.shape[1]
     y_length = original_map.shape[0]
     x_coords = calculate_x_coords(x_length, y_length, cell_nums, cell_bounds, non_nbr_cell_nums)
     y_coords = cell_bounds
     mean_x_coords = mean_y_coords = {}
+    for i in range(len(x_coords)):
+        cell_idx = i+1 #i starts from zero, but cell numbers start from 1
+        mean_x_coords[cell_idx] = mean(x_coords[cell_idx])
+        if type(y_coords[cell_idx][0]) is list:
+            mean_y_coords[cell_idx] = mean_d_double_list(y_coords[cell_idx])
+        else:
+            mean_y_coords[cell_idx] = mean_double_list(y_coords[cell_idx])
 
-    # add X and Z as input arguments, e.g Z = 10 --> Z_max = Z/2, Z_min = -Z/2
-    # - X is the length of the parking lot, which is 5 meters
-    X_max = 2.5   # [m], these will be related to y_coords of image
-    X_min = -2.5  # [m], these will be related to y_coords of image
+    optim_problem = distance_optim(mean_x_coords, mean_y_coords)
 
-    # - Z is the width of the parking lot, which is 10 meters
-    Z_max = 5.0   # [m], these will be related to x_coords of image
-    Z_min = -5.0  # [m], these will be related to x_coords of image
+    # - Genetic algorithm
+    cleaned_genetic = genetic_algorithm(optim_problem, 200, 0.2, 10)
+    print("Genetic output:", cleaned_genetic)
+
+    # - X is the Height of the parking lot
+    X_max = args.X/2   # [m], these will be related to y_coords of image
+    X_min = -args.X/2  # [m], these will be related to y_coords of image
+
+    # - Z is the width of the parking lot
+    Z_max = args.Z/2   # [m], these will be related to x_coords of image
+    Z_min = -args.Z/2 # [m], these will be related to x_coords of image
     # gps = ((gps_max-gps_min)/(px_max-px_min))*(px-px_min)+gps_min
     px_min = 1
 
@@ -216,7 +311,7 @@ if __name__ == '__main__':
                 px_ze = x_coords[cell_idx][-1]
                 px_xs = y_coords[cell_idx][0][0][1]
                 px_xe = y_coords[cell_idx][0][0][0]
-                rows = [[   cell_nums[i],  # - (x_length -1) because of image borders
+                rows = [[   cell_nums[i],
                             ((Z_max-Z_min)/(x_length-px_min)) * (px_zs-px_min)+Z_min,
                             ((Z_max-Z_min)/(x_length-px_min)) * (px_ze-px_min)+Z_min,
                             # - the y-axis is inverted, i.e. goes from y_length (bottom) to 0 (top)
@@ -227,7 +322,7 @@ if __name__ == '__main__':
                 px_ze = x_coords[cell_idx][-1]
                 px_xs = y_coords[cell_idx][0][1]
                 px_xe = y_coords[cell_idx][0][0]
-                rows = [ [  cell_nums[i], # - (x_length-1) because of image borders
+                rows = [ [  cell_nums[i],
                             ((Z_max-Z_min)/(x_length-px_min)) * (px_zs-px_min)+Z_min,
                             ((Z_max-Z_min)/(x_length-px_min)) * (px_ze-px_min)+Z_min,
                             ((X_max-X_min)/(px_min-y_length)) * (px_xs+px_min)+X_max,
@@ -236,4 +331,4 @@ if __name__ == '__main__':
     plt.waitforbuttonpress(1)
     input("Press any key to close all figures.")
     plt.close("all")
-    os.system("python3 generate_coords_BCD.py") # run generate_coords_BCD.py
+    os.system("python3 generate_coords_BCD.py "+ str(args.delta)) # run generate_coords_BCD.py

@@ -4,12 +4,13 @@ Generate waypoints for coverage path planning
 '''
 # Snow-e
 # Engineer(s): V. J. Hansen
-# 19.05.2020
-# V 1.2
+# 20.05.2020
+# V 1.3
 
 #-----------------------------------------------
 import math, csv
 import numpy as np
+import argparse
 
 with open('files/BCD_coordinates.csv') as csvread_file:
     readCSV = csv.reader(csvread_file, delimiter=',')
@@ -105,12 +106,15 @@ def generate_z_s(cell, delta):
 num_cells = len(x_s_coord)-1
 x_filename = "files/x_waypoints.txt"
 z_filename = "files/z_waypoints.txt"
-delta = 0.5 # use as input argument
+
+ap = argparse.ArgumentParser()
+ap.add_argument('delta', type=float, default=0.5, help="Side step")
+args = ap.parse_args()
 
 with open(z_filename, 'w') as zf:
     for x in range(num_cells):
         cell_idx = x+1
-        rows = generate_z_s(cell_idx, delta)
+        rows = generate_z_s(cell_idx, args.delta)
         zf.write(rows)
         zf.write("\n")
 
