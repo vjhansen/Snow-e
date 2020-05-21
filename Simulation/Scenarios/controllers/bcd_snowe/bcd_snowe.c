@@ -40,7 +40,7 @@ __Sensors used__
 #define MAX_TURN_SPEED   0.6
 #define DELTA            0.3
 #define SIZE_Z           10
-#define MAXCHAR          1000
+#define MAXCHAR          2000
 #define TURN_COEFFICIENT 0.01
 
 enum FSM { NORMAL, OBSTACLE_R, OBSTACLE_L, DONE };
@@ -65,8 +65,8 @@ typedef struct _Vector {
 } Vector;
 
 
-char *xfile = "../../Coverage_Planning/files/x_waypoints.txt";
-char *zfile = "../../Coverage_Planning/files/z_waypoints.txt";
+char *xfile = "../../Coverage_Planning/x_waypoints_sc1.txt";
+char *zfile = "../../Coverage_Planning/z_waypoints_sc1.txt";
 
 static Vector targets[100];
 static int num_points = 0;
@@ -79,7 +79,6 @@ int state = NORMAL;
 static int target_index = 1; // = 0 is where we start
 double gps_val[2] = {0.0, 0.0};
 double start_gps_pos[3] = {0.0, 0.0, 0.0};
-int target_points = 2*(SIZE_Z/DELTA);
 
 // - read .txt-file
 void read_file(char *filename, double *arr_get) {
@@ -87,7 +86,7 @@ void read_file(char *filename, double *arr_get) {
   char str[MAXCHAR];
   fp = fopen(filename, "r");
   if (fp == NULL){
-      printf("Could not open file %s",filename);
+      printf("Error: %s",filename);
   }
   int i = 0;
   while (fgets(str, MAXCHAR, fp) != NULL) {
@@ -140,7 +139,7 @@ static void initialize(void) {
     "Sonar_FM", "Sonar_FML", "Sonar_FMR", "Sonar_BM" };
 
 
-  for (int i = 0; i < NUM_SONAR; i++) {
+   for (int i = 0; i < NUM_SONAR; i++) {
     sonar[i] = wb_robot_get_device(sonar_names[i]);
     wb_distance_sensor_enable(sonar[i], TIME_STEP);
   }
@@ -212,13 +211,11 @@ static int drive_autopilot(void) {
     printf("(t: %.4g)\n",  targets[target_index].Z_u);
     printf("(p: %.4g)\n",  gps_pos[Z]);
     printf("(error: %f, i: %f, pid: %f, speed_abs: %f, speed_l: %f, speed_r: %f, beta_e: %f)\n", error, integral, PID, speed_abs, current_speed_l, current_speed_r, beta_e);
- 
+
   }
 
   switch (state) {
     case NORMAL:
-      speed[LEFT]  = PID - beta_e;
-      speed[RIGHT] = PID + beta_e;
       if (distance <= 0.1) {
         printf("Reached Waypoint: %d\n",target_index);
         target_index++;
@@ -232,6 +229,9 @@ static int drive_autopilot(void) {
                sonar_val[SFL]  > THRESHOLD) {
         state = OBSTACLE_R;
         saved_pos = gps_pos[Z];
+      } else {
+        speed[LEFT]  = PID - beta_e;
+        speed[RIGHT] = PID + beta_e;
       }
       break;
     case OBSTACLE_R:

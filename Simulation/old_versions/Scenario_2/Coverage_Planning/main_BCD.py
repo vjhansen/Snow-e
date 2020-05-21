@@ -3,7 +3,7 @@
     - Apply Boustrophedon Cellular Decomposition to a map
     - Engineer(s): V. J. Hansen
     - Version 0.9.5
-    - Data: 20.05.2020
+    - Data: 21.05.2020
 '''
 
 from typing import Tuple, List
@@ -240,7 +240,7 @@ if __name__ == '__main__':
                                 ((X_max-X_min)/(px_min-y_length)) * (px_xs+px_min)+X_max,
                                 ((X_max-X_min)/(px_min-y_length)) * (px_xe+px_min)+X_max ] ]
                 csvwriter.writerows(rows)
-            else:
+            elif (len(x_coords) < 3):
                 if ((cell_idx != len(x_coords))):
                     px_zs = x_coords[cell_idx][0]
                     px_ze = x_coords[cell_idx][-1]
