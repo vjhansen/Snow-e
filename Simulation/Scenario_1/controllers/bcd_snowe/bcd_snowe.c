@@ -6,16 +6,13 @@ __Project Description__
   * Scenario 1: No obstacles
 
 __Version History__
-  - Version:      1.0
-  - Update:       19.05.2020
+  - Version:      1.1
+  - Update:       21.05.2020
   - Engineer(s):  V. J. Hansen, D. Kazokas
 
 __Sensors used__
   - Compass:      Navigation
   - GPS:          Generate Zig-Zag path
-  - SONAR:
-  - LIDAR:
-  -
 */
 
 
@@ -23,9 +20,7 @@ __Sensors used__
 #include <webots/motor.h>
 #include <webots/robot.h>
 #include <webots/compass.h>
-#include <webots/distance_sensor.h>
 #include <webots/gps.h>
-#include <webots/lidar.h>
 
 /* C libraries */
 #include <stdio.h>
@@ -34,29 +29,20 @@ __Sensors used__
 #include <string.h>
 
 /* Macro Definitions */
-#define THRESHOLD        900.0
-#define TIME_STEP        8
-#define NUM_SONAR        3
-#define DEFAULT_SPEED    0.5 // m/s
-#define MAX_TURN_SPEED   0.7 // m/s
-#define delta            0.3
-#define size_x           5
-#define size_z           10
-#define MAXCHAR          1000
-#define TURN_COEFFICIENT 0.01
-
+int TIME_STEP       = 8;
+#define delta       0.3
+#define size_x      5
+#define size_z      10
+#define MAXCHAR     1000
 
 /* Enum Data Types */
-enum SONAR_Sensors { Sonar_L, Sonar_R, Sonar_M };
 enum SIDES { LEFT, RIGHT, MIDDLE };
 enum XZComponents { X, Y, Z };
 
 /* Webots Sensors */
 static WbDeviceTag l_motor, r_motor;
-static WbDeviceTag sonar[NUM_SONAR];
 static WbDeviceTag compass;
 static WbDeviceTag gps;
-static WbDeviceTag lidar;
 
 /* Alternative Naming */
 typedef struct _Vector {
@@ -71,8 +57,7 @@ static Vector targets[100];
 static int num_points = 0;
 static double X_target[MAXCHAR] = {0};
 static double Z_target[MAXCHAR] = {0};
-double sonar_val[NUM_SONAR] = {0.0, 0.0, 0.0};
-double distance = 0.0;
+
 static int target_index = 1; // = 0 is where we start
 double gps_val[2] = {0.0, 0.0};
 double start_gps_pos[3] = {0.0, 0.0, 0.0};
@@ -131,13 +116,6 @@ static void initialize(void) {
   wb_motor_set_velocity(l_motor, 0.0);
   wb_motor_set_velocity(r_motor, 0.0);
 
-  //..... Enable Sonar .....
-  char sonar_names[NUM_SONAR][8] = {"Sonar_L", "Sonar_R", "Sonar_M"};
-  for (int i = 0; i < NUM_SONAR; i++) {
-    sonar[i] = wb_robot_get_device(sonar_names[i]);
-    wb_distance_sensor_enable(sonar[i], TIME_STEP);
-  }
-
   //..... Enable Compass .....
   compass = wb_robot_get_device("compass");
   wb_compass_enable(compass, TIME_STEP);
@@ -153,19 +131,18 @@ static void initialize(void) {
 static int drive_autopilot(void) {
   float Kp = 0.1;
   float Ki = 0.01;
-  static float integral = 0;
-  float current_speed_l = wb_motor_get_velocity(l_motor);
-  float current_speed_r = wb_motor_get_velocity(r_motor);
+  float speed_t = 0;          // initial speed value
+  float distance = 0;
+  static float speed_i = 0;   // integral value for speed
+  static float beta_i = 0;    // integral value for beta (angle)
+  const float current_speed_l = wb_motor_get_velocity(l_motor);
+  const float current_speed_r = wb_motor_get_velocity(r_motor);
   
   double speed[2]       = {0.0, 0.0};
-  double current_time   = wb_robot_get_time();
+  //double current_time   = wb_robot_get_time();
   const double *north2D = wb_compass_get_values(compass);
   //double theta          = atan2(north2D[X], north2D[Z]) * (180/M_PI); // angle (in degrees) between x and z-axis
   const double *gps_pos = wb_gps_get_values(gps);
-
-/*for (int i = 0; i < NUM_SONAR; i++) {
-    sonar_val[i] = wb_distance_sensor_get_value(sonar[i]);
-  }*/
 
   Vector north = {north2D[X], north2D[Z]};
   Vector front = {north.X_v, -north.Z_u};
@@ -175,51 +152,59 @@ static int drive_autopilot(void) {
   distance = norm(&dir);
   normalize(&dir);
 
-  float beta_c = atan2(front.X_v, front.Z_u) * (180/M_PI); // compute current angle
-  float beta_t = atan2(dir.X_v, dir.Z_u) * (180/M_PI); // compute target angle
-  float beta_e = (beta_t - beta_c) * TURN_COEFFICIENT; // error between target and actual position
-  
-  // --------------- Speed Constraints ---------------
-  if(current_speed_l >  MAX_TURN_SPEED){current_speed_l =  MAX_TURN_SPEED;}
-  if(current_speed_r >  MAX_TURN_SPEED){current_speed_r =  MAX_TURN_SPEED;}
-  if(current_speed_l < -MAX_TURN_SPEED){current_speed_l = -MAX_TURN_SPEED;}
-  if(current_speed_r < -MAX_TURN_SPEED){current_speed_r = -MAX_TURN_SPEED;}
+  float beta_t = atan2(dir.X_v, dir.Z_u) * (180/M_PI);      // Compute target angle
+  float beta_c = atan2(front.X_v, front.Z_u) * (180/M_PI);  // Compute current angle
 
-  // --------------- Calculate PID ---------------
-  float speed_abs = ((fabs(current_speed_l)+fabs(current_speed_r))/2); // Calculate mean of speed
-  float error = (DEFAULT_SPEED - speed_abs); // Check diviation from desired speed
-  integral = integral + error;
-  float PID = Kp*error + Ki*integral;
-  if (PID < 0) {PID = 0;}
-  if (distance < 2) {PID = 0.35;} // Reduce speed to 0.35m/s 
+  // --------------- Speed Constraints ---------------
+  if (distance < 2) {speed_t = 0.2;} // Reduce speed to 0.2m/s 
+  else if (distance > size_x - 0.5) {speed_t = 0.2;} // Accelerate when 0.5m away from previous waypoint
+  else{speed_t = 1.0;} // Increase speed to 1m/s when 0.5m away from previous waypoint
   
-  //printf("(error: %f, i: %f, pid: %f, speed_abs: %f, speed_l: %f, speed_r: %f, beta_e: %f)\n", error, integral, PID, speed_abs, current_speed_l, current_speed_r, beta_e);
+  // --------------- Calculate PID For Angle and Speed ---------------
+  // For Angle
+  float beta_e = ((beta_t - beta_c) * 0.01);
+  beta_i = beta_i + beta_e;
+  float PID_beta = Kp*beta_e + Ki*beta_i;
+  // For Speed
+  float speed_abs = ((fabs(current_speed_l)+fabs(current_speed_r))/2);
+  float speed_e = (speed_t - speed_abs);
+  speed_i = speed_i + speed_e;
+  float PID_speed = Kp*speed_e + Ki*speed_i;
+  if (PID_speed < 0) {PID_speed = 0;}
+
+  //printf("s_e: %f s_i: %f PID: %f s_l: %f s_r: %f\n", speed_e, speed_i, speed_d, PID_speed, current_speed_l, current_speed_r);
+  //printf("b_e: %f b_i: %f PID: %f Speed_abs: %f\n", beta_e, beta_i, PID_beta, speed_abs);
   // --------------- End PID ---------------
   
-  
-  // used for calibration
-  //printf("distance: %f\n", distance);
-  if (fmod(current_time, 10) == 0.0) {
+    //..... Used for Calibration .....
+  //if (fmod(current_time, 10) == 0.0) {
    // printf("(t: %.4g, %.4g)\n", X_target[target_index], Z_target[target_index]);
    // printf("(t: %.4g, %.4g)\n", gps_pos[X], gps_pos[Z]);
-  }
-  // how close the snow blower should approach the waypoints
-  if (distance <= 0.1) {
+  //}
+
+  //  Approach the waypoints and reset the integrals
+  if (distance <= 0.05) {
     printf("Reached Waypoint: %d\n",target_index);
     target_index++;
-    integral = 0; // Reset PID integral part when Waypoint is reached
+    speed_i = 0;
+    beta_i = 0;
   }
   else if (target_index == num_points) {
-    target_index = 1; // go back to start.
-    // should stop simulation
+    target_index = 1; // go back to first waypoint
+    //TIME_STEP = -1; // stops simulation at last waypoint
+  }
+  
+  //..... Set Speed According to Angle.....
+  if (fabs(beta_e) > 0.1){
+    speed[LEFT]  = -PID_beta;
+    speed[RIGHT] =  PID_beta;
   }
 
-  else {
-    speed[LEFT]  = PID - beta_e;
-    speed[RIGHT] = PID + beta_e;
+  else{
+    speed[LEFT]  = PID_speed - beta_e;
+    speed[RIGHT] = PID_speed + beta_e;
   }
 
-  //..... Set Speed .....
   wb_motor_set_velocity(l_motor, speed[LEFT]);
   wb_motor_set_velocity(r_motor, speed[RIGHT]);
 
