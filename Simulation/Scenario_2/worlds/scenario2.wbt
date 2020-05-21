@@ -16,8 +16,8 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation 0.48534164105933886 0.7217231907373598 0.49351709940559546 4.376095032404987
-  position -4.5036286169434305 10.386807412299838 -3.9043444405032606
+  orientation 0.4032435308630488 0.8138801920445384 0.4183224686944833 4.472081775242383
+  position -8.81717315397103 11.816871563414622 -2.3710606793148745
   follow "Snow-e"
   followType "None"
 }
@@ -347,7 +347,7 @@ DEF Snow-e Robot {
           aperture 0.7
         }
         DistanceSensor {
-          translation -0.2 0.05 0
+          translation -0.21 0.07 0
           rotation 0 1 0 3.141592653589793
           children [
             DEF Shape Transform {
@@ -910,7 +910,7 @@ DEF Ground Robot {
 DEF Obstacles Group {
   children [
     DEF Box Solid {
-      translation -0.126266 0.15 -3.96688
+      translation -0.134238 0.15 -2.48688
       rotation 0 -1 0 1.5761753071795859
       children [
         DEF Box Shape {
