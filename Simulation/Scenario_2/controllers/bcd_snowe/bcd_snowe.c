@@ -6,8 +6,8 @@ __Project Description__
   * Scenario 2: 1 static obstacle with snow
 
 __Version History__
-  - Version:      0.6.0
-  - Update:       20.05.2020
+  - Version:      1.0.0
+  - Update:       21.05.2020
   - Engineer(s):  V. J. Hansen, D. Kazokas
 
 __Sensors used__
@@ -36,8 +36,9 @@ __Sensors used__
 #define THRESHOLD        900.0
 #define TIME_STEP        8
 #define NUM_SONAR        8
-#define DEFAULT_SPEED    0.1
-#define DELTA            0.5
+#define DEFAULT_SPEED    0.5
+#define MAX_TURN_SPEED   0.6
+#define DELTA            0.3
 #define SIZE_Z           10
 #define MAXCHAR          1000
 #define TURN_COEFFICIENT 0.01
@@ -162,14 +163,17 @@ static void initialize(void) {
 
 /*__________ Autopilot Function __________*/
 static int drive_autopilot(void) {
+  float Kp = 0.1;
+  float Ki = 0.01;
+  static float integral = 0;
+  float current_speed_l = wb_motor_get_velocity(l_motor);
+  float current_speed_r = wb_motor_get_velocity(r_motor);
+
   double speed[2]       = {0.0, 0.0};
   double current_time   = wb_robot_get_time();
   const double *north2D = wb_compass_get_values(compass);
   double theta          = atan2(north2D[X], north2D[Z]) * (180/M_PI); // angle (in degrees) between x and z-axis
   const double *gps_pos = wb_gps_get_values(gps);
-
-  //https://github.com/cyberbotics/webots/blob/69202baee3c0974f69f0e72d3412d19ed69feaad/tests/api/controllers/lidar_point_cloud/lidar_point_cloud.c
-  //const WbLidarPoint *gt_point = wb_lidar_get_point_cloud(lidar);
 
   for (int i = 0; i < NUM_SONAR; i++) {
     sonar_val[i] = wb_distance_sensor_get_value(sonar[i]);
@@ -183,60 +187,82 @@ static int drive_autopilot(void) {
   distance = norm(&dir);
   normalize(&dir);
 
-  double beta_f = atan2(front.X_v, front.Z_u) * (180/M_PI); // compute current angle
-  double beta_t = atan2(dir.X_v, dir.Z_u) * (180/M_PI); // compute target angle
-  double e_beta = beta_t - beta_f; // error between target and actual position
+  float beta_c = atan2(front.X_v, front.Z_u) * (180/M_PI); // compute current angle
+  float beta_t = atan2(dir.X_v, dir.Z_u) * (180/M_PI); // compute target angle
+  float beta_e = (beta_t - beta_c) * TURN_COEFFICIENT; // error between target and actual position
+
+  // --------------- Speed Constraints ---------------
+  if(current_speed_l >  MAX_TURN_SPEED) {current_speed_l =  MAX_TURN_SPEED;}
+  if(current_speed_r >  MAX_TURN_SPEED) {current_speed_r =  MAX_TURN_SPEED;}
+  if(current_speed_l < -MAX_TURN_SPEED) {current_speed_l = -MAX_TURN_SPEED;}
+  if(current_speed_r < -MAX_TURN_SPEED) {current_speed_r = -MAX_TURN_SPEED;}
+
+  // --------------- Calculate PID ---------------
+  float speed_abs = ((fabs(current_speed_l)+fabs(current_speed_r))/2); // Calculate mean of speed
+  float error = (DEFAULT_SPEED - speed_abs); // Check diviation from desired speed
+  integral = integral + error;
+  float PID = Kp*error + Ki*integral;
+  if (PID < 0) {PID = 0.0;}
+  if (distance < 2.0) {PID = 0.35;} // Reduce speed to 0.35m/s
+
+  // --------------- End PID ---------------
 
   // used for calibration
   if (fmod(current_time, 10) == 0.0) {
     printf("(t: %.4g)\n",  targets[target_index].Z_u);
     printf("(p: %.4g)\n",  gps_pos[Z]);
+    printf("(error: %f, i: %f, pid: %f, speed_abs: %f, speed_l: %f, speed_r: %f, beta_e: %f)\n", error, integral, PID, speed_abs, current_speed_l, current_speed_r, beta_e);
+ 
   }
 
   switch (state) {
     case NORMAL:
-      speed[LEFT]  = DEFAULT_SPEED - TURN_COEFFICIENT * e_beta;
-      speed[RIGHT] = DEFAULT_SPEED + TURN_COEFFICIENT * e_beta;
+      speed[LEFT]  = PID - beta_e;
+      speed[RIGHT] = PID + beta_e;
       if (distance <= 0.1) {
+        printf("Reached Waypoint: %d\n",target_index);
         target_index++;
+        integral = 0; // Reset PID integral part when Waypoint is reached
       }
       else if (target_index == num_points) {
         target_index = 1;
       }
-      else if (sonar_val[SFM]  > THRESHOLD || sonar_val[SFML] > THRESHOLD || 
-               sonar_val[SFMR] > THRESHOLD || sonar_val[SFR]  > THRESHOLD || 
+      else if (sonar_val[SFM]  > THRESHOLD || sonar_val[SFML] > THRESHOLD ||
+               sonar_val[SFMR] > THRESHOLD || sonar_val[SFR]  > THRESHOLD ||
                sonar_val[SFL]  > THRESHOLD) {
         state = OBSTACLE_R;
         saved_pos = gps_pos[Z];
       }
       break;
     case OBSTACLE_R:
+      integral = 0;
+      PID = 0.10;
       if (targets[target_index-1].Z_u > targets[target_index].Z_u ) {
-        speed[LEFT]  = DEFAULT_SPEED;
-        speed[RIGHT] = -DEFAULT_SPEED;
+        speed[LEFT]  = PID;
+        speed[RIGHT] = -PID;
         if (theta >= -0.5 && theta <= 0.5 && gps_pos[Z] > targets[1].Z_u) {
-          speed[LEFT]  = DEFAULT_SPEED;
-          speed[RIGHT] = DEFAULT_SPEED;
+          speed[LEFT]  = PID;
+          speed[RIGHT] = PID;
           if (sonar_val[SFR]  < THRESHOLD && sonar_val[SFL]  < THRESHOLD &&
               sonar_val[SBR]  < THRESHOLD && sonar_val[SBL]  < THRESHOLD &&
               sonar_val[SFM]  < THRESHOLD && sonar_val[SBM]  < THRESHOLD &&
               sonar_val[SFML] < THRESHOLD && sonar_val[SFMR] < THRESHOLD &&
-              (fabs(gps_pos[Z]) <= fabs(saved_pos)-2*DELTA || fabs(gps_pos[Z]) >= fabs(saved_pos)+2*DELTA))  {
+              (fabs(gps_pos[Z]) <= fabs(saved_pos)-1.5*DELTA || fabs(gps_pos[Z]) >= fabs(saved_pos)+1.5*DELTA))  {
            state = NORMAL;
           }
         }
       }
       else if (targets[target_index-1].Z_u <= targets[target_index].Z_u) {
-        speed[LEFT]  = -DEFAULT_SPEED;
-        speed[RIGHT] = DEFAULT_SPEED;
+        speed[LEFT]  = -PID;
+        speed[RIGHT] = PID;
         if (fabs(theta) >= 179.0 && fabs(theta) <= 181.0 && gps_pos[Z] < targets[num_points-1].Z_u) {
-          speed[LEFT]  = DEFAULT_SPEED;
-          speed[RIGHT] = DEFAULT_SPEED;
+          speed[LEFT]  = PID;
+          speed[RIGHT] = PID;
           if (sonar_val[SFR]  < THRESHOLD && sonar_val[SFL]  < THRESHOLD &&
               sonar_val[SBR]  < THRESHOLD && sonar_val[SBL]  < THRESHOLD &&
               sonar_val[SFM]  < THRESHOLD && sonar_val[SBM]  < THRESHOLD &&
               sonar_val[SFML] < THRESHOLD && sonar_val[SFMR] < THRESHOLD &&
-              (fabs(gps_pos[Z]) <= fabs(saved_pos)-2*DELTA || fabs(gps_pos[Z]) >= fabs(saved_pos)+2*DELTA)) {
+              (fabs(gps_pos[Z]) <= fabs(saved_pos)-1.5*DELTA || fabs(gps_pos[Z]) >= fabs(saved_pos)+1.5*DELTA)) {
            state = NORMAL;
           }
         }
