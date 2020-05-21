@@ -16,19 +16,13 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation 0.5716174246407938 0.5848903350460961 0.5754622627216246 4.194229989577401
-  position 0.05082957666261079 20.20182077852678 0.3983777379153546
+  orientation 0.5773502691896258 0.5773502691896258 0.5773502691896258 4.18879
+  position 0 15 0
   follow "Snow-e"
   followType "None"
 }
-TexturedBackground {
-  texture "empty_office"
-  skyColor [
-    1 0.999969 0.999985
-  ]
-}
 TexturedBackgroundLight {
-  luminosity 2
+  luminosity 3
   castShadows FALSE
 }
 RectangleArena {
@@ -36,7 +30,6 @@ RectangleArena {
   floorAppearance Asphalt {
     colorOverride 1 0.999969 0.999985
   }
-  wallThickness 0.02
   wallHeight 0.5
   wallAppearance Asphalt {
     textureTransform TextureTransform {
@@ -44,8 +37,8 @@ RectangleArena {
   }
 }
 DEF Snow-e Robot {
-  translation -2.66 0.121453 -5.22
-  rotation 8.82477548773634e-15 -6.275247577166567e-11 -0.9999999999999999 0.0009177080632674265
+  translation -2.7 0.12 -5.2
+  rotation 0 0 -0.9999999999999999 0
   children [
     DEF Sensors Group {
       children [

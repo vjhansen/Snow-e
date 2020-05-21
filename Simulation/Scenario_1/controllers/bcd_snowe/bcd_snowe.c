@@ -37,7 +37,8 @@ __Sensors used__
 #define THRESHOLD        900.0
 #define TIME_STEP        8
 #define NUM_SONAR        3
-#define DEFAULT_SPEED    0.1
+#define DEFAULT_SPEED    0.5 // m/s
+#define MAX_TURN_SPEED   0.7 // m/s
 #define delta            0.3
 #define size_x           5
 #define size_z           10
@@ -150,6 +151,12 @@ static void initialize(void) {
 
 /*__________ Autopilot Function __________*/
 static int drive_autopilot(void) {
+  float Kp = 0.1;
+  float Ki = 0.01;
+  static float integral = 0;
+  float current_speed_l = wb_motor_get_velocity(l_motor);
+  float current_speed_r = wb_motor_get_velocity(r_motor);
+  
   double speed[2]       = {0.0, 0.0};
   double current_time   = wb_robot_get_time();
   const double *north2D = wb_compass_get_values(compass);
@@ -168,20 +175,39 @@ static int drive_autopilot(void) {
   distance = norm(&dir);
   normalize(&dir);
 
-  double beta_f = atan2(front.X_v, front.Z_u) * (180/M_PI); // compute current angle
-  double beta_t = atan2(dir.X_v, dir.Z_u) * (180/M_PI); // compute target angle
-  double e_beta = beta_t - beta_f; // error between target and actual position
+  float beta_c = atan2(front.X_v, front.Z_u) * (180/M_PI); // compute current angle
+  float beta_t = atan2(dir.X_v, dir.Z_u) * (180/M_PI); // compute target angle
+  float beta_e = (beta_t - beta_c) * TURN_COEFFICIENT; // error between target and actual position
+  
+  // --------------- Speed Constraints ---------------
+  if(current_speed_l >  MAX_TURN_SPEED){current_speed_l =  MAX_TURN_SPEED;}
+  if(current_speed_r >  MAX_TURN_SPEED){current_speed_r =  MAX_TURN_SPEED;}
+  if(current_speed_l < -MAX_TURN_SPEED){current_speed_l = -MAX_TURN_SPEED;}
+  if(current_speed_r < -MAX_TURN_SPEED){current_speed_r = -MAX_TURN_SPEED;}
 
-  // legg til derivat- og integral-ledd.
-
+  // --------------- Calculate PID ---------------
+  float speed_abs = ((fabs(current_speed_l)+fabs(current_speed_r))/2); // Calculate mean of speed
+  float error = (DEFAULT_SPEED - speed_abs); // Check diviation from desired speed
+  integral = integral + error;
+  float PID = Kp*error + Ki*integral;
+  if (PID < 0) {PID = 0;}
+  if (distance < 2) {PID = 0.35;} // Reduce speed to 0.35m/s 
+  
+  //printf("(error: %f, i: %f, pid: %f, speed_abs: %f, speed_l: %f, speed_r: %f, beta_e: %f)\n", error, integral, PID, speed_abs, current_speed_l, current_speed_r, beta_e);
+  // --------------- End PID ---------------
+  
+  
   // used for calibration
+  //printf("distance: %f\n", distance);
   if (fmod(current_time, 10) == 0.0) {
    // printf("(t: %.4g, %.4g)\n", X_target[target_index], Z_target[target_index]);
    // printf("(t: %.4g, %.4g)\n", gps_pos[X], gps_pos[Z]);
   }
   // how close the snow blower should approach the waypoints
   if (distance <= 0.1) {
+    printf("Reached Waypoint: %d\n",target_index);
     target_index++;
+    integral = 0; // Reset PID integral part when Waypoint is reached
   }
   else if (target_index == num_points) {
     target_index = 1; // go back to start.
@@ -189,8 +215,8 @@ static int drive_autopilot(void) {
   }
 
   else {
-    speed[LEFT]  = DEFAULT_SPEED - TURN_COEFFICIENT * e_beta;
-    speed[RIGHT] = DEFAULT_SPEED + TURN_COEFFICIENT * e_beta;
+    speed[LEFT]  = PID - beta_e;
+    speed[RIGHT] = PID + beta_e;
   }
 
   //..... Set Speed .....
