@@ -19,7 +19,6 @@ Viewpoint {
   orientation 0.5773502691896258 0.5773502691896258 0.5773502691896258 4.18879
   position 0 15 0
   follow "Snow-e"
-  followType "None"
 }
 TexturedBackgroundLight {
   luminosity 3
@@ -30,7 +29,7 @@ RectangleArena {
   floorAppearance Asphalt {
     colorOverride 1 0.999969 0.999985
   }
-  wallHeight 0.5
+  wallHeight 0.05
   wallAppearance Asphalt {
     textureTransform TextureTransform {
     }

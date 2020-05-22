@@ -131,12 +131,12 @@ static void initialize(void) {
 static int drive_autopilot(void) {
   float Kp = 0.1;
   float Ki = 0.01;
-  float speed_t = 0;          // initial speed value
+  float speed_max = 0;          // initial speed value
   float distance = 0;
   static float speed_i = 0;   // integral value for speed
   static float beta_i = 0;    // integral value for beta (angle)
-  const float current_speed_l = wb_motor_get_velocity(l_motor);
-  const float current_speed_r = wb_motor_get_velocity(r_motor);
+  float current_speed_l = wb_motor_get_velocity(l_motor);
+  float current_speed_r = wb_motor_get_velocity(r_motor);
   
   double speed[2]       = {0.0, 0.0};
   //double current_time   = wb_robot_get_time();
@@ -156,9 +156,14 @@ static int drive_autopilot(void) {
   float beta_c = atan2(front.X_v, front.Z_u) * (180/M_PI);  // Compute current angle
 
   // --------------- Speed Constraints ---------------
-  if (distance < 2) {speed_t = 0.2;} // Reduce speed to 0.2m/s 
-  else if (distance > size_x - 0.5) {speed_t = 0.2;} // Accelerate when 0.5m away from previous waypoint
-  else{speed_t = 1.0;} // Increase speed to 1m/s when 0.5m away from previous waypoint
+  //if (current_speed_l > speed_max){current_speed_l = speed_max;}
+  //if (current_speed_l < -speed_max){current_speed_l = -speed_max;}
+  //if (current_speed_r > speed_max){current_speed_r = speed_max;}
+  //if (current_speed_r < -speed_max){current_speed_r = -speed_max;}
+  
+  if (distance < 2) {speed_max = 0.2;} // Reduce speed to 0.2m/s 
+  else if (distance > size_x - 0.5) {speed_max = 0.2;} // Accelerate when 0.5m away from previous waypoint
+  else{speed_max = 1.0;} // Increase speed to 1m/s when 0.5m away from previous waypoint
   
   // --------------- Calculate PID For Angle and Speed ---------------
   // For Angle
@@ -167,13 +172,14 @@ static int drive_autopilot(void) {
   float PID_beta = Kp*beta_e + Ki*beta_i;
   // For Speed
   float speed_abs = ((fabs(current_speed_l)+fabs(current_speed_r))/2);
-  float speed_e = (speed_t - speed_abs);
+  float speed_e = (speed_max - speed_abs);
   speed_i = speed_i + speed_e;
   float PID_speed = Kp*speed_e + Ki*speed_i;
   if (PID_speed < 0) {PID_speed = 0;}
 
-  //printf("s_e: %f s_i: %f PID: %f s_l: %f s_r: %f\n", speed_e, speed_i, speed_d, PID_speed, current_speed_l, current_speed_r);
+  //printf("s_e: %f s_i: %f PID: %f s_l: %f s_r: %f\n", speed_e, speed_i, PID_speed, current_speed_l, current_speed_r);
   //printf("b_e: %f b_i: %f PID: %f Speed_abs: %f\n", beta_e, beta_i, PID_beta, speed_abs);
+  //printf("beta_e_abs: %f PID_beta: %f beta_i: %f\n", fabs(beta_e), PID_beta, beta_i);
   // --------------- End PID ---------------
   
     //..... Used for Calibration .....
@@ -195,11 +201,20 @@ static int drive_autopilot(void) {
   }
   
   //..... Set Speed According to Angle.....
-  if (fabs(beta_e) > 0.1){
-    speed[LEFT]  = -PID_beta;
-    speed[RIGHT] =  PID_beta;
+  
+  if (fabs(beta_e) > 0.05){ // For angles up to 90 degrees
+    if (fabs(beta_e) > 0.9){ // For larger angles than 90 degrees
+      speed_i = 0;
+      beta_i = 0;
+      speed[LEFT]  = (-PID_beta)*0.5;
+      speed[RIGHT] = (PID_beta)*0.5;
+    }
+    else{
+      speed_i = 0;
+      speed[LEFT]  = -PID_beta;
+      speed[RIGHT] =  PID_beta;
+    }
   }
-
   else{
     speed[LEFT]  = PID_speed - beta_e;
     speed[RIGHT] = PID_speed + beta_e;
@@ -207,7 +222,7 @@ static int drive_autopilot(void) {
 
   wb_motor_set_velocity(l_motor, speed[LEFT]);
   wb_motor_set_velocity(r_motor, speed[RIGHT]);
-
+  
   return TIME_STEP;
 }
 /*_________________________________________*/
