@@ -7,7 +7,7 @@ __Project Description__
 
 __Version History__
   - Version:      1.1
-  - Update:       21.05.2020
+  - Update:       22.05.2020
   - Engineer(s):  V. J. Hansen, D. Kazokas
 
 __Sensors used__
