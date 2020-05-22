@@ -4,15 +4,15 @@ Generate waypoints for coverage path planning
 '''
 # Snow-e
 # Engineer(s): V. J. Hansen
-# 20.05.2020
-# V 1.3
+# 21.05.2020
+# V 1.4
 
 #-----------------------------------------------
 import math, csv
 import numpy as np
 import argparse
 
-with open('files/BCD_coordinates.csv') as csvread_file:
+with open('BCD_coordinates.csv') as csvread_file:
     readCSV = csv.reader(csvread_file, delimiter=',')
     x_s_coord = []
     x_e_coord = []
@@ -44,12 +44,23 @@ def init_z_e(cell):
     z_e = float(z_e_coord[cell])
     return z_e
 
+
+
+def generate_num_points(cell):
+    z_s = init_z_s(cell)
+    z_e = init_z_e(cell)
+    num_points = 0
+    while (z_s <= z_e):
+        z_s += args.delta
+        num_points += 2
+    return num_points
+
 # Pattern:
 # 0, 0, Xs, Xs, 0, 0, Xs, Xs
 def generate_x_s(cell):
     x_s_coord = []
     x_s = init_x_s(cell)
-    num_points = 5*(int((float(z_e_coord[cell])-float(z_s_coord[cell]))))
+    num_points = generate_num_points(cell)
     for n in range(num_points):
         x = (x_s) * (0.5 * (1 + math.cos((n*math.pi)/2) - math.sin((n*math.pi)/2)))
         x = round(x, 1)
@@ -61,7 +72,7 @@ def generate_x_s(cell):
 def generate_x_e(cell):
     x_e_coord = []
     x_e = init_x_e(cell)
-    num_points = 5*(int((float(z_e_coord[cell])-float(z_s_coord[cell])))) # 5*20 = 100 points
+    num_points = generate_num_points(cell)
     for n in range(num_points):
         x = (x_e) * (0.5 * (1 - math.cos((n*math.pi)/2) + math.sin((n*math.pi)/2)))
         x = round(x, 1)
@@ -88,15 +99,12 @@ def final_x(cell):
 # delta is the incremental change in eastern direction after each iteration,
 def generate_z_s(cell, delta):
     z_s_coord = []
-    z_s = z_s_p = init_z_s(cell)
+    z_s = init_z_s(cell)
     z_e = init_z_e(cell)
-    num_points = 0
-    while (z_s_p <= z_e):
-        z_s_p += delta
-        num_points += 2
+    num_points = generate_num_points(cell)
     for n in range (num_points): # (num_points-1) to ensure that the snow blower doesn't get too close to obstacles
         z = (z_s) + delta*math.ceil(n/2)
-        if (z > z_e): # used to prevent Z-values going out of bounds because of delta.
+        if (z >= z_e): # used to prevent Z-values going out of bounds because of delta.
             z = z_e
         z = round(z, 1)
         z_s_coord.append(z)
@@ -104,8 +112,8 @@ def generate_z_s(cell, delta):
     return res
 #-----------------------------------------------
 num_cells = len(x_s_coord)-1
-x_filename = "files/x_waypoints.txt"
-z_filename = "files/z_waypoints.txt"
+x_filename = "x_waypoints.txt"
+z_filename = "z_waypoints.txt"
 
 ap = argparse.ArgumentParser()
 ap.add_argument('delta', type=float, default=0.5, help="Side step")
