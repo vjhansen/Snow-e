@@ -9,5 +9,5 @@ viewpointLocked: 0
 orthographicViewHeight: 1
 textFiles: 0 "controllers/Scenario2/Scenario2.c" "controllers/Parking_Lot/Parking_Lot.c"
 globalOptionalRendering: LidarPointClouds::DistanceSensorRays
-renderingDevicePerspectives: Parking_Lot:ground_display;0;1.98047;0;0
 renderingDevicePerspectives: ground_snow_removal:ground_display;0;1.98047;0;0
+renderingDevicePerspectives: Parking_Lot:ground_display;0;1.98047;0;0
