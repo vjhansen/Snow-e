@@ -63,8 +63,8 @@ typedef struct _Vector {
 } Vector;
 
 
-char *xfile = "../../Coverage_Planning/x_waypoints_sc2.txt";
-char *zfile = "../../Coverage_Planning/z_waypoints_sc2.txt";
+char *xfile = "../../../../Coverage_Planning/x_waypoints_sc2.txt";
+char *zfile = "../../../../Coverage_Planning/z_waypoints_sc2.txt";
 
 static Vector targets[100];
 static int num_points = 0;

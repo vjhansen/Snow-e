@@ -852,8 +852,6 @@ DEF Snow-e Robot {
   }
   controller "Scenario1"
   cpuConsumption 20
-  linearVelocity 3.862982574638323e-15 -8.99664273156993e-15 -1.3731738810228105e-17
-  angularVelocity -3.1867865139445644e-16 9.843667746984666e-18 -3.171115244292886e-14
 }
 DEF Parking_Lot Robot {
   children [

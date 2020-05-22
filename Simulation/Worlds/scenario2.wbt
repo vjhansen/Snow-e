@@ -38,7 +38,8 @@ RectangleArena {
   }
 }
 DEF Snow-e Robot {
-  translation -2.5 0.123 -5
+  translation -2.4998623109300504 0.12287946586087153 -5
+  rotation -1.127021520889885e-15 2.388656055103737e-13 1 -0.0011186857196430532
   children [
     DEF Sensors Group {
       children [
@@ -851,6 +852,8 @@ DEF Snow-e Robot {
   }
   controller "Scenario2"
   cpuConsumption 20
+  linearVelocity 6.949616878836587e-10 -1.0196355441033833e-09 -1.166002361554803e-17
+  angularVelocity -7.081741351799173e-17 -5.760294441509449e-18 -5.6853401869145216e-09
 }
 DEF Parking_Lot Robot {
   children [

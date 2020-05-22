@@ -1,6 +1,6 @@
 #VRML_SIM R2020a utf8
 WorldInfo {
-  title "Snow-e Simulation - Scenario 1"
+  title "Snow-e Simulation - Scenario 2"
   basicTimeStep 8
   FPS 30
   contactProperties [
@@ -22,7 +22,7 @@ Viewpoint {
   followType "None"
 }
 TexturedBackgroundLight {
-  luminosity 2
+  luminosity 3
   castShadows FALSE
 }
 RectangleArena {
@@ -38,8 +38,8 @@ RectangleArena {
   }
 }
 DEF Snow-e Robot {
-  translation -2.4998623109091276 0.12287946582907877 -5
-  rotation 3.731259851389493e-15 2.4070271492354466e-13 1 -0.0011186858895106753
+  translation -2.4998623109300504 0.12287946586087153 -5
+  rotation -1.127021520889885e-15 2.388656055103737e-13 1 -0.0011186857196430532
   children [
     DEF Sensors Group {
       children [
@@ -850,10 +850,8 @@ DEF Snow-e Robot {
       0 0 0
     ]
   }
-  controller "Scenario1"
+  controller "Scenario2"
   cpuConsumption 20
-  linearVelocity 3.862982574638323e-15 -8.99664273156993e-15 -1.3731738810228105e-17
-  angularVelocity -3.1867865139445644e-16 9.843667746984666e-18 -3.171115244292886e-14
 }
 DEF Parking_Lot Robot {
   children [
@@ -905,4 +903,24 @@ DEF Parking_Lot Robot {
   supervisor TRUE
 }
 DEF Obstacles Group {
+  children [
+    DEF Box Solid {
+      translation -0.134238 0.15 -2.48688
+      rotation 0 -1 0 1.5761753071795859
+      children [
+        DEF Box Shape {
+          appearance PBRAppearance {
+            baseColor 0 0 0
+            roughness 1
+            metalness 0
+          }
+          geometry Box {
+            size 1.5 0.7 0.5
+          }
+        }
+      ]
+      name "box object"
+      boundingObject USE Box
+    }
+  ]
 }
