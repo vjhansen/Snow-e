@@ -7,7 +7,7 @@ __Project Description__
 
 __Version History__
   - Version:      1.0.0
-  - Update:       22.05.2020
+  - Update:       21.05.2020
   - Engineer(s):  V. J. Hansen, D. Kazokas
 
 __Sensors used__
@@ -24,6 +24,7 @@ __Sensors used__
 #include <webots/compass.h>
 #include <webots/distance_sensor.h>
 #include <webots/gps.h>
+#include <webots/lidar.h>
 
 /* C libraries */
 #include <stdio.h>
@@ -42,6 +43,7 @@ __Sensors used__
 #define MAXCHAR          2000
 #define TURN_COEFFICIENT 0.01
 
+
 enum FSM { NORMAL, OBSTACLE_R, OBSTACLE_L, DONE };
 
 /* Enum Data Types */
@@ -54,6 +56,7 @@ static WbDeviceTag l_motor, r_motor;
 static WbDeviceTag sonar[NUM_SONAR];
 static WbDeviceTag compass;
 static WbDeviceTag gps;
+static WbDeviceTag lidar;
 
 
 /* Alternative Naming */
@@ -142,6 +145,11 @@ static void initialize(void) {
     wb_distance_sensor_enable(sonar[i], TIME_STEP);
   }
 
+    //..... Enable LIDAR .....
+ /*  lidar = wb_robot_get_device("lidar");
+   wb_lidar_enable(lidar, TIME_STEP);
+   wb_lidar_enable_point_cloud(lidar);
+*/
   //..... Enable Compass .....
   compass = wb_robot_get_device("compass");
   wb_compass_enable(compass, TIME_STEP);
@@ -155,11 +163,14 @@ static void initialize(void) {
 
 /*__________ Autopilot Function __________*/
 static int drive_autopilot(void) {
-  float Kp = 0.1;
-  float Ki = 0.01;
-  static float integral = 0;
-  float current_speed_l = wb_motor_get_velocity(l_motor);
-  float current_speed_r = wb_motor_get_velocity(r_motor);
+  double Kp = 0.1;
+  double Ki = 0.01;
+  double speed_max = 0;          // initial speed value
+  double distance = 0;
+  static double speed_i = 0;   // integral value for speed
+  static double beta_i = 0;    // integral value for beta (angle)
+  double current_speed_l = wb_motor_get_velocity(l_motor);
+  double current_speed_r = wb_motor_get_velocity(r_motor);
 
   double speed[2]       = {0.0, 0.0};
   double current_time   = wb_robot_get_time();
@@ -179,62 +190,82 @@ static int drive_autopilot(void) {
   distance = norm(&dir);
   normalize(&dir);
 
-  float beta_c = atan2(front.X_v, front.Z_u) * (180/M_PI); // compute current angle
-  float beta_t = atan2(dir.X_v, dir.Z_u) * (180/M_PI); // compute target angle
-  float beta_e = (beta_t - beta_c) * TURN_COEFFICIENT; // error between target and actual position
+  float beta_t = atan2(dir.X_v, dir.Z_u) * (180/M_PI);      // Compute target angle
+  float beta_c = atan2(front.X_v, front.Z_u) * (180/M_PI);  // Compute current angle
 
   // --------------- Speed Constraints ---------------
-  if(current_speed_l >  MAX_TURN_SPEED) {current_speed_l =  MAX_TURN_SPEED;}
-  if(current_speed_r >  MAX_TURN_SPEED) {current_speed_r =  MAX_TURN_SPEED;}
-  if(current_speed_l < -MAX_TURN_SPEED) {current_speed_l = -MAX_TURN_SPEED;}
-  if(current_speed_r < -MAX_TURN_SPEED) {current_speed_r = -MAX_TURN_SPEED;}
+  if (distance < 2) {speed_max = 0.2;} // Reduce speed to 0.2m/s 
+  else if (distance > 4 - 0.5) {speed_max = 0.2;} // Accelerate when 0.5m away from previous waypoint
+  else{speed_max = 1.0;} // Increase speed to 1m/s when 0.5m away from previous waypoint
+  
+  // --------------- Calculate PID For Angle and Speed ---------------
+  // For Angle
+  float beta_e = ((beta_t - beta_c) * 0.01);
+  beta_i = beta_i + beta_e;
+  float PID_beta = Kp*beta_e + Ki*beta_i;
+  // For Speed
+  float speed_abs = ((fabs(current_speed_l)+fabs(current_speed_r))/2);
+  float speed_e = (speed_max - speed_abs);
+  speed_i = speed_i + speed_e;
+  float PID_speed = Kp*speed_e + Ki*speed_i;
+  if (PID_speed < 0) {PID_speed = 0;}
 
-  // --------------- Calculate PID ---------------
-  float speed_abs = ((fabs(current_speed_l)+fabs(current_speed_r))/2); // Calculate mean of speed
-  float error = (DEFAULT_SPEED - speed_abs); // Check diviation from desired speed
-  integral = integral + error;
-  float PID = Kp*error + Ki*integral;
-  if (PID < 0) {PID = 0.0;}
-  if (distance < 2.0) {PID = 0.35;} // Reduce speed to 0.35m/s
-
+  //printf("s_e: %f s_i: %f PID: %f s_l: %f s_r: %f\n", speed_e, speed_i, PID_speed, current_speed_l, current_speed_r);
+  //printf("b_e: %f b_i: %f PID: %f Speed_abs: %f\n", beta_e, beta_i, PID_beta, speed_abs);
+  //printf("beta_e_abs: %f PID_beta: %f beta_i: %f\n", fabs(beta_e), PID_beta, beta_i);
   // --------------- End PID ---------------
 
-  // used for calibration
+ /* // used for calibration
   if (fmod(current_time, 10) == 0.0) {
     printf("(t: %.4g)\n",  targets[target_index].Z_u);
     printf("(p: %.4g)\n",  gps_pos[Z]);
     printf("(error: %f, i: %f, pid: %f, speed_abs: %f, speed_l: %f, speed_r: %f, beta_e: %f)\n", error, integral, PID, speed_abs, current_speed_l, current_speed_r, beta_e);
-
-  }
+  }*/
 
   switch (state) {
     case NORMAL:
-      speed[LEFT]  = PID - beta_e;
-      speed[RIGHT] = PID + beta_e;
-      if (distance <= 0.1) {
+      speed[LEFT]  = PID_speed - beta_e;
+      speed[RIGHT] = PID_speed + beta_e;
+      if (distance <= 0.05) {
         printf("Reached Waypoint: %d\n",target_index);
         target_index++;
-        integral = 0; // Reset PID integral part when Waypoint is reached
+        speed_i = 0;
+        beta_i = 0;
       }
       else if (target_index == num_points) {
         target_index = 1;
       }
-      else if (sonar_val[SFM]  > THRESHOLD || sonar_val[SFML] > THRESHOLD ||
-               sonar_val[SFMR] > THRESHOLD || sonar_val[SFR]  > THRESHOLD ||
-               sonar_val[SFL]  > THRESHOLD) {
+      if (fabs(beta_e) > 0.05){ // For angles up to 90 degrees
+        if (fabs(beta_e) > 0.9){ // For larger angles than 90 degrees
+          speed_i = 0;
+          beta_i = 0;
+          speed[LEFT]  = (-PID_beta)*0.5;
+          speed[RIGHT] = (PID_beta)*0.5;
+        }
+        else{
+          speed_i = 0;
+          speed[LEFT]  = -PID_beta;
+          speed[RIGHT] =  PID_beta;
+        }
+      }
+      if (sonar_val[SFM]  > THRESHOLD || sonar_val[SFML] > THRESHOLD ||
+          sonar_val[SFMR] > THRESHOLD || sonar_val[SFR]  > THRESHOLD ||
+          sonar_val[SFL]  > THRESHOLD) {
         state = OBSTACLE_R;
         saved_pos = gps_pos[Z];
       }
       break;
+  
     case OBSTACLE_R:
-      integral = 0;
-      PID = 0.10;
+      speed_i = 0;
+      beta_i = 0;
+      PID_speed = 0.20;
       if (targets[target_index-1].Z_u > targets[target_index].Z_u ) {
-        speed[LEFT]  = PID;
-        speed[RIGHT] = -PID;
+        speed[LEFT]  =  PID_speed;
+        speed[RIGHT] = -PID_speed;
         if (theta >= -0.5 && theta <= 0.5 && gps_pos[Z] > targets[1].Z_u) {
-          speed[LEFT]  = PID;
-          speed[RIGHT] = PID;
+          speed[LEFT]  = PID_speed;
+          speed[RIGHT] = PID_speed;
           if (sonar_val[SFR]  < THRESHOLD && sonar_val[SFL]  < THRESHOLD &&
               sonar_val[SBR]  < THRESHOLD && sonar_val[SBL]  < THRESHOLD &&
               sonar_val[SFM]  < THRESHOLD && sonar_val[SBM]  < THRESHOLD &&
@@ -245,11 +276,11 @@ static int drive_autopilot(void) {
         }
       }
       else if (targets[target_index-1].Z_u <= targets[target_index].Z_u) {
-        speed[LEFT]  = -PID;
-        speed[RIGHT] = PID;
+        speed[LEFT]  = -PID_speed;
+        speed[RIGHT] =  PID_speed;
         if (fabs(theta) >= 179.0 && fabs(theta) <= 181.0 && gps_pos[Z] < targets[num_points-1].Z_u) {
-          speed[LEFT]  = PID;
-          speed[RIGHT] = PID;
+          speed[LEFT]  = PID_speed;
+          speed[RIGHT] = PID_speed;
           if (sonar_val[SFR]  < THRESHOLD && sonar_val[SFL]  < THRESHOLD &&
               sonar_val[SBR]  < THRESHOLD && sonar_val[SBL]  < THRESHOLD &&
               sonar_val[SFM]  < THRESHOLD && sonar_val[SBM]  < THRESHOLD &&
