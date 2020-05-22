@@ -2,7 +2,7 @@
 WorldInfo {
   title "Snow-e Simulation - Scenario 1"
   basicTimeStep 8
-  FPS 16
+  FPS 30
   contactProperties [
     ContactProperties {
       material1 "track material"
