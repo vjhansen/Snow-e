@@ -193,8 +193,8 @@ if __name__ == '__main__':
     print("Non-neighbor cells: ", non_nbr_cell_nums)
 
 #-----------------------------------------------
-    x_length = original_map.shape[1]
-    y_length = original_map.shape[0]
+    x_length = original_map.shape[1] # rename length
+    y_length = original_map.shape[0] # rename Height
     x_coords = calculate_x_coords(x_length, y_length, cell_nums, cell_bounds, non_nbr_cell_nums)
     y_coords = cell_bounds
 
@@ -206,7 +206,7 @@ if __name__ == '__main__':
     Z_max = (args.Z-0.1)/2   # [m], these will be related to x_coords of image
     Z_min = (-args.Z+0.1)/2 # [m], these will be related to x_coords of image
     # gps = ((gps_max-gps_min)/(px_max-px_min))*(px-px_min)+gps_min
-    px_min = 1
+    px_min = 1 # border size
 
     fields = ['Cell', 'Z_start', 'Z_end', 'X_start', 'X_end']
     filename = "BCD_coordinates.csv"
@@ -238,8 +238,8 @@ if __name__ == '__main__':
                     rows = [ [  cell_nums[i],
                                 ((Z_max-Z_min)/(x_length-px_min)) * (px_zs-px_min)+Z_min,
                                 ((Z_max-Z_min)/(x_length-px_min)) * (px_ze-px_min)+Z_min,
-                                ((X_max-X_min)/(px_min-y_length)) * (px_xs+px_min)+X_max,
-                                ((X_max-X_min)/(px_min-y_length)) * (px_xe+px_min)+X_max ] ]
+                                ((X_max-X_min)/(px_min-y_length)) * (px_xs-px_min)+X_max,
+                                ((X_max-X_min)/(px_min-y_length)) * (px_xe-px_min)+X_max ] ]
                 csvwriter.writerows(rows)
             elif (len(x_coords) < 3):
                 if ((cell_idx != len(x_coords))):

@@ -202,6 +202,8 @@ static int drive_autopilot(void) {
   // used for calibration
   if (fmod(current_time, 10) == 0.0) {
     printf("(t: %.4g)\n",  targets[target_index].Z_u);
+    printf("(theta: %.4g)\n",  theta);
+    
     printf("(p: %.4g)\n",  gps_pos[Z]);
     printf("(error: %f, i: %f, pid: %f, speed_abs: %f, speed_l: %f, speed_r: %f, beta_e: %f)\n", error, integral, PID, speed_abs, current_speed_l, current_speed_r, beta_e);
 
@@ -230,7 +232,7 @@ static int drive_autopilot(void) {
       integral = 0;
       PID = 0.10;
       if (targets[target_index-1].Z_u > targets[target_index].Z_u ) {
-        speed[LEFT]  = PID;
+        speed[LEFT]  = PID; 
         speed[RIGHT] = -PID;
         if (theta >= -0.5 && theta <= 0.5 && gps_pos[Z] > targets[1].Z_u) {
           speed[LEFT]  = PID;
