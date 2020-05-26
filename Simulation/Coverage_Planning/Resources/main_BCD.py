@@ -2,8 +2,8 @@
 '''
     - Apply Boustrophedon Cellular Decomposition to a map
     - Engineer(s): V. J. Hansen
-    - Version 0.9.5
-    - Data: 21.05.2020
+    - Version 1.0.0
+    - Data: 26.05.2020
 '''
 
 from typing import Tuple, List
@@ -70,7 +70,6 @@ def bcd(erode_img: np.ndarray) -> Tuple[np.ndarray, int]:
     cell_bounds = {}
     for col in range(erode_img.shape[1]):
         crrnt_slice = erode_img[:, col]
-
         connectivity, connective_parts = calc_connectivity(crrnt_slice)
         if (last_connectivity == 0):
             crrnt_cells = []
@@ -193,9 +192,9 @@ if __name__ == '__main__':
     print("Non-neighbor cells: ", non_nbr_cell_nums)
 
 #-----------------------------------------------
-    x_length = original_map.shape[1] # rename length
-    y_length = original_map.shape[0] # rename Height
-    x_coords = calculate_x_coords(x_length, y_length, cell_nums, cell_bounds, non_nbr_cell_nums)
+    im_width = original_map.shape[1] # rename length
+    im_height = original_map.shape[0] # rename Height
+    x_coords = calculate_x_coords(im_width, im_height, cell_nums, cell_bounds, non_nbr_cell_nums)
     y_coords = cell_bounds
 
     # - X is the Height of the parking lot
@@ -205,8 +204,8 @@ if __name__ == '__main__':
     # - Z is the width of the parking lot
     Z_max = (args.Z-0.1)/2   # [m], these will be related to x_coords of image
     Z_min = (-args.Z+0.1)/2 # [m], these will be related to x_coords of image
-    # gps = ((gps_max-gps_min)/(px_max-px_min))*(px-px_min)+gps_min
-    px_min = 1 # border size
+    # gps = ((gps_max-gps_min)/(px_max-border_sz))*(px-border_sz)+gps_min
+    border_sz = 1 # border_sz size
 
     fields = ['Cell', 'Z_start', 'Z_end', 'X_start', 'X_end']
     filename = "BCD_coordinates.csv"
@@ -225,21 +224,22 @@ if __name__ == '__main__':
                     px_xs = y_coords[cell_idx][0][0][1]
                     px_xe = y_coords[cell_idx][0][0][0]
                     rows = [[   cell_nums[i],
-                                ((Z_max-Z_min)/(x_length-px_min)) * (px_zs-px_min)+Z_min,
-                                ((Z_max-Z_min)/(x_length-px_min)) * (px_ze-px_min)+Z_min,
-                                # - the y-axis is inverted, i.e. goes from y_length (bottom) to 0 (top)
-                                ((X_max-X_min)/(px_min-y_length)) * (px_xs-px_min)+X_max,
-                                ((X_max-X_min)/(px_min-y_length)) * (px_xe-px_min)+X_max ] ]
+                                ((Z_max-Z_min)/(im_width-border_sz)) * (px_zs-border_sz)+Z_min,
+                                ((Z_max-Z_min)/(im_width-border_sz)) * (px_ze-border_sz)+Z_min,
+                                # - the y-axis is inverted, i.e. goes from im_height (bottom) to 0 (top)
+                                ((X_max-X_min)/(border_sz-im_height)) * (px_xs-border_sz)+X_max,
+                                ((X_max-X_min)/(border_sz-im_height)) * (px_xe-border_sz)+X_max ] ]
                 elif ( (cell_idx != 1) | (cell_idx != len(x_coords)) ):
                     px_zs = x_coords[cell_idx][0]
                     px_ze = x_coords[cell_idx][-1]
                     px_xs = y_coords[cell_idx][0][1]
                     px_xe = y_coords[cell_idx][0][0]
                     rows = [ [  cell_nums[i],
-                                ((Z_max-Z_min)/(x_length-px_min)) * (px_zs-px_min)+Z_min,
-                                ((Z_max-Z_min)/(x_length-px_min)) * (px_ze-px_min)+Z_min,
-                                ((X_max-X_min)/(px_min-y_length)) * (px_xs-px_min)+X_max,
-                                ((X_max-X_min)/(px_min-y_length)) * (px_xe-px_min)+X_max ] ]
+                                ((Z_max-Z_min)/(im_width-border_sz)) * (px_zs-border_sz)+Z_min,
+                                ((Z_max-Z_min)/(im_width-border_sz)) * (px_ze-border_sz)+Z_min,
+                                # - the y-axis is inverted, i.e. goes from im_height (bottom) to 0 (top)
+                                ((X_max-X_min)/(border_sz-im_height)) * (px_xs-border_sz)+X_max,
+                                ((X_max-X_min)/(border_sz-im_height)) * (px_xe-border_sz)+X_max ] ]
                 csvwriter.writerows(rows)
             elif (len(x_coords) < 3):
                 if ((cell_idx != len(x_coords))):
@@ -248,22 +248,22 @@ if __name__ == '__main__':
                     px_xs = y_coords[cell_idx][0][1]
                     px_xe = y_coords[cell_idx][0][0]
                     rows = [[   cell_nums[i],
-                                ((Z_max-Z_min)/(x_length-px_min)) * (px_zs-px_min)+Z_min,
-                                ((Z_max-Z_min)/(x_length-px_min)) * (px_ze-px_min)+Z_min,
-                                # - the y-axis is inverted, i.e. goes from y_length (bottom) to 0 (top)
-                                ((X_max-X_min)/(px_min-y_length)) * (px_xs-px_min)+X_max,
-                                ((X_max-X_min)/(px_min-y_length)) * (px_xe-px_min)+X_max ] ]
+                                ((Z_max-Z_min)/(im_width-border_sz)) * (px_zs-border_sz)+Z_min,
+                                ((Z_max-Z_min)/(im_width-border_sz)) * (px_ze-border_sz)+Z_min,
+                                # - the y-axis is inverted, i.e. goes from im_height (bottom) to 0 (top)
+                                ((X_max-X_min)/(border_sz-im_height)) * (px_xs-border_sz)+X_max,
+                                ((X_max-X_min)/(border_sz-im_height)) * (px_xe-border_sz)+X_max ] ]
                 else:
                     px_zs = x_coords[cell_idx][0]
                     px_ze = x_coords[cell_idx][-1]
                     px_xs = y_coords[cell_idx][0][0][1]
                     px_xe = y_coords[cell_idx][0][0][0]
                     rows = [[   cell_nums[i],
-                                ((Z_max-Z_min)/(x_length-px_min)) * (px_zs-px_min)+Z_min,
-                                ((Z_max-Z_min)/(x_length-px_min)) * (px_ze-px_min)+Z_min,
-                                # - the y-axis is inverted, i.e. goes from y_length (bottom) to 0 (top)
-                                ((X_max-X_min)/(px_min-y_length)) * (px_xs-px_min)+X_max,
-                                ((X_max-X_min)/(px_min-y_length)) * (px_xe-px_min)+X_max ] ]
+                                ((Z_max-Z_min)/(im_width-border_sz)) * (px_zs-border_sz)+Z_min,
+                                ((Z_max-Z_min)/(im_width-border_sz)) * (px_ze-border_sz)+Z_min,
+                                # - the y-axis is inverted, i.e. goes from im_height (bottom) to 0 (top)
+                                ((X_max-X_min)/(border_sz-im_height)) * (px_xs-border_sz)+X_max,
+                                ((X_max-X_min)/(border_sz-im_height)) * (px_xe-border_sz)+X_max ] ]
                 csvwriter.writerows(rows)
     plt.waitforbuttonpress(1)
     input("Press any key to close all figures.")

@@ -4,7 +4,7 @@ Generate waypoints for coverage path planning
 '''
 # Snow-e
 # Engineer(s): V. J. Hansen
-# 21.05.2020
+# 26.05.2020
 # V 1.4
 
 #-----------------------------------------------
@@ -43,8 +43,6 @@ def init_z_s(cell):
 def init_z_e(cell):
     z_e = float(z_e_coord[cell])
     return z_e
-
-
 
 def generate_num_points(cell):
     z_s = init_z_s(cell)
