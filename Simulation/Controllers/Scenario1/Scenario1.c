@@ -6,8 +6,8 @@ __Project Description__
   * Scenario 1: No Obstacles
 
 __Version History__
-  - Version:      1.0.1
-  - Update:       22.05.2020
+  - Version:      1.1.0
+  - Update:       26.05.2020
   - Engineer(s):  V. J. Hansen, D. Kazokas
 
 __Sensors used__
@@ -29,7 +29,6 @@ __Sensors used__
 #include <string.h>
 
 /* Macro Definitions */
-int TIME_STEP       = 8;
 #define delta       0.3
 #define size_x      5
 #define size_z      10
@@ -44,26 +43,22 @@ static WbDeviceTag l_motor, r_motor;
 static WbDeviceTag compass;
 static WbDeviceTag gps;
 
-
 /* Alternative Naming */
 typedef struct _Vector {
   double X_v;
   double Z_u;
 } Vector;
 
-
 char *xfile = "../../Coverage_Planning/x_waypoints_sc1.txt";
 char *zfile = "../../Coverage_Planning/z_waypoints_sc1.txt";
-
+int TIME_STEP = 8;
 static Vector targets[100];
 static int num_points = 0;
 static double X_target[MAXCHAR] = {0};
 static double Z_target[MAXCHAR] = {0};
-
 static int target_index = 1; // = 0 is where we start
 double gps_val[2] = {0.0, 0.0};
 double start_gps_pos[3] = {0.0, 0.0, 0.0};
-int target_points = 2*(size_z/delta);
 
 // - read .txt-file
 void read_file(char *filename, double *arr_get) {
@@ -98,14 +93,13 @@ static void normalize(Vector *vec) {
   vec->X_v /= n;
 }
 
-
 // new vector = vector 1 - vector 2
 static void minus(Vector *diff, const Vector *trgt, const Vector *gpsPos) {
   diff->X_v = trgt->X_v - gpsPos->X_v;
   diff->Z_u = trgt->Z_u - gpsPos->Z_u;
 }
 
-/*__________ Initialize Function __________*/
+/*- - - - Initialize robot - - - - - -*/
 static void initialize(void) {
   //..... Boot Message .....
   printf("\nInitializing Snow-e Robot...\n");
@@ -126,24 +120,21 @@ static void initialize(void) {
   gps = wb_robot_get_device("gps");
   wb_gps_enable(gps, TIME_STEP);
 }
-/*_________________________________________*/
+/*- - - - - - - - - - - - - - - - - - - - - - - -*/
 
-
-/*__________ Autopilot Function __________*/
+/*- - - - -  Autopilot Function - - - - - - - - -*/
 static int drive_autopilot(void) {
   float Kp = 0.1;
   float Ki = 0.01;
-  float speed_max = 0;          // initial speed value
-  float distance = 0;
+  float speed_max = 0;        // initial speed value
+  float distance  = 0;
   static float speed_i = 0;   // integral value for speed
-  static float beta_i = 0;    // integral value for beta (angle)
+  static float beta_i  = 0;   // integral value for beta (angle)
   float current_speed_l = wb_motor_get_velocity(l_motor);
   float current_speed_r = wb_motor_get_velocity(r_motor);
-  
-  double speed[2]       = {0.0, 0.0};
-  //double current_time   = wb_robot_get_time();
+
+  double speed[2] = {0.0, 0.0};
   const double *north2D = wb_compass_get_values(compass);
-  //double theta          = atan2(north2D[X], north2D[Z]) * (180/M_PI); // angle (in degrees) between x and z-axis
   const double *gps_pos = wb_gps_get_values(gps);
 
   Vector north = {north2D[X], north2D[Z]};
@@ -158,11 +149,11 @@ static int drive_autopilot(void) {
   float beta_c = atan2(front.X_v, front.Z_u) * (180/M_PI);  // Compute current angle
 
   // --------------- Speed Constraints ---------------
-  if (distance < 2) {speed_max = 0.2;} // Reduce speed to 0.2m/s 
+  if (distance < 2) {speed_max = 0.2;} // Reduce speed to 0.2m/s
   else if (distance > size_x - 0.5) {speed_max = 0.2;} // Accelerate when 0.5m away from previous waypoint
   else{speed_max = 1.0;} // Increase speed to 1m/s when 0.5m away from previous waypoint
-  
-  // --------------- Calculate PID For Angle and Speed ---------------
+
+  // --------------- Calculate PID for Angle and Speed ---------------
   // For Angle
   float beta_e = ((beta_t - beta_c) * 0.01);
   beta_i = beta_i + beta_e;
@@ -173,17 +164,7 @@ static int drive_autopilot(void) {
   speed_i = speed_i + speed_e;
   float PID_speed = Kp*speed_e + Ki*speed_i;
   if (PID_speed < 0) {PID_speed = 0;}
-
-  //printf("s_e: %f s_i: %f PID: %f s_l: %f s_r: %f\n", speed_e, speed_i, PID_speed, current_speed_l, current_speed_r);
-  //printf("b_e: %f b_i: %f PID: %f Speed_abs: %f\n", beta_e, beta_i, PID_beta, speed_abs);
-  //printf("beta_e_abs: %f PID_beta: %f beta_i: %f\n", fabs(beta_e), PID_beta, beta_i);
   // --------------- End PID ---------------
-  
-    //..... Used for Calibration .....
-  //if (fmod(current_time, 10) == 0.0) {
-   // printf("(t: %.4g, %.4g)\n", X_target[target_index], Z_target[target_index]);
-   // printf("(t: %.4g, %.4g)\n", gps_pos[X], gps_pos[Z]);
-  //}
 
   //  Approach the waypoints and reset the integrals
   if (distance <= 0.05) {
@@ -196,10 +177,9 @@ static int drive_autopilot(void) {
     target_index = 1; // go back to first waypoint
     //TIME_STEP = -1; // stops simulation at last waypoint
   }
-  
+
   //..... Set Speed According to Angle.....
-  
-  if (fabs(beta_e) > 0.05){ // For angles up to 90 degrees
+  if (fabs(beta_e) > 0.05){  // For angles up to 90 degrees
     if (fabs(beta_e) > 0.9){ // For larger angles than 90 degrees
       speed_i = 0;
       beta_i = 0;
@@ -216,15 +196,13 @@ static int drive_autopilot(void) {
     speed[LEFT]  = PID_speed - beta_e;
     speed[RIGHT] = PID_speed + beta_e;
   }
-
   wb_motor_set_velocity(l_motor, speed[LEFT]);
   wb_motor_set_velocity(r_motor, speed[RIGHT]);
-  
   return TIME_STEP;
 }
-/*_________________________________________*/
+/*- - - - - - - - - - - - - - - - - - - - - - - -*/
 
-/*__________ Main Function __________*/
+/*- - - - - - - - -  Main Function - - - - - - - */
 int main(int argc, char **argv) {
   wb_robot_init();
   initialize();
