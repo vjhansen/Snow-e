@@ -1,9 +1,10 @@
-# based on: https://github.com/samialperen/boustrophedon_cellular_decomposition
+# based on:
+# - https://github.com/samialperen/boustrophedon_cellular_decomposition
 '''
     - Apply Boustrophedon Cellular Decomposition to a map
     - Engineer(s): V. J. Hansen
-    - Version 1.0.0
-    - Data: 26.05.2020
+    - Version 1.0.1
+    - Data: 28.05.2020
 '''
 
 from typing import Tuple, List
@@ -16,10 +17,13 @@ import numpy as np
 Slice = List[Tuple[int, int]] # vertical line segment
 #-------------------------------------
 def calc_connectivity(slice: np.ndarray) -> Tuple[int, Slice]:
-    """ Calculates the connectivity of a slice and returns the connected area of ​​the slice.
-    Args:       slice: rows. A slice of map.
-    Returns:    The connectivity number and connectivity parts.
-                connectivity --> total number of connected parts """
+    """
+    - "Calculates the connectivity of a slice
+        and returns the connected area of ​​the slice."
+    - Args: slice: rows. "A slice of map."
+    - Returns: The connectivity number and connectivity parts.
+        connectivity "total number of connected parts"
+    """
     connectivity = last_data = 0
     open_part = False
     connective_parts = []
@@ -36,8 +40,10 @@ def calc_connectivity(slice: np.ndarray) -> Tuple[int, Slice]:
     return connectivity, connective_parts
 #-------------------------------------
 def get_adjacency_matrix(parts_left: Slice, parts_right: Slice) -> np.ndarray:
-    """ Get adjacency matrix of 2 neighborhood slices.
-    Args: slice_left: left slice, slice_right: right slice """
+    """
+        - "Get adjacency matrix of 2 neighborhood slices"
+        - Args: slice_left: slice_right:
+    """
     adjacency_matrix = np.zeros( [len(parts_left), len(parts_right)] )
     for l, lparts in enumerate(parts_left):
         for r, rparts in enumerate(parts_right):
@@ -46,22 +52,30 @@ def get_adjacency_matrix(parts_left: Slice, parts_right: Slice) -> np.ndarray:
     return adjacency_matrix # - [L, R] Adjacency matrix.
 #-------------------------------------
 def remove_duplicates(in_list):
-    """ This function removes duplicates in the input list, where input list is composed of unhashable elements """
+    """
+        - "This function removes duplicates in the input list,
+            where input list is composed of unhashable elements"
+    """
     out_list = []
     in_list.sort()
     out_list = list(in_list for in_list, _ in itertools.groupby(in_list))
     return out_list
 #------------------------------------
 def bcd(erode_img: np.ndarray) -> Tuple[np.ndarray, int]:
-    """ Boustrophedon Cellular Decomposition
-    Args:   erode_img: [H, W], eroded map. pixel value 0 = obstacles, 1 = free space.
-    Returns:
-        [H, W], separated map.
-        crrnt_cell and seperate_img is for display purposes --> which is used to show
-        decomposed cells into a separate figure
-        all_cell_nums --> contains all cell index numbers
-        cell_bounds   --> contains all cell boundary coordinates (only y-coordinate)
-        non_nbr_cells --> contains cell index numbers of non_nbr_cells, i.e. cells which are separated by obstacles
+    """
+    Go through this.
+
+        - "Boustrophedon Cellular Decomposition"
+        - Args: erode_img: [H, W] "eroded map,
+            pixel value 0 = obstacles, 1 = free space"
+        - Returns:
+            - [H, W], "separated map"
+            - crrnt_cell and seperate_img "is for display purposes,
+                which is used to show decomposed cells into a separate figure"
+            - all_cell_nums  "contains all cell index numbers"
+            - cell_bounds    "contains all cell boundary coordinates"
+            - non_nbr_cells  "contains cell index numbers of
+                cells which are separated by obstacles"
     """
     last_connectivity = 0
     last_connectivity_parts = crrnt_cells = non_nbr_cells = []
@@ -95,13 +109,13 @@ def bcd(erode_img: np.ndarray) -> Tuple[np.ndarray, int]:
                 if (np.sum(adj_matrix[:, i]) > 1): # right slice is connected to more than one part of left slice
                     new_cells[i] = crrnt_cell
                     crrnt_cell = crrnt_cell+1
-                # - If this part of the part does not communicate with any part of the last time, it means that it happened in
+                # - If this part of the part does not communicate with any part of the last time
                 elif (np.sum(adj_matrix[:, i]) == 0):
                     new_cells[i] = crrnt_cell
                     crrnt_cell = crrnt_cell+1
             crrnt_cells = new_cells
 
-        # - Draw the partition information on the map.
+        # - Draw partition information on the map.
         for cell, slice in zip(crrnt_cells, connective_parts):
             separate_img[slice[0]:slice[1], col] = cell
         last_connectivity = connectivity
@@ -114,8 +128,8 @@ def bcd(erode_img: np.ndarray) -> Tuple[np.ndarray, int]:
             # - Cells separated by the objects are not neighbors to each other
             non_nbr_cells.append(crrnt_cells)
             # - non_nbr_cells will contain many duplicate values
-            # we get rid of duplicates at the end in this logic, all other cells must be neighbors to each other
-            # if their cell number are adjacent to each other, like cell 1 is neighbor to cell 2
+            # we get rid of duplicates at the end in this logic,
+            # all other cells must be neighbors if their cell numbers are adjacent
             for i in range(len(crrnt_cells)):
                 cell_index = crrnt_cells[i]
                 # - connective_parts and crrnt_cells contain more than one cell which are separated by the object
@@ -135,13 +149,16 @@ def disp_separate_map(separate_map, cells):
     fig_new = plt.figure()
     plt.imshow(disp_img)
 
-""" Input: cells_to_visit   --> the order of cells to visit
-    Input: cell_bounds      --> y-coordinates of each cell
-        x-coordinates will be calculated in this function based on cell number, since the 1st cell starts from the left and moves towards the right.
-    Input: Nonneighbors --> This shows cells which are separated by the objects,
-                            so these cells should have the same x-coordinates.
-"""
+
 def calculate_x_coords(x_size, y_size, cells_to_visit, cell_bounds, non_nbrs):
+    """
+        - Input: cells_to_visit "the order of cells to visit"
+        - Input: cell_bounds "y-coordinates of each cell"
+            "x-coordinates will be calculated in this function based on cell number,
+            since the 1st cell starts from the left and moves towards the right."
+        - Input: non_nbrs "This shows cells which are separated by the objects,
+                so these cells should have the same x-coordinates."
+    """
     total_cell_number = len(cells_to_visit)
     # - Find the total length of the axises
     size_x = x_size
@@ -197,14 +214,13 @@ if __name__ == '__main__':
     x_coords = calculate_x_coords(im_width, im_height, cell_nums, cell_bounds, non_nbr_cell_nums)
     y_coords = cell_bounds
 
-    # - X is the Height of the parking lot
-    X_max = (args.X-0.1)/2   # [m], these will be related to y_coords of image
-    X_min = (-args.X+0.1)/2  # [m], these will be related to y_coords of image
+    # - X is the height of the parking lot
+    X_max = (args.X-0.1)/2   # [m], these are related to y_coords of image
+    X_min = (-args.X+0.1)/2  # [m], these are related to y_coords of image
 
     # - Z is the width of the parking lot
-    Z_max = (args.Z-0.1)/2   # [m], these will be related to x_coords of image
-    Z_min = (-args.Z+0.1)/2 # [m], these will be related to x_coords of image
-    # gps = ((gps_max-gps_min)/(px_max-border_sz))*(px-border_sz)+gps_min
+    Z_max = (args.Z-0.1)/2   # [m], these are related to x_coords of image
+    Z_min = (-args.Z+0.1)/2 # [m], these are related to x_coords of image
     border_sz = 1 # border_sz size
 
     fields = ['Cell', 'Z_start', 'Z_end', 'X_start', 'X_end']
@@ -217,7 +233,7 @@ if __name__ == '__main__':
             # - data rows of csv file
             cell_idx = i+1
             # - first, middle and last y_coords are 4D
-            if (len(x_coords) > 3):
+            if (len(x_coords) > 3): # more than 3 cells (check this)**********
                 if ( (cell_idx == 1) | (cell_idx == len(x_coords)) | (cell_idx == ((len(x_coords)+1)/2)) ):
                     px_zs = x_coords[cell_idx][0]
                     px_ze = x_coords[cell_idx][-1]
@@ -241,7 +257,7 @@ if __name__ == '__main__':
                                 ((X_max-X_min)/(border_sz-im_height)) * (px_xs-border_sz)+X_max,
                                 ((X_max-X_min)/(border_sz-im_height)) * (px_xe-border_sz)+X_max ] ]
                 csvwriter.writerows(rows)
-            elif (len(x_coords) < 3):
+            elif (len(x_coords) < 3): # less than 3 cells, check this
                 if ((cell_idx != len(x_coords))):
                     px_zs = x_coords[cell_idx][0]
                     px_ze = x_coords[cell_idx][-1]

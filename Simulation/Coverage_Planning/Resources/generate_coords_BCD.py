@@ -100,7 +100,7 @@ def generate_z_s(cell, delta):
     z_s = init_z_s(cell)
     z_e = init_z_e(cell)
     num_points = generate_num_points(cell)
-    for n in range (num_points): # (num_points-1) to ensure that the snow blower doesn't get too close to obstacles
+    for n in range (num_points):
         z = (z_s) + delta*math.ceil(n/2)
         if (z >= z_e): # used to prevent Z-values going out of bounds because of delta.
             z = z_e
