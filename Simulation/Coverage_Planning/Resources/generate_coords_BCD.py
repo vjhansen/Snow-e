@@ -60,7 +60,7 @@ def generate_X_b(cell):
     X_b = init_X_b(cell)
     num_points = generate_num_points(cell)
     for n in range(num_points):
-        x = (X_b) * (0.5 * (1 + math.cos((n*math.pi)/2) - math.sin((n*math.pi)/2)))
+        x = (X_b)*(0.5*(1+math.cos((n*math.pi)/2)-math.sin((n*math.pi)/2)))
         x = round(x, 1)
         X_b_coord.append(x)
     return X_b_coord
@@ -72,7 +72,7 @@ def generate_X_t(cell):
     X_t = init_X_t(cell)
     num_points = generate_num_points(cell)
     for n in range(num_points):
-        x = (X_t) * (0.5 * (1 - math.cos((n*math.pi)/2) + math.sin((n*math.pi)/2)))
+        x = (X_t)*(0.5*(1-math.cos((n*math.pi)/2)+math.sin((n*math.pi)/2)))
         x = round(x, 1)
         X_t_coord.append(x)
     return X_t_coord
@@ -102,7 +102,7 @@ def generate_z_s(cell, delta):
     num_points = generate_num_points(cell)
     for n in range (num_points):
         z = (z_s) + delta*math.ceil(n/2)
-        if (z >= z_e): # used to prevent Z-values going out of bounds because of delta.
+        if (z >= z_e): # used to prevent Z-values going out of bounds.
             z = z_e
         z = round(z, 1)
         z_s_coord.append(z)

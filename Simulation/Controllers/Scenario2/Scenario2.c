@@ -6,8 +6,8 @@ __Project Description__
   * Scenario 2: one static obstacle with snow
 
 __Version History__
-  - Version:      1.1.0
-  - Update:       27.05.2020
+  - Version:      1.1.1
+  - Update:       28.05.2020
   - Engineer(s):  V. J. Hansen, D. Kazokas
 
 __Sensors used__
@@ -164,7 +164,10 @@ static int drive_autopilot(void) {
   double speed[2]       = {0.0, 0.0};
   double current_time   = wb_robot_get_time();
   const double *north2D = wb_compass_get_values(compass);
-  double theta          = atan2(north2D[X], north2D[Z]) * (180/M_PI); // angle (in degrees) between x and z-axis
+
+  // angle (in degrees) between x and z-axis
+  double theta          = atan2(north2D[X], north2D[Z]) * (180/M_PI);
+
   const double *gps_pos = wb_gps_get_values(gps);
 
   for (int i = 0; i < NUM_SONAR; i++) {
@@ -179,13 +182,20 @@ static int drive_autopilot(void) {
   distance = norm(&dir);
   normalize(&dir);
 
-  float beta_t = atan2(dir.X_v, dir.Z_u) * (180/M_PI);      // Compute target angle
-  float beta_c = atan2(front.X_v, front.Z_u) * (180/M_PI);  // Compute current angle
+  // Compute target angle
+  float beta_t = atan2(dir.X_v, dir.Z_u) * (180/M_PI);
+
+  // Compute current angle
+  float beta_c = atan2(front.X_v, front.Z_u) * (180/M_PI);
 
   // --------------- Speed Constraints ---------------
-  if (distance < 2) {speed_max = 0.2;} // Reduce speed to 0.2m/s
-  else if (distance > 4 - 0.5) {speed_max = 0.2;} // Accelerate when 0.5m away from previous waypoint
-  else{speed_max = 1.0;} // Increase speed to 1m/s when 0.5m away from previous waypoint
+  if (distance < 2) {speed_max = 0.2;} // Reduce speed to 0.2 m/s
+
+  // Accelerate when 0.5 m away from previous waypoint
+  else if (distance > 4 - 0.5) {speed_max = 0.2;}
+
+  // Increase speed to 1 m/s when 0.5 m away from previous waypoint
+  else{speed_max = 1.0;}
 
   // --------------- Calculate PID For Angle and Speed ---------------
   // For Angle
@@ -247,7 +257,8 @@ static int drive_autopilot(void) {
               sonar_val[SBR]  < THRESHOLD && sonar_val[SBL]  < THRESHOLD &&
               sonar_val[SFM]  < THRESHOLD && sonar_val[SBM]  < THRESHOLD &&
               sonar_val[SFML] < THRESHOLD && sonar_val[SFMR] < THRESHOLD &&
-              (fabs(gps_pos[Z]) <= fabs(saved_pos)-1.5*DELTA || fabs(gps_pos[Z]) >= fabs(saved_pos)+1.5*DELTA))  {
+              (    fabs(gps_pos[Z]) <= fabs(saved_pos)-1.5*DELTA
+                || fabs(gps_pos[Z]) >= fabs(saved_pos)+1.5*DELTA))  {
            state = NORMAL;
           }
         }
@@ -255,14 +266,16 @@ static int drive_autopilot(void) {
       else if (targets[target_index-1].Z_u <= targets[target_index].Z_u) {
         speed[LEFT]  = -PID_speed;
         speed[RIGHT] =  PID_speed;
-        if (fabs(theta) >= 179.0 && fabs(theta) <= 181.0 && gps_pos[Z] < targets[num_points-1].Z_u) {
+        if (fabs(theta) >= 179.0 && fabs(theta) <= 181.0 &&
+            gps_pos[Z] < targets[num_points-1].Z_u) {
           speed[LEFT]  = PID_speed;
           speed[RIGHT] = PID_speed;
           if (sonar_val[SFR]  < THRESHOLD && sonar_val[SFL]  < THRESHOLD &&
               sonar_val[SBR]  < THRESHOLD && sonar_val[SBL]  < THRESHOLD &&
               sonar_val[SFM]  < THRESHOLD && sonar_val[SBM]  < THRESHOLD &&
               sonar_val[SFML] < THRESHOLD && sonar_val[SFMR] < THRESHOLD &&
-              (fabs(gps_pos[Z]) <= fabs(saved_pos)-1.5*DELTA || fabs(gps_pos[Z]) >= fabs(saved_pos)+1.5*DELTA)) {
+              (    fabs(gps_pos[Z]) <= fabs(saved_pos)-1.5*DELTA
+                || fabs(gps_pos[Z]) >= fabs(saved_pos)+1.5*DELTA)) {
            state = NORMAL;
           }
         }

@@ -145,13 +145,19 @@ static int drive_autopilot(void) {
   distance = norm(&dir);
   normalize(&dir);
 
-  float beta_t = atan2(dir.X_v, dir.Z_u) * (180/M_PI);      // Compute target angle
-  float beta_c = atan2(front.X_v, front.Z_u) * (180/M_PI);  // Compute current angle
+  // Compute target angle
+  float beta_t = atan2(dir.X_v, dir.Z_u) * (180/M_PI);
+  // Compute current angle
+  float beta_c = atan2(front.X_v, front.Z_u) * (180/M_PI);
 
   // --------------- Speed Constraints ---------------
   if (distance < 2) {speed_max = 0.2;} // Reduce speed to 0.2m/s
-  else if (distance > size_x - 0.5) {speed_max = 0.2;} // Accelerate when 0.5m away from previous waypoint
-  else{speed_max = 1.0;} // Increase speed to 1m/s when 0.5m away from previous waypoint
+
+  // Accelerate when 0.5m away from previous waypoint
+  else if (distance > size_x - 0.5) {speed_max = 0.2;}
+
+  // Increase speed to 1m/s when 0.5m away from previous waypoint
+  else{speed_max = 1.0;}
 
   // --------------- Calculate PID for Angle and Speed ---------------
   // For Angle
