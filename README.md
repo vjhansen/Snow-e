@@ -3,7 +3,8 @@
 ![GitHub](https://img.shields.io/github/license/vjhansen/Snow-e?color=blue)
 
 
-## *Snow-e* - Autonomous Snow Blower Simulation using Webots
+## *Snow-e*
+## Autonomous Snow Blower Simulation
 >#### Student Project: ES-SES4000 19-20
 >#### Engineers: V. J. Hansen, D. Kazokas
 ---
