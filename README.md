@@ -1,3 +1,7 @@
+![GitHub last commit](https://img.shields.io/github/last-commit/vjhansen/Snow-e)
+![GitHub repo size](https://img.shields.io/github/repo-size/vjhansen/Snow-e)
+![GitHub](https://img.shields.io/github/license/vjhansen/Snow-e?color=blue)
+
 
 ## Autonomous Snow Blower - *Snow-e*
 >#### Student Project: ES-SES4000 19-20
@@ -16,11 +20,4 @@
 * e.g. `python3 main_BCD.py -i new_map_sc1.png 5 10 0.3  `
 
 ### Part 2 - Webots 
-* open...
-
-
----
-
-### Coverage Path Planning
-
-#### Boustrophedon Cellular Decomposition
+* add more
