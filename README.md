@@ -32,4 +32,8 @@
 ### Part 2 - Webots 
 * Go to `Snow-e/Simulation/Worlds`
 * Click on one of the `.wbt`-files. E.g. `scenario2.wbt` which includes an obstacle.
-* more
+* Collapse the `DEF Snow-e Robot` section
+* Scroll down to `controller "Scenario "`, Select `Scenario1` or `Scenario2` depending on the world you are in.
+* Click `Edit` to open the Text Editor.
+* `Build` the controller.. more here
+*
