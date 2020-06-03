@@ -9,7 +9,7 @@
 ---
 
 
-[![IMAGE ALT TEXT](http://img.youtube.com/vi/GPPK6jh8ui0/0.jpg)](http://www.youtube.com/watch?v=GPPK6jh8ui0 "Autonomous Snow Blower Simulation")
+[![IMAGE ALT TEXT](http://img.youtube.com/vi/GPPK6jh8ui0/0.jpg)](http://www.youtube.com/watch?v=GPPK6jh8ui0 "Autonomous Snow Blower Simulation (YouTube)")
 
 
 ## Run the Simulation
