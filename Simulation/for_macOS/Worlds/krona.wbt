@@ -1,0 +1,744 @@
+#VRML_SIM R2020a utf8
+WorldInfo {
+  info [
+    "World generated using the Open Street Map to Webots importer"
+    "Author: David Mansolino <david.mansolino@epfl.ch>"
+  ]
+  basicTimeStep 8
+  FPS 14
+  lineScale 1
+}
+Viewpoint {
+  orientation 0.4084678347011733 0.8687895790962006 0.27992623183328413 4.947437322686861
+  position -67.29879413133268 56.35594544510151 10.680610698457729
+  near 3
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+Floor {
+  translation 0 -0.02 0
+  size 165 225
+  appearance PBRAppearance {
+    baseColorMap ImageTexture {
+      url [
+        "textures/snow.jpg"
+      ]
+    }
+    roughness 1
+    metalness 0
+  }
+}
+ParkingLines {
+  translation -13.41 0 -20.88
+  numberOfCarParks 7
+}
+ParkingLines {
+  translation -13.12 0 -33.05
+  rotation 0 -1 0 -5.307179586466759e-06
+  numberOfCarParks 3
+}
+ParkingLines {
+  translation 7.68 0 -33.05
+  rotation 0 -1 0 -5.307179586466759e-06
+  numberOfCarParks 6
+}
+Crossroad {
+  translation 9.752189 0.01 -22.613968
+  name "crossroad(1)"
+  id "1259618798"
+  shape [
+    -3.957912 0 -2.082049
+    -4.040387 0 1.9171
+    -1.908727 0 4.04435
+    2.090244 0 3.953591
+    3.975598 0 2.048078
+    4.023821 0 -1.951631
+    -3.957912 0 -2.082049
+  ]
+  connectedRoadIDs [
+    "243662851_2"
+    "243662851_3"
+    "620482783"
+  ]
+}
+Crossroad {
+  translation 35.300949 0.01 -91.03073
+  name "crossroad(2)"
+  id "299316511"
+  shape [
+    0.013153 0 -4.472117
+    -2.908079 0 -3.39751
+    -4.462856 0 0.287957
+    -3.188357 0 3.135982
+    0.595771 0 4.432274
+    3.585585 0 -2.672748
+    0.013153 0 -4.472117
+  ]
+  connectedRoadIDs [
+    "27268928"
+    "27275113_1"
+    "27622735"
+  ]
+}
+Crossroad {
+  translation 30.64447 0.01 -43.609202
+  name "crossroad(3)"
+  id "299316513"
+  shape [
+    -1.875021 0 -4.060086
+    -1.999039 0 -0.062009
+    -2.121065 0 3.937142
+    1.877075 0 4.059137
+    3.930515 0 2.133319
+    4.064964 0 -1.864421
+    2.123056 0 -3.936068
+    -1.875021 0 -4.060086
+  ]
+  connectedRoadIDs [
+    "27275113_1"
+    "27275113_2"
+    "370292351"
+  ]
+}
+Crossroad {
+  translation 30.288871 0.01 12.112171
+  name "crossroad(4)"
+  id "299316515"
+  shape []
+  connectedRoadIDs [
+    "27275113_3"
+    "27291567"
+  ]
+}
+Crossroad {
+  translation 42.756909 0.01 38.730999
+  name "crossroad(5)"
+  id "299316520"
+  shape [
+    2.496344 0 -3.125423
+    0.114425 0 -2.233138
+    -1.855166 0 1.248343
+    -2.496344 0 3.125423
+    5.317213 0 9.366282
+    10.309901 0 3.115437
+    10.056287 0 -1.694431
+    2.496344 0 -3.125423
+  ]
+  connectedRoadIDs [
+    "27291567"
+    "728104370"
+    "728104371"
+  ]
+}
+Crossroad {
+  translation 10.116332 0.01 -6.569223
+  name "crossroad(6)"
+  id "299392789"
+  shape [
+    1.908727 0 -4.04435
+    -2.090244 0 -3.953591
+    -3.97309 0 -2.052937
+    -4.026204 0 1.94671
+    -0.026557 0 1.999824
+    3.978426 0 2.042579
+    4.021119 0 -1.957193
+    1.908727 0 -4.04435
+  ]
+  connectedRoadIDs [
+    "243662847"
+    "243662851_1"
+    "243662851_2"
+  ]
+}
+Crossroad {
+  translation 30.397176 0.01 -6.353864
+  name "crossroad(7)"
+  id "299392790"
+  shape [
+    1.983938 0 -4.007991
+    -2.01603 0 -3.991945
+    -3.978633 0 -2.042175
+    -4.02092 0 1.957602
+    -2.023426 0 3.988201
+    1.976506 0 4.011661
+    1.999966 0 0.01173
+    1.999984 0 -0.008023
+    1.983938 0 -4.007991
+  ]
+  connectedRoadIDs [
+    "243662847"
+    "27275113_2"
+    "27275113_3"
+  ]
+}
+Road {
+  translation 31.615481 0.01 -92.585506
+  name "Bussedalen"
+  id "27268928"
+  startJunction "299316511"
+  width 4
+  numberOfLanes 1
+  speedLimit 13.888889
+  lines []
+  wayPoints [
+    0 0 0
+    -5.604683 0 -2.36443
+    -10.268954 0 -3.978594
+    -14.47427 0 -5.329919
+    -18.336785 0 -6.194541
+    -21.970371 0 -6.693862
+    -27.770086 0 -6.860329
+  ]
+  startingAngle [
+    1.97001
+  ]
+  startLine [
+    "textures/road_line_dashed.png"
+    "textures/road_line_triangle.png"
+  ]
+  splineSubdivision 0
+}
+PedestrianCrossing {
+  translation 17.141212 -0.07 -97.915426
+  rotation 0 1 0 1.350577
+  name "pedestrian crossing(1)"
+  size 4 1.6
+}
+Road {
+  translation 30.288871 0.01 12.112171
+  name "Hasbergs vei"
+  id "27291567"
+  startJunction "299316515"
+  endJunction "299316520"
+  width 4
+  numberOfLanes 1
+  speedLimit 13.888889
+  lines []
+  wayPoints [
+    0 0 0
+    0.004059 0 5.067252
+    0.160203 0 7.805416
+    0.646034 0 10.84108
+    1.15541 0 12.818509
+    1.972907 0 15.19388
+    3.245115 0 17.976908
+    5.125574 0 20.731765
+    7.300419 0 23.049429
+    9.584271 0 24.987384
+    11.597668 0 26.12643
+  ]
+  startingAngle [
+    0.005865
+  ]
+  endingAngle [
+    -1.055954
+  ]
+  endLine [
+    "textures/road_line_triangle.png"
+    "textures/road_line_dashed.png"
+  ]
+  splineSubdivision 0
+}
+Road {
+  translation 52.457129 0.01 -109.784504
+  name "Rogstadbakken"
+  id "27622735"
+  endJunction "299316511"
+  width 4
+  numberOfLanes 1
+  speedLimit 13.888889
+  lines []
+  wayPoints [
+    0 0 0
+    -2.734694 0 1.552256
+    -5.51133 0 3.427891
+    -9.072883 0 6.291183
+    -12.732432 0 10.670047
+    -15.149416 0 14.769583
+    -15.356812 0 15.181342
+  ]
+  endingAngle [
+    0.466589
+  ]
+  endLine [
+    "textures/road_line_triangle.png"
+    "textures/road_line_dashed.png"
+  ]
+  splineSubdivision 0
+}
+PedestrianCrossing {
+  translation 43.384247 -0.07 -103.493321
+  rotation 0 1 0 -0.696151
+  name "pedestrian crossing(2)"
+  size 4 1.6
+}
+Road {
+  translation 14.116104 0.01 -6.526529
+  name "road(1)"
+  id "243662847"
+  startJunction "299392789"
+  endJunction "299392790"
+  width 4
+  numberOfLanes 1
+  speedLimit 13.888889
+  lines []
+  rightBorder FALSE
+  leftBorder FALSE
+  wayPoints [
+    0 0 0
+    5.292568 0 0.056492
+    12.281296 0 0.130379
+  ]
+  startingAngle [
+    -1.560123
+  ]
+  endingAngle [
+    -1.560225
+  ]
+  startLine [
+    "textures/road_line_dashed.png"
+    "textures/road_line_triangle.png"
+  ]
+  endLine [
+    "textures/road_line_triangle.png"
+    "textures/road_line_dashed.png"
+  ]
+  splineSubdivision 0
+}
+Road {
+  translation 13.751898 0.01 -22.565744
+  name "road(3)"
+  id "620482783"
+  startJunction "1259618798"
+  width 4
+  numberOfLanes 1
+  speedLimit 27.777778
+  lines []
+  rightBorder FALSE
+  leftBorder FALSE
+  wayPoints [
+    0 0 0
+    5.213902 0 0.062863
+  ]
+  startingAngle [
+    -1.55874
+  ]
+  startLine [
+    "textures/road_line_dashed.png"
+    "textures/road_line_triangle.png"
+  ]
+  splineSubdivision 0
+}
+Road {
+  translation 72.229611 0.01 39.180463
+  name "Hasbergs vei(1)"
+  id "728104370"
+  endJunction "299316520"
+  width 4
+  numberOfLanes 1
+  speedLimit 13.888889
+  lines []
+  wayPoints [
+    0 0 0
+    -7.926541 0 0.121328
+    -13.296886 0 0.050851
+    -17.828419 0 -0.094567
+    -19.310741 0 -0.139746
+  ]
+  endingAngle [
+    1.518117
+  ]
+  endLine [
+    "textures/road_line_triangle.png"
+  ]
+  splineSubdivision 0
+}
+Road {
+  translation 50.570466 0.01 44.971859
+  name "Hasbergs vei(2)"
+  id "728104371"
+  startJunction "299316520"
+  width 8
+  numberOfForwardLanes 2
+  speedLimit 13.888889
+  wayPoints [
+    0 0 0
+    1.595612 0 1.274451
+    6.616358 0 3.063388
+    12.24826 0 5.124833
+    18.033352 0 7.296173
+  ]
+  startingAngle [
+    -0.896835
+  ]
+  startLine [
+    "textures/road_line_dashed.png"
+    "textures/road_line_dashed.png"
+  ]
+  splineSubdivision 0
+}
+Road {
+  translation 34.004656 0.01 -87.246602
+  name "Hasbergs vei(3)"
+  id "27275113_1"
+  startJunction "299316511"
+  endJunction "299316513"
+  width 4
+  numberOfLanes 1
+  speedLimit 13.888889
+  lines []
+  wayPoints [
+    0 0 0
+    -0.02429 0 0.070906
+    -0.74342 0 3.77533
+    -1.416632 0 8.147522
+    -2.181705 0 15.249147
+    -2.725593 0 24.2419
+    -3.0554 0 33.811697
+    -3.236169 0 39.639323
+  ]
+  startingAngle [
+    0.330032
+  ]
+  endingAngle [
+    0.031009
+  ]
+  startLine [
+    "textures/road_line_dashed.png"
+    "textures/road_line_triangle.png"
+  ]
+  endLine [
+    "textures/road_line_triangle.png"
+    "textures/road_line_dashed.png"
+  ]
+  splineSubdivision 0
+}
+Road {
+  translation -16.048275 0.01 -6.916678
+  name "road(4)"
+  id "243662851_1"
+  endJunction "299392789"
+  width 4
+  numberOfLanes 1
+  speedLimit 27.777778
+  lines []
+  rightBorder FALSE
+  leftBorder FALSE
+  wayPoints [
+    0 0 0
+    22.164959 0 0.294342
+  ]
+  endingAngle [
+    -1.557518
+  ]
+  endLine [
+    "textures/road_line_triangle.png"
+    "textures/road_line_dashed.png"
+  ]
+  splineSubdivision 0
+}
+Road {
+  translation 30.522475 0.01 -39.611062
+  name "Hasbergs vei(4)"
+  id "27275113_2"
+  startJunction "299316513"
+  endJunction "299392790"
+  width 4
+  numberOfLanes 1
+  speedLimit 13.888889
+  lines []
+  wayPoints [
+    0 0 0
+    -0.121728 0 3.989383
+    -0.153131 0 26.319177
+    -0.141345 0 29.25723
+  ]
+  startingAngle [
+    0.030503
+  ]
+  endingAngle [
+    -0.004012
+  ]
+  startLine [
+    "textures/road_line_dashed.png"
+    "textures/road_line_triangle.png"
+  ]
+  endLine [
+    "textures/road_line_triangle.png"
+    "textures/road_line_dashed.png"
+  ]
+  splineSubdivision 0
+}
+PedestrianCrossing {
+  translation 30.369344 -0.07 -13.291885
+  rotation 0 1 0 0.004012
+  name "pedestrian crossing(3)"
+  size 4 1.6
+}
+Road {
+  translation 30.373716 0.01 -2.353933
+  name "Hasbergs vei(5)"
+  id "27275113_3"
+  startJunction "299392790"
+  endJunction "299316515"
+  width 4
+  numberOfLanes 1
+  speedLimit 13.888889
+  lines []
+  wayPoints [
+    0 0 0
+    -0.084845 0 14.466104
+  ]
+  startingAngle [
+    0.005865
+  ]
+  endingAngle [
+    0.005865
+  ]
+  startLine [
+    "textures/road_line_dashed.png"
+    "textures/road_line_triangle.png"
+  ]
+  splineSubdivision 0
+}
+Road {
+  translation 10.025573 0.01 -10.568193
+  name "road(5)"
+  id "243662851_2"
+  startJunction "299392789"
+  endJunction "1259618798"
+  width 4
+  numberOfLanes 1
+  speedLimit 27.777778
+  lines []
+  rightBorder FALSE
+  leftBorder FALSE
+  wayPoints [
+    0 0 0
+    -0.182626 0 -8.046805
+  ]
+  startingAngle [
+    3.118901
+  ]
+  endingAngle [
+    3.118901
+  ]
+  startLine [
+    "textures/road_line_dashed.png"
+    "textures/road_line_triangle.png"
+  ]
+  endLine [
+    "textures/road_line_triangle.png"
+    "textures/road_line_dashed.png"
+  ]
+  splineSubdivision 0
+}
+Road {
+  translation 5.753039 0.01 -22.696442
+  name "road(6)"
+  id "243662851_3"
+  startJunction "1259618798"
+  width 4
+  numberOfLanes 1
+  speedLimit 27.777778
+  lines []
+  rightBorder FALSE
+  leftBorder FALSE
+  wayPoints [
+    0 0 0
+    -19.135425 0 -0.394629
+  ]
+  startingAngle [
+    1.591416
+  ]
+  startLine [
+    "textures/road_line_dashed.png"
+    "textures/road_line_triangle.png"
+  ]
+  splineSubdivision 0
+}
+SimpleBuilding {
+  translation 58.5 0 87.8
+  name "Krona"
+  corners [
+    0 0
+    -0.27 -27.04
+    -40.35 -26.65
+    -40.45 -36.95
+    -37.88 -37.05
+    -37.96 -45.57
+    -38.38 -89.16
+    -94.78 -88.61
+    -94.3 -40.27
+    -93.97 -6.81
+    -54.65 -7.19
+    -54.57 1.56
+    -41.7 1.44
+    -41.71 0.4
+  ]
+  wallType "glass highrise"
+  roofType "gravel"
+  roofShape "flat roof"
+}
+SimpleBuilding {
+  translation -61.63 0 -3.13
+  name "building(3)"
+  corners [
+    0 0
+    -3.37 18.11
+    -6.54 17.53
+    -7.17 20.92
+    -18.63 18.79
+    -13.82 -7.06
+    18.32 -7.75
+    18.48 -0.4
+  ]
+  wallType "classic building"
+  roofShape "flat roof"
+}
+SimpleBuilding {
+  translation -38.09 0 -23.53
+  name "building(4)"
+  corners [
+    0 0
+    -4.53 -0.66
+    -4.7 2.32
+    -23.52 1.2
+    -23.73 2.55
+    -20.51 3.04
+    -21.13 7.02
+    -24.35 6.52
+    -25.14 11.57
+    -35.37 9.98
+    -32.63 -7.61
+    -4.22 -5.92
+    -4.26 -5.06
+    0.63 -4.36
+  ]
+  wallType "old brick building"
+  roofShape "flat roof"
+}
+SimpleBuilding {
+  translation -62.7 0 -90.8
+  name "building(6)"
+  corners [
+    0 0
+    3.96 -2.25
+    38.88 -0.75
+    38.43 9.73
+    10.32 8.51
+    9.51 15.06
+    31.99 16.81
+    32.19 14.12
+    41.14 14.81
+    40.48 23.33
+    31.59 22.65
+    31.02 29.94
+    7.89 28.13
+    5.93 43.92
+    21.95 45.9
+    21.38 50.52
+    7.38 48.8
+    6.84 53.13
+    4.82 52.88
+    4.12 58.48
+    -7.08 57.1
+  ]
+  wallType "glass highrise"
+  roofShape "flat roof"
+}
+SimpleBuilding {
+  translation -11.78 0 -69.05
+  name "Kiwi"
+  corners [
+    0 0
+    -0.71 20.75
+    26.54 21.67
+    26.06 35.69
+    -9.19 34.49
+    -8 -0.27
+  ]
+  wallType "residential building"
+  roofShape "flat roof"
+}
+SimpleBuilding {
+  translation 13.25 0 -90.34
+  name "building(8)"
+  corners [
+    0 0
+    -0.47 13.57
+    -17.63 12.99
+    -17.71 15.21
+    -23.76 15
+    -23.68 12.78
+    -27.76 12.64
+    -27.3 -0.93
+  ]
+  wallType "concrete building"
+  roofShape "flat roof"
+}
+SimpleBuilding {
+  translation 15.16 0 -51.57
+  name "building(9)"
+  corners [
+    0 0
+    -13.21 -0.45
+    -13.03 -5.68
+    -16 -5.77
+    -15.81 -11.12
+    -12.66 -11.01
+    -12.21 -24.24
+    0.81 -23.8
+  ]
+  wallType "red and white building"
+  roofShape "flat roof"
+}
+SimpleBuilding {
+  translation 55.82 0 8.62
+  name "building(10)"
+  corners [
+    0 0, 1.47 0.92, 3.42 3.24, 4.55 6.05, 4.76 9.06, 4.03 11.99, 2.42 14.55, 0.1 16.49, -2.71 17.62, -5.73 17.83, -8.67 17.1, -11.24 15.5, -13.19 13.18, -14.32 10.37, -14.53 7.36, -13.79 4.42, -12.19 1.87, -9.86 -0.08, -7.05 -1.21, -5.32 -1.33, -5.08 -4.07, -11.89 -4.66, -11.67 -7.18, -0.98 -6.26, -0.27 -14.41, -11.67 -15.4, -11 -23, -8.17 -22.75, -7.82 -26.78, 9.9 -25.24, 9.55 -21.22, 11.69 -21.03, 10.12 -3.03, 6.19 -3.37, 5.85 0.51
+  ]
+  wallType "glass highrise"
+  roofShape "flat roof"
+}
+DEF parking Transform {
+  translation -16 0 -8
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColorMap ImageTexture {
+          url [
+            "textures/light_asphalt.jpg"
+          ]
+        }
+        roughness 1
+        metalness 0
+        textureTransform TextureTransform {
+          scale 38 38
+        }
+      }
+      geometry IndexedFaceSet {
+        coord Coordinate {
+          point [
+            0 -0.01 0
+            0.95 -0.01 -25.41
+            37.75 -0.01 -24.1
+            38.08 -0.01 -6.96
+            29.36 -0.01 -6.89
+            29.52 -0.01 3.48
+            -0.02 -0.01 3.63
+            0 -0.01 0
+          ]
+        }
+        ccw FALSE
+        coordIndex [
+          0, 1, 2, 3, 4, 5, 6, 7, -1
+        ]
+      }
+      castShadows FALSE
+    }
+  ]
+}
