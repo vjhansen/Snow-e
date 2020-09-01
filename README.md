@@ -4,8 +4,10 @@
 
 
 ## Snow-e: Autonomous Snow Blower Simulation
->#### Student Project: SES4000 19-20
->#### Engineers: V. J. Hansen, D. Kazokas
+
+Student Project in SES4000 2019-20.
+Engineers: V. J. Hansen, D. Kazokas.
+
 ---
 
 
