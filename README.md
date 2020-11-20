@@ -4,9 +4,9 @@
 
 
 ## Snow-e: Autonomous Snow Blower Simulation
-
-Student Project in SES4000 2019-20.
-Engineers: V. J. Hansen, D. Kazokas.
+* Autonomous Snow Blower Simulation in Webots. 
+* Coverage Path Planning based on Boustrophedon Cell Decomposition.
+* Student Project in Systems Engineering 2019-20.
 
 ---
 
