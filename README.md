@@ -4,7 +4,7 @@
 
 
 ## Snow-e: Autonomous Snow Blower Simulation
-* Autonomous Snow Blower Simulation in Webots. 
+* Autonomous Snow Blower Simulation in [Webots](https://github.com/cyberbotics/webots). 
 * Coverage Path Planning based on Boustrophedon Cell Decomposition.
 * Student Project in Systems Engineering 2019-20.
 
