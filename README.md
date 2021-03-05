@@ -7,11 +7,8 @@
 * Autonomous Snow Blower Simulation in [Webots](https://github.com/cyberbotics/webots). 
 * Coverage Path Planning based on Boustrophedon Cell Decomposition.
 * Student Project in Systems Engineering 2019-20.
+* [Run the simulation in Webots](Simulation/run_sim.md)
 
 ---
 
 [![IMAGE ALT TEXT](/Simulation/snow-e_sim.gif)](http://www.youtube.com/watch?v=GPPK6jh8ui0 "Autonomous Snow Blower Simulation (YouTube)")
-
-----
-
-### [Run the simulation in Webots](Simulation/run_sim.md)
