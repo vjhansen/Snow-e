@@ -5,7 +5,7 @@
 
 ## Snow-e: Autonomous Snow Blower Simulation
 * Autonomous Snow Blower Simulation in [Webots](https://github.com/cyberbotics/webots). 
-* Coverage Path Planning based on Boustrophedon Cell Decomposition.
+* Coverage Path Planning based on [Boustrophedon Cellular Decomposition](https://link.springer.com/article/10.1023/A:1008958800904).
 * Student Project in Systems Engineering 2019-20.
 * [Run the simulation in Webots](Simulation/run_sim.md)
 
