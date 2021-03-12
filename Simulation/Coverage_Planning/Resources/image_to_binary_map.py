@@ -1,33 +1,38 @@
-# - Create binary map from image
-## python3 image_to_binary_map.py --image sim_lot.png
-
+"""
+Create binary map from image
+python3 image_to_binary_map.py --image sim_lot.png
+"""
 # Engineer(s): V. J. Hansen
-# Version: 1.4
-# Date: 28.05.2020
+# Version: 1.4.5
+# Date: 12.03.2021
 
-import cv2, argparse, os
+
+import argparse
+import os
+import cv2
 import numpy as np
 
-# - initialize the list of reference point
 ref_point = []
-
-def shape_selection(event, x, y, flags, param):
-    # grab references to the global variables
-    global ref_point, crop
+def shape_selection(event, x_pos, y_pos, flags, param):
+    """
+    Select obstacle
+    """
+    # - initialize the list of reference point
+    global ref_point
     # left mouse button clicked, record the starting (x, y)-coordinates
     if event == cv2.EVENT_LBUTTONDOWN:
-        ref_point = [(x, y)]
+        ref_point = [(x_pos, y_pos)]
 
     # left mouse button released
     elif event == cv2.EVENT_LBUTTONUP:
         # record the ending (x, y)-coordinates
-        ref_point.append((x, y))
+        ref_point.append((x_pos, y_pos))
         # draw a rectangle around the region of interest (roi)
-        x1, y1 = ref_point[0]
-        x2, y2 = ref_point[1]
-        roi = image[y1:y2, x1:x2]
+        x_1, y_1 = ref_point[0]
+        x_2, y_2 = ref_point[1]
+        roi = image[y_1:y_2, x_1:x_2]
         cv2.rectangle(image, ref_point[0], ref_point[1], (0, 0, 0), -10)
-        white_bg[y1:y2, x1:x2] = roi
+        white_bg[y_1:y_2, x_1:x_2] = roi
         cv2.imshow("image", image)
 
 ap = argparse.ArgumentParser()
@@ -70,13 +75,13 @@ while True:
         resized_img = cv2.resize(white_bg, (251, 221)) # resize image
         # add black border to resized image
         # (the border is needed for the BCD to set the boundary of our area)
-        bordersize = 1
+        BORDER_SZ = 1
         border = cv2.copyMakeBorder(
                         resized_img,
-                        top = bordersize,
-                        bottom = bordersize,
-                        left = bordersize,
-                        right = bordersize,
+                        top = BORDER_SZ,
+                        bottom = BORDER_SZ,
+                        left = BORDER_SZ,
+                        right = BORDER_SZ,
                         borderType = cv2.BORDER_CONSTANT,
                         value = [0,0,0] # black color
         )

@@ -3,16 +3,20 @@
 '''
     - Apply Boustrophedon Cellular Decomposition to a map
     - Engineer(s): V. J. Hansen
-    - Version 1.0.3
-    - Data: 28.05.2020
+    - Version 1.0.4
+    - Data: 12.03.2021
 '''
 
-from typing import Tuple, List
-from matplotlib import pyplot as plt
-import csv, os, random, itertools
-import cv2 # openCV
+
+import csv
+import os
+import itertools
 import argparse
+from typing import Tuple, List
+import cv2
 import numpy as np
+from matplotlib import pyplot as plt
+
 #-------------------------------------
 Slice = List[Tuple[int, int]] # vertical line segment
 #-------------------------------------
@@ -28,10 +32,10 @@ def calc_connectivity(slice: np.ndarray) -> Tuple[int, Slice]:
     open_part = False
     connective_parts = []
     for i, data in enumerate(slice):
-        if (last_data == 0 and data == 1):
+        if last_data == 0 and data == 1:
             open_part = True
             start_point = i
-        elif (last_data == 1 and data == 0 and open_part):
+        elif last_data == 1 and data == 0 and open_part:
             open_part = False
             connectivity += 1
             end_point = i
@@ -47,7 +51,7 @@ def get_adjacency_matrix(parts_left: Slice, parts_right: Slice) -> np.ndarray:
     adjacency_matrix = np.zeros( [len(parts_left), len(parts_right)] )
     for l, lparts in enumerate(parts_left):
         for r, rparts in enumerate(parts_right):
-            if (min(lparts[1], rparts[1]) - max(lparts[0], rparts[0]) > 0):
+            if min(lparts[1], rparts[1]) - max(lparts[0], rparts[0]) > 0:
                 adjacency_matrix[l, r] = 1
     return adjacency_matrix # - [L, R] Adjacency matrix.
 #-------------------------------------
@@ -82,7 +86,7 @@ def bcd(erode_img: np.ndarray) -> Tuple[np.ndarray, int]:
     for col in range(erode_img.shape[1]):
         crrnt_slice = erode_img[:, col]
         connectivity, connective_parts = calc_connectivity(crrnt_slice)
-        if (last_connectivity == 0):
+        if last_connectivity == 0:
             crrnt_cells = []
             # - Slice intersects with the object for the first time
             for i in range(connectivity):
@@ -90,7 +94,7 @@ def bcd(erode_img: np.ndarray) -> Tuple[np.ndarray, int]:
                  # - Creating different cells on the
                  #      same column which are seperated by the object(s)
                 crrnt_cell += 1
-        elif (connectivity == 0):
+        elif connectivity == 0:
             crrnt_cells = []
             continue
         else:
@@ -98,12 +102,12 @@ def bcd(erode_img: np.ndarray) -> Tuple[np.ndarray, int]:
                                                 connective_parts)
             new_cells = [0] * len(connective_parts)
             for i in range(adj_matrix.shape[0]):
-                if (np.sum(adj_matrix[i, :]) == 1):
+                if np.sum(adj_matrix[i, :]) == 1:
                     new_cells[np.argwhere(adj_matrix[i,:])[0][0]]=crrnt_cells[i]
                 # - If a previous part is now connected to multiple parts,
                 #       it means that IN has occurred.
                 # Left slice is connected to more than one part of right slice
-                elif (np.sum(adj_matrix[i, :]) > 1):
+                elif np.sum(adj_matrix[i, :]) > 1:
                     for idx in np.argwhere(adj_matrix[i, :]):
                         new_cells[idx[0]] = crrnt_cell
                         crrnt_cell = crrnt_cell+1
@@ -111,11 +115,11 @@ def bcd(erode_img: np.ndarray) -> Tuple[np.ndarray, int]:
                 # - If a part is now connected to the previous multiple parts,
                 #       it means that OUT has occurred.
                 # - Right slice is connected to more than one part of left slice
-                if (np.sum(adj_matrix[:, i]) > 1):
+                if np.sum(adj_matrix[:, i]) > 1:
                     new_cells[i] = crrnt_cell
                     crrnt_cell = crrnt_cell+1
                 # - If this part does not communicate with any previous part
-                elif (np.sum(adj_matrix[:, i]) == 0):
+                elif np.sum(adj_matrix[:, i]) == 0:
                     new_cells[i] = crrnt_cell
                     crrnt_cell = crrnt_cell+1
             crrnt_cells = new_cells
@@ -125,11 +129,11 @@ def bcd(erode_img: np.ndarray) -> Tuple[np.ndarray, int]:
             separate_img[slice[0]:slice[1], col] = cell
         last_connectivity = connectivity
         last_connectivity_parts = connective_parts
-        if (len(crrnt_cells) == 1):    # - no object in this cell
+        if len(crrnt_cells) == 1:    # - no object in this cell
             cell_index = crrnt_cell-1  # - cell index starts from 1
             cell_bounds.setdefault(cell_index,[])
             cell_bounds[cell_index].append(connective_parts)
-        elif (len(crrnt_cells) > 1):    # - Cells separated by object
+        elif len(crrnt_cells) > 1:    # - Cells separated by object
             # - Cells separated by the objects are not neighbors to each other
             non_nbr_cells.append(crrnt_cells)
             """
@@ -160,11 +164,11 @@ def disp_separate_map(separate_map, cells):
     random_colors = np.random.randint(0, 255, [cells, 3])
     for cell_id in range(1, cells):
         disp_img[separate_map == cell_id, :] = random_colors[cell_id, :]
-    fig_new = plt.figure()
+    plt.figure()
     plt.imshow(disp_img)
 
 #-------------------------------------
-def calculate_x_coords(x_size, y_size, cells_to_visit, cell_bounds, non_nbrs):
+def calculate_x_coords(cells_to_visit, cell_bounds, non_nbrs):
     """
         - Input: (cells_to_visit) - the order of cells to visit
         - Input: (cell_bounds) - y-coordinates of each cell,
@@ -176,24 +180,20 @@ def calculate_x_coords(x_size, y_size, cells_to_visit, cell_bounds, non_nbrs):
     """
     total_cell_number = len(cells_to_visit)
     # - Find the total length of the axises
-    size_x = x_size
-    size_y = y_size
     # - Calculate x-coordinates of each cell
     cells_x_coords = {}
     width_accum_prev = 0
     cell_idx = 1
-    while (cell_idx <= total_cell_number):
+    while cell_idx <= total_cell_number:
         for sub_nbr in non_nbrs:
             # - (crrnt_cell), i.e. cell_idx is divided by the object(s)
-            if (sub_nbr[0] == cell_idx):
+            if sub_nbr[0] == cell_idx:
                  # - Contains how many cells are in the same vertical line
                 separated_cell_number = len(sub_nbr)
                 width_crrnt_cell = len(cell_bounds[cell_idx])
                 for j in range(separated_cell_number):
-                    """
-                    All cells separated by the object(s) in this vertical line
-                        have the same x-coordinates
-                    """
+                    # All cells separated by the object(s) in this vertical line
+                    #   have the same x-coordinates
                     cells_x_coords[cell_idx+j] = list(range(width_accum_prev,
                                             width_crrnt_cell+width_accum_prev))
                 width_accum_prev += width_crrnt_cell
@@ -220,7 +220,7 @@ if __name__ == '__main__':
     """
     We need a binary image: 1 represents free space, 0 represents objects/walls
     """
-    if (len(original_map.shape) > 2):
+    if len(original_map.shape) > 2:
         print("Map image is converted to binary")
         single_ch_map = original_map[:, :, 0]
         _, binary_map = cv2.threshold(single_ch_map, 127, 1, cv2.THRESH_BINARY)
@@ -236,8 +236,7 @@ if __name__ == '__main__':
 #-----------------------------------------------
     im_width  = original_map.shape[1]
     im_height = original_map.shape[0]
-    x_coords  = calculate_x_coords(im_width, im_height, cell_nums,
-                cell_bounds, non_nbr_cell_nums)
+    x_coords  = calculate_x_coords(cell_nums, cell_bounds, non_nbr_cell_nums)
     y_coords = cell_bounds
 
     # - X is the height of the parking lot
@@ -247,86 +246,86 @@ if __name__ == '__main__':
     # - Z is the width of the parking lot
     Z_max = (args.Z-0.1)/2   # [m], these are related to x_coords of image
     Z_min = (-args.Z+0.1)/2  # [m], these are related to x_coords of image
-    border_sz = 1 # border size
+    BORDER_SZ = 1 # border size
 
     fields = ['Cell', 'Z_start', 'Z_end', 'X_start', 'X_end']
-    filename = "BCD_coordinates.csv"
+    FILENAME = "BCD_coordinates.csv"
     # - Writing to .csv-file
-    with open(filename, 'w') as csvfile:
+    with open(FILENAME, 'w') as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow(fields)
         for i in range(len(x_coords)):
             # - data rows of csv file
             cell_idx = i+1
             # - first, middle and last y_coords are 4D
-            if (len(x_coords) > 3): # more than 3 cells
-                if ( (cell_idx == 1) | (cell_idx == len(x_coords))
-                                     | (cell_idx == ((len(x_coords)+1)/2)) ):
+            if len(x_coords) > 3: # more than 3 cells
+                if  ((cell_idx == 1) | (cell_idx == len(x_coords))
+                                     | (cell_idx == ((len(x_coords)+1)/2))) :
                     px_zs = x_coords[cell_idx][0]
                     px_ze = x_coords[cell_idx][-1]
                     px_xs = y_coords[cell_idx][0][0][1]
                     px_xe = y_coords[cell_idx][0][0][0]
                     rows = [[   cell_nums[i],
-                                ((Z_max-Z_min)/(im_width-border_sz)) \
-                                    * (px_zs-border_sz)+Z_min,
-                                ((Z_max-Z_min)/(im_width-border_sz)) \
-                                    * (px_ze-border_sz)+Z_min,
+                                ((Z_max-Z_min)/(im_width-BORDER_SZ)) \
+                                    * (px_zs-BORDER_SZ)+Z_min,
+                                ((Z_max-Z_min)/(im_width-BORDER_SZ)) \
+                                    * (px_ze-BORDER_SZ)+Z_min,
                                 # - the y-axis is inverted,
                                 # i.e. goes from im_height (bottom) to 0 (top)
-                                ((X_max-X_min)/(border_sz-im_height)) \
-                                    * (px_xs-border_sz)+X_max,
-                                ((X_max-X_min)/(border_sz-im_height)) \
-                                    * (px_xe-border_sz)+X_max ] ]
-                elif ( (cell_idx != 1) | (cell_idx != len(x_coords)) ):
+                                ((X_max-X_min)/(BORDER_SZ-im_height)) \
+                                    * (px_xs-BORDER_SZ)+X_max,
+                                ((X_max-X_min)/(BORDER_SZ-im_height)) \
+                                    * (px_xe-BORDER_SZ)+X_max ] ]
+                elif  (cell_idx != 1) | (cell_idx != len(x_coords)) :
                     px_zs = x_coords[cell_idx][0]
                     px_ze = x_coords[cell_idx][-1]
                     px_xs = y_coords[cell_idx][0][1]
                     px_xe = y_coords[cell_idx][0][0]
                     rows = [ [  cell_nums[i],
-                                ((Z_max-Z_min)/(im_width-border_sz)) \
-                                    * (px_zs-border_sz)+Z_min,
-                                ((Z_max-Z_min)/(im_width-border_sz)) \
-                                    * (px_ze-border_sz)+Z_min,
+                                ((Z_max-Z_min)/(im_width-BORDER_SZ)) \
+                                    * (px_zs-BORDER_SZ)+Z_min,
+                                ((Z_max-Z_min)/(im_width-BORDER_SZ)) \
+                                    * (px_ze-BORDER_SZ)+Z_min,
                                 # - the y-axis is inverted,
                                 # i.e. goes from im_height (bottom) to 0 (top)
-                                ((X_max-X_min)/(border_sz-im_height)) \
-                                    * (px_xs-border_sz)+X_max,
-                                ((X_max-X_min)/(border_sz-im_height)) \
-                                    * (px_xe-border_sz)+X_max ] ]
+                                ((X_max-X_min)/(BORDER_SZ-im_height)) \
+                                    * (px_xs-BORDER_SZ)+X_max,
+                                ((X_max-X_min)/(BORDER_SZ-im_height)) \
+                                    * (px_xe-BORDER_SZ)+X_max ] ]
                 csvwriter.writerows(rows)
-            elif (len(x_coords) < 3): # less than 3 cells
-                if ((cell_idx != len(x_coords))):
+            elif len(x_coords) < 3: # less than 3 cells
+                if cell_idx != len(x_coords):
                     px_zs = x_coords[cell_idx][0]
                     px_ze = x_coords[cell_idx][-1]
                     px_xs = y_coords[cell_idx][0][1]
                     px_xe = y_coords[cell_idx][0][0]
                     rows = [[   cell_nums[i],
-                                ((Z_max-Z_min)/(im_width-border_sz)) \
-                                    * (px_zs-border_sz)+Z_min,
-                                ((Z_max-Z_min)/(im_width-border_sz)) \
-                                    * (px_ze-border_sz)+Z_min,
+                                ((Z_max-Z_min)/(im_width-BORDER_SZ)) \
+                                    * (px_zs-BORDER_SZ)+Z_min,
+                                ((Z_max-Z_min)/(im_width-BORDER_SZ)) \
+                                    * (px_ze-BORDER_SZ)+Z_min,
                                 # - the y-axis is inverted,
                                 # i.e. goes from im_height (bottom) to 0 (top)
-                                ((X_max-X_min)/(border_sz-im_height)) \
-                                    * (px_xs-border_sz)+X_max,
-                                ((X_max-X_min)/(border_sz-im_height)) \
-                                    * (px_xe-border_sz)+X_max ] ]
+                                ((X_max-X_min)/(BORDER_SZ-im_height)) \
+                                    * (px_xs-BORDER_SZ)+X_max,
+                                ((X_max-X_min)/(BORDER_SZ-im_height)) \
+                                    * (px_xe-BORDER_SZ)+X_max ] ]
                 else:
                     px_zs = x_coords[cell_idx][0]
                     px_ze = x_coords[cell_idx][-1]
                     px_xs = y_coords[cell_idx][0][0][1]
                     px_xe = y_coords[cell_idx][0][0][0]
                     rows = [[   cell_nums[i],
-                                ((Z_max-Z_min)/(im_width-border_sz)) \
-                                    * (px_zs-border_sz)+Z_min,
-                                ((Z_max-Z_min)/(im_width-border_sz)) \
-                                    * (px_ze-border_sz)+Z_min,
+                                ((Z_max-Z_min)/(im_width-BORDER_SZ)) \
+                                    * (px_zs-BORDER_SZ)+Z_min,
+                                ((Z_max-Z_min)/(im_width-BORDER_SZ)) \
+                                    * (px_ze-BORDER_SZ)+Z_min,
                                 # - the y-axis is inverted,
                                 # i.e. goes from im_height (bottom) to 0 (top)
-                                ((X_max-X_min)/(border_sz-im_height)) \
-                                    * (px_xs-border_sz)+X_max,
-                                ((X_max-X_min)/(border_sz-im_height)) \
-                                    * (px_xe-border_sz)+X_max ] ]
+                                ((X_max-X_min)/(BORDER_SZ-im_height)) \
+                                    * (px_xs-BORDER_SZ)+X_max,
+                                ((X_max-X_min)/(BORDER_SZ-im_height)) \
+                                    * (px_xe-BORDER_SZ)+X_max ] ]
                 csvwriter.writerows(rows)
     plt.waitforbuttonpress(1)
     input("Press any key to close all figures.")

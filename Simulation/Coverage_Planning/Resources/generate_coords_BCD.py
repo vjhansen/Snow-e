@@ -4,18 +4,17 @@ Generate waypoints for coverage path planning
 '''
 # Snow-e
 # Engineer(s): V. J. Hansen
-# 28.05.2020
-# V 1.4.1
+# 12.03.2021
+# V 1.4.5
 
-#-----------------------------------------------
-import math, csv
-import numpy as np
+import math
+import csv
 import argparse
 
 with open('BCD_coordinates.csv') as csvread_file:
     readCSV = csv.reader(csvread_file, delimiter=',')
-    X_b_coord = []
-    X_t_coord = []
+    x_b_coord = []
+    x_t_coord = []
     z_s_coord = []
     z_e_coord = []
     for row in readCSV:
@@ -25,16 +24,16 @@ with open('BCD_coordinates.csv') as csvread_file:
         X_end   = row[4]
         z_s_coord.append(z_start)
         z_e_coord.append(z_end)
-        X_b_coord.append(X_start)
-        X_t_coord.append(X_end)
+        x_b_coord.append(X_start)
+        x_t_coord.append(X_end)
 
-def init_X_b(cell):
-    X_b = float(X_b_coord[cell])
-    return X_b
+def init_x_b(cell):
+    x_b = float(x_b_coord[cell])
+    return x_b
 
-def init_X_t(cell):
-    X_t = float(X_t_coord[cell])
-    return X_t
+def init_x_t(cell):
+    x_t = float(x_t_coord[cell])
+    return x_t
 
 def init_z_s(cell):
     z_s = float(z_s_coord[cell])
@@ -48,86 +47,98 @@ def generate_num_points(cell):
     z_s = init_z_s(cell)
     z_e = init_z_e(cell)
     num_points = 0
-    while (z_s <= z_e):
+    while z_s <= z_e:
         z_s += args.delta
         num_points += 2
     return num_points
 
-# Pattern:
-# 0, 0, Xb, Xb, 0, 0, Xb, Xb
-def generate_X_b(cell):
-    X_b_coord = []
-    X_b = init_X_b(cell)
+
+def generate_x_b(cell):
+    """
+    Pattern:
+    0, 0, Xb, Xb, 0, 0, Xb, Xb
+    """
+    x_b_coord = []
+    x_b = init_x_b(cell)
     num_points = generate_num_points(cell)
     for n in range(num_points):
-        x = (X_b)*(0.5*(1+math.cos((n*math.pi)/2)-math.sin((n*math.pi)/2)))
+        x = (x_b)*(0.5*(1+math.cos((n*math.pi)/2)-math.sin((n*math.pi)/2)))
         x = round(x, 1)
-        X_b_coord.append(x)
-    return X_b_coord
+        x_b_coord.append(x)
+    return x_b_coord
 
-# Pattern:
-# Xt, Xt, 0, 0, Xt, Xt, 0, 0
-def generate_X_t(cell):
-    X_t_coord = []
-    X_t = init_X_t(cell)
+
+def generate_x_t(cell):
+    """
+    Pattern:
+    Xt, Xt, 0, 0, Xt, Xt, 0, 0
+    """
+    x_t_coord = []
+    x_t = init_x_t(cell)
     num_points = generate_num_points(cell)
     for n in range(num_points):
-        x = (X_t)*(0.5*(1-math.cos((n*math.pi)/2)+math.sin((n*math.pi)/2)))
+        x = (x_t)*(0.5*(1-math.cos((n*math.pi)/2)+math.sin((n*math.pi)/2)))
         x = round(x, 1)
-        X_t_coord.append(x)
-    return X_t_coord
+        x_t_coord.append(x)
+    return x_t_coord
 
-# Pattern:
-# Xb, Xb, Xt, Xt, Xb, Xb, Xt, Xt
-def generate_X(cell):
+
+def generate_x(cell):
+    """
+    Pattern:
+    Xb, Xb, Xt, Xt, Xb, Xb, Xt, Xt
+    """
     final_x_coord = []
-    X_b = generate_X_b(cell)
-    X_t = generate_X_t(cell)
-    for n in range(len(X_b)):
-        if (X_b[n] != 0): # problem if x-coordinate == 0
-            x = X_b[n]
-        elif (X_t[n] != 0):
-            x = X_t[n]
+    x_b = generate_x_b(cell)
+    x_t = generate_x_t(cell)
+    for n in range(len(x_b)):
+        if x_b[n] != 0: # problem if x-coordinate == 0
+            x = x_b[n]
+        elif x_t[n] != 0:
+            x = x_t[n]
         final_x_coord.append(x)
     res = ", ".join(repr(e) for e in final_x_coord)
     return res
 
-# Pattern:
-# Zs, Zs, Zs+delta, Zs+delta, Zs+2*delta, Zs+2*delta, ..., Zs + n*delta = Ze
-# delta is the incremental change in eastern direction after each iteration
+
 def generate_z_s(cell, delta):
+    """
+    Pattern:
+    Zs, Zs, Zs+delta, Zs+delta, Zs+2*delta, Zs+2*delta, ..., Zs + n*delta = Ze
+    delta is the incremental change in eastern direction after each iteration
+    """
     z_s_coord = []
     z_s = init_z_s(cell)
     z_e = init_z_e(cell)
     num_points = generate_num_points(cell)
     for n in range (num_points):
         z = (z_s) + delta*math.ceil(n/2)
-        if (z >= z_e): # used to prevent Z-values going out of bounds.
+        if z >= z_e: # used to prevent Z-values going out of bounds.
             z = z_e
         z = round(z, 1)
         z_s_coord.append(z)
     res = ", ".join(repr(e) for e in z_s_coord)
     return res
 #-----------------------------------------------
-num_cells = len(X_b_coord)-1
-x_filename = "x_waypoints.txt"
-z_filename = "z_waypoints.txt"
+NUM_CELLS = len(x_b_coord)-1
+X_FILENAME = "x_waypoints.txt"
+Z_FILENAME = "z_waypoints.txt"
 
 ap = argparse.ArgumentParser()
 ap.add_argument('delta', type=float, default=0.5, help="Side step")
 args = ap.parse_args()
 
-with open(z_filename, 'w') as zf:
-    for i in range(num_cells):
+with open(Z_FILENAME, 'w') as zf:
+    for i in range(NUM_CELLS):
         cell_idx = i+1
-        rows = generate_z_s(cell_idx, args.delta)
-        zf.write(rows)
+        ROWS = generate_z_s(cell_idx, args.delta)
+        zf.write(ROWS)
         zf.write("\n")
 
-with open(x_filename, 'w') as xf:
-    for n in range(num_cells):
+with open(X_FILENAME, 'w') as xf:
+    for n in range(NUM_CELLS):
         cell_idx = n+1
-        rows = generate_X(cell_idx)
-        xf.write(rows)
+        ROWS = generate_x(cell_idx)
+        xf.write(ROWS)
         xf.write("\n")
 print("Waypoints Created!")
