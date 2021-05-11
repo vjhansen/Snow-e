@@ -1,7 +1,3 @@
-![GitHub last commit](https://img.shields.io/github/last-commit/vjhansen/Snow-e)
-![GitHub repo size](https://img.shields.io/github/repo-size/vjhansen/Snow-e)
-![GitHub](https://img.shields.io/github/license/vjhansen/Snow-e?color=blue)
-
 
 ## Snow-e: Autonomous Snow Blower Simulation
 * Autonomous Snow Blower Simulation in [Webots](https://github.com/cyberbotics/webots). 
