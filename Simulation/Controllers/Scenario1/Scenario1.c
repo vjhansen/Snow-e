@@ -44,7 +44,8 @@ static WbDeviceTag compass;
 static WbDeviceTag gps;
 
 /* Alternative Naming */
-typedef struct _Vector {
+typedef struct _Vector
+{
   double X_v;
   double Z_u;
 } Vector;
@@ -61,17 +62,21 @@ double gps_val[2] = {0.0, 0.0};
 double start_gps_pos[3] = {0.0, 0.0, 0.0};
 
 // - read .txt-file
-void read_file(char *filename, double *arr_get) {
+void read_file(char *filename, double *arr_get) 
+{
   FILE *fp;
   char str[MAXCHAR];
   fp = fopen(filename, "r");
-  if (fp == NULL){
+  if (fp == NULL)
+  {
       printf("Could not open file %s",filename);
   }
   int i = 0;
-  while (fgets(str, MAXCHAR, fp) != NULL) {
+  while (fgets(str, MAXCHAR, fp) != NULL) 
+  {
     char *token = strtok(str, ",");
-    while (token != NULL) {
+    while (token != NULL) 
+    {
       i++;
       arr_get[i] = atof(token);
       num_points = i;
@@ -82,25 +87,29 @@ void read_file(char *filename, double *arr_get) {
 }
 
 /* Euclidean Norm */
-static double norm(const Vector *vec) {
+static double norm(const Vector *vec) 
+{
   return sqrt(vec->Z_u*vec->Z_u + vec->X_v*vec->X_v);
 }
 
 // v = v/||v||
-static void normalize(Vector *vec) {
+static void normalize(Vector *vec) 
+{
   double n = norm(vec);
   vec->Z_u /= n;
   vec->X_v /= n;
 }
 
 // new vector = vector 1 - vector 2
-static void minus(Vector *diff, const Vector *trgt, const Vector *gpsPos) {
+static void minus(Vector *diff, const Vector *trgt, const Vector *gpsPos) 
+{
   diff->X_v = trgt->X_v - gpsPos->X_v;
   diff->Z_u = trgt->Z_u - gpsPos->Z_u;
 }
 
 /*- - - - Initialize robot - - - - - -*/
-static void initialize(void) {
+static void initialize(void) 
+{
   //..... Boot Message .....
   printf("\nInitializing Snow-e Robot...\n");
 
@@ -123,13 +132,14 @@ static void initialize(void) {
 /*- - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /*- - - - -  Autopilot Function - - - - - - - - -*/
-static int drive_autopilot(void) {
-  float Kp = 0.1;
-  float Ki = 0.01;
+static int drive_autopilot(void)
+{
+  float Kp        = 0.1;
+  float Ki        = 0.01;
   float speed_max = 0;        // initial speed value
   float distance  = 0;
-  static float speed_i = 0;   // integral value for speed
-  static float beta_i  = 0;   // integral value for beta (angle)
+  static float speed_i  = 0;   // integral value for speed
+  static float beta_i   = 0;   // integral value for beta (angle)
   float current_speed_l = wb_motor_get_velocity(l_motor);
   float current_speed_r = wb_motor_get_velocity(r_motor);
 
@@ -137,9 +147,10 @@ static int drive_autopilot(void) {
   const double *north2D = wb_compass_get_values(compass);
   const double *gps_pos = wb_gps_get_values(gps);
 
-  Vector north = {north2D[X], north2D[Z]};
-  Vector front = {north.X_v, -north.Z_u};
+  Vector north        = {north2D[X], north2D[Z]};
+  Vector front        = {north.X_v, -north.Z_u};
   Vector curr_gps_pos = {gps_pos[X], gps_pos[Z]};
+
   Vector dir;
   minus(&dir, &targets[target_index], &curr_gps_pos);
   distance = norm(&dir);
@@ -161,44 +172,52 @@ static int drive_autopilot(void) {
 
   // --------------- Calculate PID for Angle and Speed ---------------
   // For Angle
-  float beta_e = ((beta_t - beta_c) * 0.01);
-  beta_i = beta_i + beta_e;
-  float PID_beta = Kp*beta_e + Ki*beta_i;
+  float beta_e    = ((beta_t - beta_c) * 0.01);
+  beta_i          = beta_i + beta_e;
+  float PID_beta  = Kp*beta_e + Ki*beta_i;
+
   // For Speed
   float speed_abs = ((fabs(current_speed_l)+fabs(current_speed_r))/2);
-  float speed_e = (speed_max - speed_abs);
-  speed_i = speed_i + speed_e;
+  float speed_e   = (speed_max - speed_abs);
+  speed_i         = speed_i + speed_e;
   float PID_speed = Kp*speed_e + Ki*speed_i;
   if (PID_speed < 0) {PID_speed = 0;}
   // --------------- End PID ---------------
 
+
   //  Approach the waypoints and reset the integrals
-  if (distance <= 0.05) {
+  if (distance <= 0.05) 
+  {
     printf("Reached Waypoint: %d\n",target_index);
     target_index++;
     speed_i = 0;
-    beta_i = 0;
+    beta_i  = 0;
   }
-  else if (target_index == num_points) {
+  else if (target_index == num_points) 
+  {
     target_index = 1; // go back to first waypoint
     //TIME_STEP = -1; // stops simulation at last waypoint
   }
 
   //..... Set Speed According to Angle.....
-  if (fabs(beta_e) > 0.05){  // For angles up to 90 degrees
-    if (fabs(beta_e) > 0.9){ // For larger angles than 90 degrees
-      speed_i = 0;
-      beta_i = 0;
-      speed[LEFT]  = (-PID_beta)*0.5;
-      speed[RIGHT] = (PID_beta)*0.5;
+  if (fabs(beta_e) > 0.05) // angles up to 90 degrees
+  {
+    if (fabs(beta_e) > 0.9) // angles > 90 degrees
+    {
+      speed_i       = 0;
+      beta_i        = 0;
+      speed[LEFT]   = (-PID_beta)*0.5;
+      speed[RIGHT]  = (PID_beta)*0.5;
     }
-    else{
-      speed_i = 0;
-      speed[LEFT]  = -PID_beta;
-      speed[RIGHT] =  PID_beta;
+    else
+    {
+      speed_i       = 0;
+      speed[LEFT]   = -PID_beta;
+      speed[RIGHT]  = PID_beta;
     }
   }
-  else{
+  else
+  {
     speed[LEFT]  = PID_speed - beta_e;
     speed[RIGHT] = PID_speed + beta_e;
   }
@@ -209,19 +228,22 @@ static int drive_autopilot(void) {
 /*- - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /*- - - - - - - - -  Main Function - - - - - - - */
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
   wb_robot_init();
   initialize();
   read_file(xfile, X_target);
   read_file(zfile, Z_target);
 
   // fill target-vector with X and Z way points
-  for (int i=0, j=1; i<num_points; i++, j++) {
+  for (int i=0, j=1; i<num_points; i++, j++)
+  {
     targets[i].X_v = X_target[i];
     targets[i].Z_u = Z_target[j];
   }
   printf("\nStarting Snow-e in Autopilot Mode...\n\n");
-  while (wb_robot_step(TIME_STEP) != -1) {
+  while (wb_robot_step(TIME_STEP) != -1)
+  {
     drive_autopilot();
   };
   wb_robot_cleanup();

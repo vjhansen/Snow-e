@@ -31,14 +31,16 @@
 #include <webots/robot.h>
 #include <webots/supervisor.h>
 
+
 #define TIME_STEP 8
-#define X 0
-#define Z 2
-#define GROUND_X 4.9
-#define GROUND_Z 9.9
+#define X         0
+#define Z         2
+#define GROUND_X  4.9
+#define GROUND_Z  9.9
 
 
-int main() {
+int main()
+{
   wb_robot_init();
   WbDeviceTag display = wb_robot_get_device("ground_display");
 
@@ -56,7 +58,8 @@ int main() {
   // set the pen to remove the texture
   wb_display_set_alpha(display, 0.0);
 
-  while (wb_robot_step(TIME_STEP) != -1) {
+  while (wb_robot_step(TIME_STEP) != -1)
+  {
     // Update the translation field
     const double *translation = wb_supervisor_field_get_sf_vec3f(translationField);
 
